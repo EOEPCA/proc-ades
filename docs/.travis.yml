@@ -1,7 +1,7 @@
 jobs:
   include:
     - stage: generate docs
-      if: branch = master AND NOT type IN (pull_request)
+      if: branch = develop AND NOT type IN (pull_request)
 
       # Assume that 'docker' service is stated at the Travis global level. It seems that re-stating it here confuses Travis.
       # services:
