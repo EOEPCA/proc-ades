@@ -12,6 +12,49 @@ This section contains:
 * Context within EOEPCA
 ================================
 
+The ADES provides a WPS-T 2.0.0 service that incorporates the Docker execution engine, and is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). The ADES relies upon the EMS to ensure that the processor is deployed as a WPS service before it is invoked.
+
+The main responsibilities of the ADES are:
+ 
+* Validate and accept an execution request and submit the process execution
+* Monitor the process execution
+
+In order to accomplish the execution and monitor steps above, it also need to be responsible for the operations of:
+
+* Data Stage-In for the process inputs
+* Data Stage-Out for the process outputs
+
+Those operations are internal sub-steps of the execution step.
+
+=== Execution
+
+The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.
+
+When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named Argo Workflows, to run the following steps:
+
+* Data Stage-In
+* Processing
+* Data Stage-Out
+
+Argo Workflows is responsible for the internal orchestration of the three steps above.
+Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present. 
+
+==== Data Stage-In
+
+Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.
+ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (libcurl, s3cmd) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.
+
+==== Processing
+
+Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.
+ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).
+
+==== Data Stage-Out
+
+Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.
+ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output. 
+Monitor
+ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.
 
 == Static Architecture
 
@@ -23,6 +66,17 @@ This section contains:
 * Diagram and description of the major logical components within the Building Block
 
 ================================
+
+As illustrated in <<img_procAdesExecute>> of the EOEPCA Master System Design Document (ref. <<EOEPCA-MSD>>), the ADES provides an execution engine that handles the complexities of constructing the jobs and interfacing with the processing cluster. The selected cluster implementation is based on Kubernetes.
+
+[#img_procAdesExecute,reftext='{figure-caption} {counter:figure-num}']
+.ADES Process Execution
+image::processing-ADES-execute.png[width=85%,pdfwidth=85%,align="center"]
+
+The ADES internal architecture is based on two major components:
+
+* The WPS Server
+* The ADES Core Engine
 
 == Use Cases
 
@@ -46,6 +100,18 @@ This section contains:
 
 ================================
 
+The ADES exposes a standard OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
+
+=== Authentication/Authorization
+
+The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:
+* A request for Authentication
+** The Authentication flow is implemented using the OpenID Connect 1.0 protocol
+* A request for Authorization
+** The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)
+
+The PEP module is provided by *Task 1: User Management*, and it is part of the ADES architecture.
+
 == Required Resources
 
 [NOTE]
@@ -57,6 +123,23 @@ This section contains:
 * References to open repositories (when applicable)
 
 ================================
+
+=== Software 
+
+The following open-source software are required to support the implementation of the ADES:
+
+* HTTP(S), FTP(S), FILE, OPeNDAP Client
+** libcurl https://curl.haxx.se/libcurl/ 
+* OpenSearch Client
+** DotNetOpenSearchClient https://github.com/Terradue/DotNetOpenSearchClient 
+* Kubernetes Client
+** libcurl https://curl.haxx.se/libcurl/ 
+* Kubernetes Extension
+** Argoproj https://argoproj.github.io/argo
+* S3 Client
+** s3cmd https://github.com/s3tools/s3cmd
+* WPS Server
+** ZOO-Kernel http://zoo-project.org/docs/kernel/
 
 == Design Standards, Conventions and Procedures
 

@@ -3,8 +3,8 @@
 :email: <Eoepca.SystemTeam@telespazio.com>
 :project: EOEPCA
 :project-name: EO Exploitation Platform Common Architecture
-:component-name: <Template Service>
-:component-github-name: template-svce
+:component-name: ADES
+:component-github-name: proc-ades
 :doc-title: {component-name} Design Document
 :doc-num: {project}.SDD.xxx
 :revnumber: 0.1
