@@ -1,4 +1,25 @@
-[[mainDesign]]
-= Design
+[[mainComponents]]
+= Building Block Design
 
-TBD
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* A concise breakdown of the Building Block in several independent services (when applicable). For each component, the following subsections are added:
+** Overview and purpose: indicating the functionality covered by the component
+** SW Reuse and Dependencies: indicating reuse of third party open source solutions (if any) and any pre-required Dependencies
+** Interfaces: both internal to the building block and those exposed externally
+** Data: Data usage of the building block, data flow and any GDPR concerns should be addressed here
+** Applicable Resources: links and references to (Reference Docs), and repositories.
+
+When a breakdown is necessary, a genral overview of the building block can be given. On the contrary, no breakdown indicates a single component development with the same expected sections.
+
+================================
+
+== Sample Component
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources

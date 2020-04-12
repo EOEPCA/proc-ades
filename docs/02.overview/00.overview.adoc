@@ -1,4 +1,73 @@
 [[mainOverview]]
 = Overview
 
-TBD
+== Building Block Overview
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* High-Level Description of the Building Block
+* Context within EOEPCA
+================================
+
+
+== Static Architecture
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Diagram and description of the major logical components within the Building Block
+
+================================
+
+== Use Cases
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Diagrams and definition of the use cases covered by this Building Block
+
+================================
+
+== External Interfaces
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Listing of technical external interfaces (with other Building Blocks)
+
+================================
+
+== Required Resources
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* List of HW and SW required resources for the correct functioning of the building Block
+* References to open repositories (when applicable)
+
+================================
+
+== Design Standards, Conventions and Procedures
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Explanations on the UML Design notation and necessary naming conventions used throughout the document
+
+================================
+
+=== UML Design
+=== Naming Conventions

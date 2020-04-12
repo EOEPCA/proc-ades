@@ -1,0 +1,11 @@
+[[traceabilityMatrix]]
+= Use Case Traceability
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* A traceability matrix against the use case analysis document of the project, indicating which components address each use case
+
+================================
