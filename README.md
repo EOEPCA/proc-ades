@@ -1,7 +1,7 @@
 <!--
 *** 
 *** To avoid retyping too much info. Do a search and replace for the following:
-*** template-svce, twitter_handle, email
+*** proc-ades, twitter_handle, email
 -->
 
 <!-- PROJECT SHIELDS -->
@@ -20,22 +20,22 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/EOEPCA/eoepca">
+  <a href="https://github.com/EOEPCA/proc-ades">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">EOEPCA system</h3>
+  <h3 align="center">ADES building block</h3>
 
   <p align="center">
-    EOEPCA Reference Implementation - System
+    Application Deployment and Execution Service (ADES) building block
     <br />
-    <a href="https://github.com/EOEPCA/template-svce"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/EOEPCA/proc-ades"><strong>Explore the docs »</strong></a>
     <br />
-    <a href="https://github.com/EOEPCA/template-svce">View Demo</a>
+    <a href="https://github.com/EOEPCA/proc-ades">View Demo</a>
     ·
-    <a href="https://github.com/EOEPCA/template-svce/issues">Report Bug</a>
+    <a href="https://github.com/EOEPCA/proc-ades/issues">Report Bug</a>
     ·
-    <a href="https://github.com/EOEPCA/template-svce/issues">Request Feature</a>
+    <a href="https://github.com/EOEPCA/proc-ades/issues">Request Feature</a>
   </p>
 </p>
 
@@ -63,11 +63,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+[![Product Name Screen Shot][product-screenshot]](https://github.com/EOEPCA/)
 
-Here's a blank template to get started:
-**To avoid retyping too much info. Do a search and replace with your text editor for the following:**
-`template-svce`, `twitter_handle`, `email`
+The Processing & Chaining domain area provides an extensible repository of processing functions, tools and applications that can be discovered by search query, invoked individually, and utilised in workflows. ADES is responsible for the execution of the processing service as a OGC WPS 2.0 request within the target Exploitation Platform (i.e., the one that is close to the data).
 
 ### Built With
 
@@ -117,12 +115,12 @@ Once installed, developers can deploy environments for these pipelines:
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-TBW
+Currently, only the design documentation is produced out of this repository.
 
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/EOEPCA/eoepca/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/EOEPCA/proc-ades/issues) for a list of proposed features (and known issues).
 
 
 
@@ -149,32 +147,30 @@ Distributed under the Apache-2.0 License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email
+Terradue - [@terradue](https://twitter.com/terradue) - info@terradue.com
 
-Project Link: [https://github.com/EOEPCA/eoepca](https://github.com/EOEPCA/eoepca)
+Project Link: [https://github.com/EOEPCA/proc-ades](https://github.com/EOEPCA/proc-ades)
 
 
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
-* []()
-* []()
 * README.md is based on [this template](https://github.com/othneildrew/Best-README-Template) by [Othneil Drew](https://github.com/othneildrew).
 
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/EOEPCA/eoepca.svg?style=flat-square
-[contributors-url]: https://github.com/EOEPCA/eoepca/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/EOEPCA/eoepca.svg?style=flat-square
-[forks-url]: https://github.com/EOEPCA/eoepca/network/members
-[stars-shield]: https://img.shields.io/github/stars/EOEPCA/eoepca.svg?style=flat-square
-[stars-url]: https://github.com/EOEPCA/eoepca/stargazers
-[issues-shield]: https://img.shields.io/github/issues/EOEPCA/eoepca.svg?style=flat-square
-[issues-url]: https://github.com/EOEPCA/eoepca/issues
-[license-shield]: https://img.shields.io/github/license/EOEPCA/eoepca.svg?style=flat-square
-[license-url]: https://github.com/EOEPCA/eoepca/blob/master/LICENSE
-[build-shield]: https://www.travis-ci.com/EOEPCA/eoepca.svg?branch=master
+[contributors-shield]: https://img.shields.io/github/contributors/EOEPCA/proc-ades.svg?style=flat-square
+[contributors-url]: https://github.com/EOEPCA/proc-ades/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/EOEPCA/proc-ades.svg?style=flat-square
+[forks-url]: https://github.com/EOEPCA/proc-ades/network/members
+[stars-shield]: https://img.shields.io/github/stars/EOEPCA/proc-ades.svg?style=flat-square
+[stars-url]: https://github.com/EOEPCA/proc-ades/stargazers
+[issues-shield]: https://img.shields.io/github/issues/EOEPCA/proc-ades.svg?style=flat-square
+[issues-url]: https://github.com/EOEPCA/proc-ades/issues
+[license-shield]: https://img.shields.io/github/license/EOEPCA/proc-ades.svg?style=flat-square
+[license-url]: https://github.com/EOEPCA/proc-ades/blob/master/LICENSE
+[build-shield]: https://www.travis-ci.com/EOEPCA/proc-ades.svg?branch=master
 [product-screenshot]: images/screenshot.png
