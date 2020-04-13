@@ -90,11 +90,11 @@ The ADES architecture is based on two major components:
 * The WPS Server, exposing a WPS 2.0.0 (REST/JSON) interface <<WPS-T>> <<WPS-REST-JSON>>
 * The ADES Core Engine, exposing an internal interface, compliant with the OpenAPI specification <<OPENAPI>>
 
-<<img_procAdesArchitecture>> shows the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.
+<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.
 
-[#img_procAdesArchitecture,reftext='{figure-caption} {counter:figure-num}']
-.ADES Architecture
-image::processing-ADES-architecture.png[width=95%,pdfwidth=95%,align="center"]
+[#img_procAdesOverview,reftext='{figure-caption} {counter:figure-num}']
+.ADES building block overview
+image::processing-ADES-overview.png[width=95%,pdfwidth=95%,align="center"]
 
 The WPS Server provides the external interface of the ADES, available to the EMS only. It relies on internal code and configuration for the GetCapabilites, DescribeProcess, Deploy/Undeploy WPS operations.
 On the other hand, the WPS server interacts with the ADES Core Engine API for the Execute, GetStatus, GetResult and Dismiss WPS operations.

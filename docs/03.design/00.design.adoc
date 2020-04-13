@@ -25,7 +25,7 @@ The WPS Server provides the external interface of the ADES, available to the EMS
 ==== WPS-T 2.0.0 compliance
 
 _"ZOO-Kernel implements and complies with the WPS 1.0.0 and the WPS 2.0.0 standards edited by the Open Geospatial Consortium"._
-The Dismiss operation, which is _"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"_, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.
+The Dismiss operation, which is _"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"_, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context, the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.
 
 === Software Reuse and Dependencies
 
@@ -36,12 +36,53 @@ The following open-source software is reused:
 
 === Interfaces
 
-The WPS Server exposes an OGC WPS-T 2.0.0 (REST/JSON) <<WPS-T>> <<WPS-REST-JSON>> interface to deploy, execute, monitor and dismiss processing services.
+The WPS Server exposes an OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
 
+=== Data
+
+Not Applicable.
+
+=== Applicable Resources
+
+* <<WPS-T>>
+* <<WPS-REST-JSON>>
+
+== ADES Core Engine
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
 === Data
 === Applicable Resources
 
-== ADES Core Engine
+== ADES Core Engine Client
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources
+
+== Argo Workflows Client
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources
+
+== OWS Context Parser
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources
+
+== CWL Parser
+=== Overview and Purpose
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources
+
+== Parameters Converter
 === Overview and Purpose
 === Software Reuse and Dependencies
 === Interfaces
