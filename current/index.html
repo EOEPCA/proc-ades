@@ -94,6 +94,51 @@
 <li><a href="#_applicable_resources_2">3.2.5. Applicable Resources</a></li>
 </ul>
 </li>
+<li><a href="#_ades_core_engine_client">3.3. ADES Core Engine Client</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_3">3.3.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_3">3.3.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_3">3.3.3. Interfaces</a></li>
+<li><a href="#_data_3">3.3.4. Data</a></li>
+<li><a href="#_applicable_resources_3">3.3.5. Applicable Resources</a></li>
+</ul>
+</li>
+<li><a href="#_argo_workflows_client">3.4. Argo Workflows Client</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_4">3.4.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_4">3.4.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_4">3.4.3. Interfaces</a></li>
+<li><a href="#_data_4">3.4.4. Data</a></li>
+<li><a href="#_applicable_resources_4">3.4.5. Applicable Resources</a></li>
+</ul>
+</li>
+<li><a href="#_ows_context_parser">3.5. OWS Context Parser</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_5">3.5.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_5">3.5.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_5">3.5.3. Interfaces</a></li>
+<li><a href="#_data_5">3.5.4. Data</a></li>
+<li><a href="#_applicable_resources_5">3.5.5. Applicable Resources</a></li>
+</ul>
+</li>
+<li><a href="#_cwl_parser">3.6. CWL Parser</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_6">3.6.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_6">3.6.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_6">3.6.3. Interfaces</a></li>
+<li><a href="#_data_6">3.6.4. Data</a></li>
+<li><a href="#_applicable_resources_6">3.6.5. Applicable Resources</a></li>
+</ul>
+</li>
+<li><a href="#_parameters_converter">3.7. Parameters Converter</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_7">3.7.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_7">3.7.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_7">3.7.3. Interfaces</a></li>
+<li><a href="#_data_7">3.7.4. Data</a></li>
+<li><a href="#_applicable_resources_7">3.7.5. Applicable Resources</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#traceabilityMatrix">4. Use Case Traceability</a></li>
@@ -1124,13 +1169,13 @@ Monitor</p>
 </ul>
 </div>
 <div class="paragraph">
-<p><a href="#img_procAdesArchitecture">Figure 2</a> shows the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.</p>
+<p><a href="#img_procAdesOverview">Figure 2</a> shows an overview of the ADES building block. It provides the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.</p>
 </div>
-<div id="img_procAdesArchitecture" class="imageblock text-center">
+<div id="img_procAdesOverview" class="imageblock text-center">
 <div class="content">
-<img src="./images/processing-ADES-architecture.png" alt="processing ADES architecture" width="95%">
+<img src="./images/processing-ADES-overview.png" alt="processing ADES overview" width="95%">
 </div>
-<div class="title">Figure 2. ADES Architecture</div>
+<div class="title">Figure 2. ADES building block overview</div>
 </div>
 <div class="paragraph">
 <p>The WPS Server provides the external interface of the ADES, available to the EMS only. It relies on internal code and configuration for the GetCapabilites, DescribeProcess, Deploy/Undeploy WPS operations.<br>
@@ -1421,7 +1466,7 @@ In turn, the ADES Core Engine contacts the Argo Workflows API to submit, monitor
 <h5 id="_wps_t_2_0_0_compliance">3.1.1.1. WPS-T 2.0.0 compliance</h5>
 <div class="paragraph">
 <p><em>"ZOO-Kernel implements and complies with the WPS 1.0.0 and the WPS 2.0.0 standards edited by the Open Geospatial Consortium".</em><br>
-The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"</em>, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.</p>
+The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"</em>, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context, the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.</p>
 </div>
 </div>
 </div>
@@ -1448,16 +1493,27 @@ The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the cl
 <div class="sect3">
 <h4 id="_interfaces">3.1.3. Interfaces</h4>
 <div class="paragraph">
-<p>The WPS Server exposes an OGC WPS-T 2.0.0 (REST/JSON) <a href="#WPS-T">[WPS-T]</a> <a href="#WPS-REST-JSON">[WPS-REST-JSON]</a> interface to deploy, execute, monitor and dismiss processing services.</p>
+<p>The WPS Server exposes an OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_data">3.1.4. Data</h4>
-
+<div class="paragraph">
+<p>Not Applicable.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_applicable_resources">3.1.5. Applicable Resources</h4>
-
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#WPS-T">[WPS-T]</a></p>
+</li>
+<li>
+<p><a href="#WPS-REST-JSON">[WPS-REST-JSON]</a></p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1480,6 +1536,121 @@ The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the cl
 </div>
 <div class="sect3">
 <h4 id="_applicable_resources_2">3.2.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ades_core_engine_client">3.3. ADES Core Engine Client</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_3">3.3.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_3">3.3.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_3">3.3.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_3">3.3.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_3">3.3.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_argo_workflows_client">3.4. Argo Workflows Client</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_4">3.4.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_4">3.4.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_4">3.4.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_4">3.4.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_4">3.4.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ows_context_parser">3.5. OWS Context Parser</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_5">3.5.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_5">3.5.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_5">3.5.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_5">3.5.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_5">3.5.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_cwl_parser">3.6. CWL Parser</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_6">3.6.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_6">3.6.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_6">3.6.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_6">3.6.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_6">3.6.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_converter">3.7. Parameters Converter</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_7">3.7.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_7">3.7.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_7">3.7.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_7">3.7.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_7">3.7.5. Applicable Resources</h4>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1520,7 +1691,7 @@ The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the cl
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2020-04-13 05:26:07 UTC
+Last updated 2020-04-13 22:02:51 UTC
 </div>
 </div>
 </body>
