@@ -19,7 +19,7 @@
 <span id="author" class="author">TVUK System Team</span><br>
 <span id="email" class="email">&lt;<a href="mailto:Eoepca.SystemTeam@telespazio.com">Eoepca.SystemTeam@telespazio.com</a>&gt;</span><br>
 <span id="revnumber">version 0.1,</span>
-<span id="revdate">dd/mm/yyyy</span>
+<span id="revdate">14/04/2020</span>
 <br><span id="revremark"></span>
 </div>
 <div id="toc" class="toc2">
@@ -45,13 +45,16 @@
 <li><a href="#_data_stage_out">2.1.1.3. Data Stage-Out</a></li>
 </ul>
 </li>
+<li><a href="#_monitor">2.1.2. Monitor</a></li>
+<li><a href="#_dismiss">2.1.3. Dismiss</a></li>
 </ul>
 </li>
 <li><a href="#_static_architecture">2.2. Static Architecture</a></li>
 <li><a href="#_use_cases">2.3. Use Cases</a></li>
 <li><a href="#_external_interfaces">2.4. External Interfaces</a>
 <ul class="sectlevel3">
-<li><a href="#_authenticationauthorization">2.4.1. Authentication/Authorization</a></li>
+<li><a href="#_processing_2">2.4.1. Processing</a></li>
+<li><a href="#_authn_authz">2.4.2. AuthN / AuthZ</a></li>
 </ul>
 </li>
 <li><a href="#_required_resources">2.5. Required Resources</a>
@@ -69,13 +72,26 @@
 </li>
 <li><a href="#mainComponents">3. Building Block Design</a>
 <ul class="sectlevel2">
-<li><a href="#_sample_component">3.1. Sample Component</a>
+<li><a href="#_wps_server">3.1. WPS Server</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose">3.1.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose">3.1.1. Overview and Purpose</a>
+<ul class="sectlevel4">
+<li><a href="#_wps_t_2_0_0_compliance">3.1.1.1. WPS-T 2.0.0 compliance</a></li>
+</ul>
+</li>
 <li><a href="#_software_reuse_and_dependencies">3.1.2. Software Reuse and Dependencies</a></li>
 <li><a href="#_interfaces">3.1.3. Interfaces</a></li>
 <li><a href="#_data">3.1.4. Data</a></li>
 <li><a href="#_applicable_resources">3.1.5. Applicable Resources</a></li>
+</ul>
+</li>
+<li><a href="#_ades_core_engine">3.2. ADES Core Engine</a>
+<ul class="sectlevel3">
+<li><a href="#_overview_and_purpose_2">3.2.1. Overview and Purpose</a></li>
+<li><a href="#_software_reuse_and_dependencies_2">3.2.2. Software Reuse and Dependencies</a></li>
+<li><a href="#_interfaces_2">3.2.3. Interfaces</a></li>
+<li><a href="#_data_2">3.2.4. Data</a></li>
+<li><a href="#_applicable_resources_2">3.2.5. Applicable Resources</a></li>
 </ul>
 </li>
 </ul>
@@ -138,7 +154,7 @@ The Amendment Record Sheet below records the history and issue status of this do
 <tbody>
 <tr>
 <th class="tableblock halign-center valign-top"><p class="tableblock">0.1</p></th>
-<td class="tableblock halign-center valign-top"><p class="tableblock">dd/mm/yyyy</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">14/04/2020</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Initial in-progress draft</p></td>
 </tr>
 </tbody>
@@ -476,6 +492,16 @@ OGC 08-068r2,<br>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>API Version 2006-03-01</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="OPENAPI"></a>[OPENAPI]</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>OpenAPI Specification,<br>
+<a href="https://swagger.io/specification/" class="bare">https://swagger.io/specification/</a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>API Version 3.0.3 2020-02-20</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -950,15 +976,30 @@ OGC 08-068r2,<br>
 <p>The ADES provides a WPS-T 2.0.0 service that incorporates the Docker execution engine, and is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). The ADES relies upon the EMS to ensure that the processor is deployed as a WPS service before it is invoked.</p>
 </div>
 <div class="paragraph">
+<p>As illustrated in the EOEPCA Master System Design Document (ref. <a href="#EOEPCA-MSD">[EOEPCA-MSD]</a>), the ADES provides an execution engine that handles the complexities of constructing the jobs and interfacing with the processing cluster. See the context wthin the EOEOPA, as depicted below in <a href="#img_procAdesExecute">Figure 1</a>:</p>
+</div>
+<div id="img_procAdesExecute" class="imageblock text-center">
+<div class="content">
+<img src="./images/processing-ADES-execute.png" alt="processing ADES execute" width="85%">
+</div>
+<div class="title">Figure 1. ADES Process Execution</div>
+</div>
+<div class="paragraph">
 <p>The main responsibilities of the ADES are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Validate and accept an execution request and submit the process execution</p>
+<p>Validate and accept an execution request from the EMS</p>
+</li>
+<li>
+<p>Submit the process execution to the processing cluster</p>
 </li>
 <li>
 <p>Monitor the process execution</p>
+</li>
+<li>
+<p>Retrieve the processing results</p>
 </li>
 </ul>
 </div>
@@ -984,7 +1025,7 @@ OGC 08-068r2,<br>
 <p>The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.</p>
 </div>
 <div class="paragraph">
-<p>When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named Argo Workflows, to run the following steps:</p>
+<p>When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named <a href="https://github.com/argoproj/argo">Argo Workflows</a>, to run the following steps:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1006,25 +1047,42 @@ Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or pr
 <div class="sect4">
 <h5 id="_data_stage_in">2.1.1.1. Data Stage-In</h5>
 <div class="paragraph">
-<p>Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.<br>
-ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (libcurl, s3cmd) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.</p>
+<p>Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.</p>
+</div>
+<div class="paragraph">
+<p>ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (<a href="https://curl.haxx.se/libcurl/">libcurl</a>, <a href="https://github.com/s3tools/s3cmd">s3cmd</a>) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="_processing">2.1.1.2. Processing</h5>
 <div class="paragraph">
-<p>Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.<br>
-ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).</p>
+<p>Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.</p>
+</div>
+<div class="paragraph">
+<p>ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="_data_stage_out">2.1.1.3. Data Stage-Out</h5>
 <div class="paragraph">
-<p>Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.<br>
-ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output.<br>
-Monitor<br>
-ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.</p>
+<p>Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.</p>
 </div>
+<div class="paragraph">
+<p>ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output.<br>
+Monitor</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_monitor">2.1.2. Monitor</h4>
+<div class="paragraph">
+<p>ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dismiss">2.1.3. Dismiss</h4>
+<div class="paragraph">
+<p>ADES can remove from the execution environment an alredy started processing job.</p>
 </div>
 </div>
 </div>
@@ -1053,26 +1111,34 @@ ADES monitors a submitted execution at regular intervals and reports back the pr
 </table>
 </div>
 <div class="paragraph">
-<p>As illustrated in <a href="#img_procAdesExecute">Figure 1</a> of the EOEPCA Master System Design Document (ref. <a href="#EOEPCA-MSD">[EOEPCA-MSD]</a>), the ADES provides an execution engine that handles the complexities of constructing the jobs and interfacing with the processing cluster. The selected cluster implementation is based on Kubernetes.</p>
-</div>
-<div id="img_procAdesExecute" class="imageblock text-center">
-<div class="content">
-<img src="./images/processing-ADES-execute.png" alt="processing ADES execute" width="85%">
-</div>
-<div class="title">Figure 1. ADES Process Execution</div>
-</div>
-<div class="paragraph">
-<p>The ADES internal architecture is based on two major components:</p>
+<p>The ADES architecture is based on two major components:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>The WPS Server</p>
+<p>The WPS Server, exposing a WPS 2.0.0 (REST/JSON) interface <a href="#WPS-T">[WPS-T]</a> <a href="#WPS-REST-JSON">[WPS-REST-JSON]</a></p>
 </li>
 <li>
-<p>The ADES Core Engine</p>
+<p>The ADES Core Engine, exposing an internal interface, compliant with the OpenAPI specification <a href="#OPENAPI">[OPENAPI]</a></p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p><a href="#img_procAdesArchitecture">Figure 2</a> shows the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.</p>
+</div>
+<div id="img_procAdesArchitecture" class="imageblock text-center">
+<div class="content">
+<img src="./images/processing-ADES-architecture.png" alt="processing ADES architecture" width="95%">
+</div>
+<div class="title">Figure 2. ADES Architecture</div>
+</div>
+<div class="paragraph">
+<p>The WPS Server provides the external interface of the ADES, available to the EMS only. It relies on internal code and configuration for the GetCapabilites, DescribeProcess, Deploy/Undeploy WPS operations.<br>
+On the other hand, the WPS server interacts with the ADES Core Engine API for the Execute, GetStatus, GetResult and Dismiss WPS operations.<br>
+In turn, the ADES Core Engine contacts the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution.</p>
+</div>
+<div class="paragraph">
+<p>Section <a href="#mainComponents">Building Block Design</a> contains a detailed description of the ADES components.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1124,17 +1190,40 @@ ADES monitors a submitted execution at regular intervals and reports back the pr
 </tr>
 </table>
 </div>
+<div class="sect3">
+<h4 id="_processing_2">2.4.1. Processing</h4>
 <div class="paragraph">
-<p>The ADES exposes a standard OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.</p>
+<p>The ADES exposes an OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.</p>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_authenticationauthorization">2.4.1. Authentication/Authorization</h4>
+<h4 id="_authn_authz">2.4.2. AuthN / AuthZ</h4>
 <div class="paragraph">
-<p>The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:<br>
-* A request for Authentication<br>
-<strong> The Authentication flow is implemented using the OpenID Connect 1.0 protocol<br>
-* A request for Authorization<br>
-</strong> The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)</p>
+<p>The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A request for Authentication</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The Authentication flow is implemented using the OpenID Connect 1.0 protocol</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>A request for Authorization</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p>The PEP module is provided by <strong>Task 1: User Management</strong>, and it is part of the ADES architecture.</p>
@@ -1322,18 +1411,45 @@ ADES monitors a submitted execution at regular intervals and reports back the pr
 </table>
 </div>
 <div class="sect2">
-<h3 id="_sample_component">3.1. Sample Component</h3>
+<h3 id="_wps_server">3.1. WPS Server</h3>
 <div class="sect3">
 <h4 id="_overview_and_purpose">3.1.1. Overview and Purpose</h4>
-
+<div class="paragraph">
+<p>The WPS Server provides the external interface of the ADES, available to the EMS only.</p>
+</div>
+<div class="sect4">
+<h5 id="_wps_t_2_0_0_compliance">3.1.1.1. WPS-T 2.0.0 compliance</h5>
+<div class="paragraph">
+<p><em>"ZOO-Kernel implements and complies with the WPS 1.0.0 and the WPS 2.0.0 standards edited by the Open Geospatial Consortium".</em><br>
+The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"</em>, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.</p>
+</div>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_software_reuse_and_dependencies">3.1.2. Software Reuse and Dependencies</h4>
-
+<div class="paragraph">
+<p>The following open-source software is reused:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>WPS Server</p>
+<div class="ulist">
+<ul>
+<li>
+<p>ZOO-Kernel <a href="http://zoo-project.org/docs/kernel/" class="bare">http://zoo-project.org/docs/kernel/</a></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_interfaces">3.1.3. Interfaces</h4>
-
+<div class="paragraph">
+<p>The WPS Server exposes an OGC WPS-T 2.0.0 (REST/JSON) <a href="#WPS-T">[WPS-T]</a> <a href="#WPS-REST-JSON">[WPS-REST-JSON]</a> interface to deploy, execute, monitor and dismiss processing services.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_data">3.1.4. Data</h4>
@@ -1341,6 +1457,29 @@ ADES monitors a submitted execution at regular intervals and reports back the pr
 </div>
 <div class="sect3">
 <h4 id="_applicable_resources">3.1.5. Applicable Resources</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ades_core_engine">3.2. ADES Core Engine</h3>
+<div class="sect3">
+<h4 id="_overview_and_purpose_2">3.2.1. Overview and Purpose</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_software_reuse_and_dependencies_2">3.2.2. Software Reuse and Dependencies</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_interfaces_2">3.2.3. Interfaces</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_data_2">3.2.4. Data</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_applicable_resources_2">3.2.5. Applicable Resources</h4>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1381,7 +1520,7 @@ ADES monitors a submitted execution at regular intervals and reports back the pr
 <div id="footer">
 <div id="footer-text">
 Version 0.1<br>
-Last updated 2020-04-12 13:50:11 UTC
+Last updated 2020-04-13 05:26:07 UTC
 </div>
 </div>
 </body>
