@@ -124,11 +124,11 @@ This section contains:
 
 ================================
 
-=== Processing
+=== Processing interface
 
 The ADES exposes an OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
 
-=== AuthN / AuthZ
+=== AuthN / AuthZ interface
 
 The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:
 
