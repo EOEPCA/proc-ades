@@ -8,7 +8,7 @@
 :doc-title: {component-name} Design Document
 :doc-num: {project}.SDD.xxx
 :revnumber: 0.1
-:revdate: dd/mm/yyyy
+:revdate: 14/04/2020
 :revremark:
 :category: Design Document
 :copyrightYear: 2020
