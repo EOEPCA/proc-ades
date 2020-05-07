@@ -12,7 +12,7 @@ This section contains:
 * Context within EOEPCA
 ================================
 
-The ADES provides a WPS-T 2.0.0 service that incorporates the Docker execution engine, and is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). The ADES relies upon the EMS to ensure that the processor is deployed as a WPS service before it is invoked.
+The ADES provides a WPS 1.0 & 2.0 service interfaces as well as an OGC API Processes compliant API. It is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). In the global scenario, we assume that the EMS ensures that the processor is deployed as a WPS service before it is invoked.
 
 As illustrated in the EOEPCA Master System Design Document (ref. <<EOEPCA-MSD>>), the ADES provides an execution engine that handles the complexities of constructing the jobs and interfacing with the processing cluster. See the context wthin the EOEOPA, as depicted below in <<img_procAdesExecute>>:
 
@@ -85,10 +85,7 @@ This section contains:
 
 ================================
 
-The ADES architecture is based on two major components:
-
-* The WPS Server, exposing a WPS 2.0.0 (REST/JSON) interface <<WPS-T>> <<WPS-REST-JSON>>
-* The ADES Core Engine, exposing an internal interface, compliant with the OpenAPI specification <<OPENAPI>>
+The ADES is based on an Web API framework architecture. It exposes primarly a WPS Server with a legacy WPS 1.0 & 2.0 OWS services and it is offers a REST/JSON interface compliant with the OGC Processes API <<WPS-REST-JSON>> compliant with the OpenAPI specification <<OPENAPI>>.
 
 <<img_procAdesOverview>> shows an overview of the ADES building block. It provides the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.
 
@@ -96,9 +93,9 @@ The ADES architecture is based on two major components:
 .ADES building block overview
 image::processing-ADES-overview.png[width=95%,pdfwidth=95%,align="center"]
 
-The WPS Server provides the external interface of the ADES, available to the EMS only. It relies on internal code and configuration for the GetCapabilites, DescribeProcess, Deploy/Undeploy WPS operations.
-On the other hand, the WPS server interacts with the ADES Core Engine API for the Execute, GetStatus, GetResult and Dismiss WPS operations.
-In turn, the ADES Core Engine contacts the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution. 
+The WPS Service provides the external interface of the ADES, available to the EMS only. It enables internal code and configuration for creating the Processing Services via the Deploy/Undeploy WPS operations.
+Then, the WPS service triggers various function oif the Processing Services for the Execute, GetStatus, GetResult and Dismiss WPS operations.
+Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it's execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution. 
 
 Section <<Building Block Design>> contains a detailed description of the ADES components.
 
@@ -113,6 +110,49 @@ This section contains:
 
 ================================
 
+The following diagram describes the main use cases of the ADES
+
+[plantuml, diagram-usecases, png] 
+....
+@startuml Backend Use Cases
+
+:EMS: as ems <<service>>
+
+rectangle "ADES" as ades {
+
+    usecase "Deploy\nProcessing Service" as deploy
+    usecase "Execute Service\nas a Job" as execute
+    usecase "Monitor Job" as getStatus
+    usecase "Retrieve Result" as getResult
+
+    getResult ..> getStatus : <<extend>>
+}
+
+ems --> deploy
+ems --> execute
+ems --> getStatus
+ems --> getResult
+
+@enduml
+....
+
+=== Deploy Processing Service
+
+_As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a OWS Context from a Resource Catalog referencing a CWL so that I can make it available (or remove) for the Execution, on behalf of my User._
+
+=== Execute Service as Job
+
+_As an EMS service, I want to Execute an available processing service via the WPS & API interface, so that I can submit an execution, on behalf of my User._
+
+=== Monitor Job
+
+_As an EMS service, I want to get the status of a given processing job, via the WPS & API interface, so that I can monitor a current or past execution, and provide the information back to my User._
+
+=== Retrieve Result
+
+_As an EMS service, I want to get the reference of the processing results of a given processing job, via the WPS & API interface, so that I can provide the information back to my User._
+
+
 == External Interfaces
 
 [NOTE]
@@ -126,7 +166,7 @@ This section contains:
 
 === Processing interface
 
-The ADES exposes an OGC WPS-T 2.0.0 (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
+The ADES exposes an OGC WPS 1.0 & 2.0 as well as the OGC Processes API (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
 
 === AuthN / AuthZ interface
 

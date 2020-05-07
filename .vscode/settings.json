@@ -1,0 +1,7 @@
+{
+    "asciidoc.preview.attributes": {
+        "plantuml-server-url": "https://www.plantuml.com/plantuml",
+        "imagesdir": "./docs/images",
+        "toc": "auto"
+    }
+}
