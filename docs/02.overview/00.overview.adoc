@@ -85,9 +85,9 @@ This section contains:
 
 ================================
 
-The ADES is based on an Web API framework architecture. It exposes primarly a WPS Server with a legacy WPS 1.0 & 2.0 OWS services and it is offers a REST/JSON interface compliant with the OGC Processes API <<WPS-REST-JSON>> compliant with the OpenAPI specification <<OPENAPI>>.
+The ADES is based on an Web API framework architecture. It offers primarly an OWS Server with WPS 1.0 & 2.0 OGC services and it exposes a REST/JSON interface compliant with the OGC Processes API <<OGC-API-PROC>> compliant with the OpenAPI specification <<OPENAPI>>.
 
-<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the relationship between the WPS Server and the ADES core engine, and the interaction with the external Kubernetes cluster via the Argo Workflows API.
+<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Argo Workflows API.
 
 [#img_procAdesOverview,reftext='{figure-caption} {counter:figure-num}']
 .ADES building block overview

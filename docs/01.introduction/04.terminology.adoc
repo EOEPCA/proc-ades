@@ -23,7 +23,7 @@ The following terms are used in the Master System Design.
 | The 'software' component that provides the execution unit of the _Application Package_.
 
 | Application Deployment and Execution Service (ADES)
-| WPS-T (REST/JSON) service that incorporates the Docker execution engine, and is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform.
+| Web Processing Service that incorporates the Docker execution engine, and is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform.
 
 | Application Descriptor
 | A file that provides the metadata part of the _Application Package_. Provides all the metadata required to accommodate the processor within the WPS service and make it available for execution.
