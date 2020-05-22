@@ -6,11 +6,11 @@ $namespaces:
   opensearch: http://a9.com/-/spec/opensearch/1.1/
 
 $graph:
-- baseCommand: metadata-extractor
+- baseCommand: eoepca-metadata-extractor
   class: CommandLineTool
   hints:
     DockerRequirement:
-      dockerPull: docker-co.terradue.com/metadata_extractor:latest
+      dockerPull: blasco/eoepca-eo-tools:latest
   id: metadata_extractor
   inputs:
     arg1:
