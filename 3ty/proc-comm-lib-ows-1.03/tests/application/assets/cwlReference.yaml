@@ -1,0 +1,136 @@
+cwlVersion: v1.0
+
+$namespaces:
+  ows: http://www.opengis.net/ows/1.1
+  stac: http://www.me.net/stac/cwl/extension
+  opensearch: http://a9.com/-/spec/opensearch/1.1/
+
+$graph:
+  - baseCommand: burned-area
+    class: CommandLineTool
+    hints:
+      DockerRequirement:
+        dockerPull: burned-area:0.6
+    id: burned-area
+    inputs:
+      arg1:
+        inputBinding:
+          position: 1
+          prefix: --threshold
+        type: int?
+        default: 5
+      arg2:
+        inputBinding:
+          position: 2
+          prefix: --type
+        type: string[]?
+      arg3:
+        inputBinding:
+          position: 3
+          prefix: --base_dir
+          valueFrom: $(self.path)
+        type: Directory
+        default:
+          class: Directory
+          location: "/workspace"
+      arg4:
+        type: File
+        inputBinding:
+          position: 4
+          prefix: --post_event
+      arg5:
+        type: File[]?
+        inputBinding:
+          position: 5
+          prefix: --pre_event
+    outputs:
+      results:
+        outputBinding:
+          glob: .
+        type: Any
+    requirements:
+      EnvVarRequirement:
+        envDef:
+          PATH: /opt/anaconda/envs/env_burned_area/bin/:/opt/anaconda/bin:/opt/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          PREFIX: /opt/anaconda/envs/env_burned_area
+      ResourceRequirement: {}
+
+  #  stderr: std.err
+  #  stdout: std.out
+  - class: Workflow
+    id: ogc-s2-burned-area # service id [WPS] map to wps:Input/ows:identifier
+    label: Sentinel-2 burned area # title [WPS] map to wps:Input/ows:title
+    doc: Sentinel-2 burned area with NDVI and NDWI # description [WPS] map to wps:Input/ows:abstract
+    ows:version: 1.12 # workflow version
+    inputs:
+      base_dir:
+        type: Directory?
+        ows:ignore: True # [WPS] no mapping
+
+      optional_integer_parameter: # parameter id [WPS] map to wps:Input/ows:identifier
+        doc: threshold blah blah blah # [WPS] maps to wps:Input/ows:abstract
+        label: threshold value # [WPS] maps to wps:Input/ows:title
+        type: int? # question mark indicates it is optional. [WPS] maps to minOccurs = 0 (maxOccurs = 1 because it is not an array)
+
+      optional_combo_parameter: # parameter id [WPS] map to wps:Input/ows:identifier
+        doc: type blah blah blah # [WPS] maps to wps:Input/ows:abstract
+        label: optional type options # [WPS] maps to wps:Input/ows:title
+        type:
+          - "null" # null option --> optional (like '?') [WPS] maps to minOccurs = 0 (maxOccurs = 99 because it is an array)
+          - type: enum # [WPS] maps to AllowedValues
+            symbols: ['type1', 'type2', 'type3']
+
+      mandatory_bounding_box: # parameter id [WPS] map to wps:Input/ows:identifier
+        doc: bbox blah blah blah # [WPS] maps to wps:Input/ows:abstract
+        label: mandatory bbox # [WPS] maps to wps:Input/ows:title
+        type: string # no question mark indicates it is not optional. [WPS] maps to minOccurs = 1 (maxOccurs = 1 because it is not an array)
+        format: ows:BoundingBox # [WPS] map to BoundingBox type
+        default: "-180, -90, 180, 90"
+        ows:CRS: # [WPS] OWS extension to indicate the supported CRS
+          - urn:ogc:def:crs:EPSG:6.6:4326 # first is the default
+          - urn:ogc:def:crs:EPSG:6.6:4322
+          - urn:ogc:def:crs:EPSG:6.6:4323
+
+      mandatory_single_input_file:
+        doc: Mandatory input file blah blah blah # [WPS] maps to wps:Input/ows:abstract
+        label: Mandatory input file # [WPS] maps to wps:Input/ows:title
+        type: File # no question mark indicates it is not optional. [WPS] maps to minOccurs = 1 (maxOccurs = 1 because it is not an array)
+        # This file can be referenced by a STAC catalog
+        stac:catalog: # [WPS] maps to wps:Supported/wps:Format with mimetype = application/json & application/yaml
+          stac:href: catalog.json # optional catalogue URL. Default to file 'catalog.json'.
+          stac:collection_id: post_event # name of the collection to fetch the input from
+        # This file can be also referenced as an OpenSearch URL
+        opensearch:url: {} # [WPS] maps to wps:Supported/wps:Format with mimetype = application/atom+xml & application/opensearchdescription+xml
+
+      optional_multiple_input_files:
+        doc: Mandatory input file blah blah blah # [WPS] maps to wps:Input/ows:abstract
+        label: Mandatory input file # [WPS] maps to wps:Input/ows:title
+        type: File[]? # question mark indicates it is optional. [WPS] maps to minOccurs = 0 (maxOccurs = 99 because it is an array)
+        # Those files can be referenced by a STAC catalog
+        stac:catalog:
+          stac:href: catalog.json # optional catalogue URL. Default to file 'catalog.json'.
+          stac:collection_id: pre_event # name of the collection to fetch the inputs from
+        # Those file can be also referenced as an OpenSearch URL
+        opensearch:url: {} # [WPS] maps to wps:Supported/wps:Format with mimetype = application/atom+xml & application/opensearchdescription+xml
+
+    outputs:
+      results: # parameter id [WPS] map to wps:Output/ows:identifier
+        label: Outputs blah blah
+        outputSource:
+          - step1/results
+        type:
+          items: Directory
+          type: array
+
+    steps:
+      step1:
+        in:
+          arg1: optional_integer_parameter
+          arg2: optional_combo_parameter
+          arg3: base_dir
+          arg4: mandatory_single_input_file
+          arg5: optional_multiple_input_files
+        out:
+          - results
+        run: '#burned-area'
+
