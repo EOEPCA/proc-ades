@@ -1,0 +1,42 @@
+[eoepcaadesdeployprocess]
+	Title = Eoepca Deploy Process
+	Abstract = This method will deploy an application encapsulated within a Docker container as a process accessible through the WPS interface.
+	processVersion = 1.0.0
+	storeSupported = true
+	statusSupported = true
+	serviceType = C
+	serviceProvider = libepcatransactional.zo
+<DataInputs>
+	[applicationPackage]
+	Title = Application Package
+	Abstract = An application package, encoded as an ATOM-encoded OGC context document, describing the details of the application.
+	minOccurs = 1
+	maxOccurs = 1
+	<ComplexData>
+		<Default>
+			mimeType = application/atom+xml
+		</Default>
+		<Supported>
+			MimeType = application/atom+xml
+		</Supported>
+	</ComplexData>
+</DataInputs>
+
+<DataOutputs>
+	[deployResult]
+	Title = Deploy Result
+	Abstract = The server's response to deploying a process.  A successful response will contain a summary of the deployed process.
+<ComplexOutput>
+	<Default>
+		encoding = ISO-8859-1
+		MimeType = application/xml
+	</Default>
+	<Supported>
+		encoding = ISO-8859-1
+		MimeType = application/xml
+	</Supported>
+</ComplexOutput>
+</DataOutputs>
+
+
+
