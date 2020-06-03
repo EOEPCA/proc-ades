@@ -285,7 +285,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();{
 
             std::stringstream sBuffer;
-            if(!loadFile(confEoepca["argoConfig"].c_str(),sBuffer)){
+            if(loadFile(confEoepca["argoConfig"].c_str(),sBuffer)){
               std::string err{"eoepca configuration cannot load file: "};
               err.append(confEoepca["argoConfig"]);
 
@@ -300,8 +300,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     // argoConfig->k8Uri = confEoepca["k8Url"];
     // argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
 
-
-std::cerr << argoConfig->argoConfigFile << "\n";
+    setStatus(conf, "running", "argoConfigFile loaded");
+    std::cerr << argoConfig->argoConfigFile << "\n";
 
 
     auto argoInterface =
