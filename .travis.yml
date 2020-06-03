@@ -7,6 +7,19 @@ services:
 
 jobs:
   include:
+
+    - stage: build (compile, unit test, package)
+      install: skip
+      script: travis/build.sh
+
+    - stage: container creation and publishing
+      install: skip
+      script: travis/containerCreation.sh
+
+    - stage: smoke and acceptance test
+      install: skip
+      script: travis/acce§ptanceTest.sh
+
     - stage: test
       if: branch = develop and env(operation) = local
 
@@ -45,11 +58,11 @@ jobs:
 import:
   - docs/.travis.yml
 
-# notifications:
-#   slack: eoepca:Msk9hjQKAbwSYcVWiepenPim
-#   email:
-#     recipients:
-#       - a.person @acme.com
-#       - a.n.other@acme.com
-#     on_success: never # default: change
-#     on_failure: never # default: always
+notifications:
+  slack: eoepca:Msk9hjQKAbwSYcVWiepenPim
+  email:
+    recipients:
+      - a.person @acme.com
+      - a.n.other@acme.com
+    on_success: never # default: change
+    on_failure: never # default: always
