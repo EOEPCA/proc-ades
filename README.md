@@ -109,7 +109,7 @@ git clone https://github.com/EOEPCA/proc-ades.git
 3. Change local directory
 
 ```sh
-cd ades-core-engine-api-framework
+cd proc-ades
 ```
 
 4. Build application
@@ -572,8 +572,11 @@ The 'assets/argo.json' file is used to configure the connection to Kubernetes an
 ```
 
 *argopath*: defines.....
+
 *k8Url*: defines.....
+
 *argoUrl*: defines.....
+
 *stage*
   
 *credential* --> *user*: defines ...
