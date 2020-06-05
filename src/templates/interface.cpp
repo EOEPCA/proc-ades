@@ -298,7 +298,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
     // argoConfig->argoUri = confEoepca["argoUrl"];
     // argoConfig->k8Uri = confEoepca["k8Url"];
-    // argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
+    argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
 
     setStatus(conf, "running", "argoConfigFile loaded");
     std::cerr << argoConfig->argoConfigFile << "\n";
