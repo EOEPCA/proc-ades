@@ -6,6 +6,7 @@
 #include <graph.hpp>
 #include <zconf.h>
 #include <memory>
+#include "argoconfigparser.hpp"
 
 #include "zooargo.hpp"
 
@@ -30,9 +31,13 @@ static std::string innerReplace(std::string &str, const std::string &from,
 
 
 
+
+
+
 extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const std::string &cwlContent, std::list<std::pair<std::string, std::unique_ptr<mods::ArgoInterface::tgInput>>> &inputList, const std::string &uuidBaseID, const std::string &runId, std::string &id) {
 
-
+    std::cerr<<awConfig.argoConfigFile<<std::endl;
+    proc_ades_argo::model::ArgoWorkflowConfigParsed argoWorkflowConfigData = nlohmann::json::parse(awConfig.argoConfigFile);
 
     std::string newRunId(runId);
     std::string newUuidBaseID(uuidBaseID);
@@ -113,7 +118,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     if (useStageIn) {
         // pre processing node
         std::unique_ptr<proc_comm_lib_argo::NodeTemplate> stageInApplication = std::make_unique<proc_comm_lib_argo::NodeTemplate>();
-        stageInApplication->setDockerImage("blasco/eoepca-eo-tools");
+        stageInApplication->setDockerImage(*argoWorkflowConfigData.get_stage()->get_in()->get_docker());
         stageInApplication->setUseShell(true);
         stageInApplication->setCommand("stagein");
         application->setPreProcessingNode(stageInApplication);
@@ -121,14 +126,21 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
 
 
     std::unique_ptr<proc_comm_lib_argo::NodeTemplate> stageOutApplication = std::make_unique<proc_comm_lib_argo::NodeTemplate>();
-    stageOutApplication->setDockerImage("blasco/eoepca-eo-tools");
+    stageOutApplication->setDockerImage(*argoWorkflowConfigData.get_stage()->get_out()->get_docker());
     stageOutApplication->setUseShell(true);
-    stageOutApplication->setCommand("echo");
+
+    std::string resultFolder= newRunId+"-"+newUuidBaseID;
+    stageOutApplication->setCommand("eoepca_webdav_client.py -d " + *argoWorkflowConfigData.get_stage()->get_out()->get_webdav_endpoint() + "/ -p /" + resultFolder + "/ -a $SECRET_USERNAME:$SECRET_PASSWORD -s ");
     stageOutApplication->setIncludeTee(true);
+
+    std::map<std::string, std::pair<std::string, std::string>> secretEnvVars;
+    secretEnvVars.insert({"SECRET_USERNAME",std::make_pair("eoepcawebdavsecret","username")});
+    secretEnvVars.insert({"SECRET_PASSWORD",std::make_pair("eoepcawebdavsecret","password")});
+    stageOutApplication->setSecrerEnvVars(secretEnvVars);
 
     application->setPostProcessingNode(stageOutApplication);
 
-    std::cerr << "start8"<<std::endl;
+    std::cerr << "start8.1"<<std::endl;
     // temporary hardcoded
     std::map<std::string, std::string> volume;
     volume["volumeName"] = "workdir";
@@ -145,7 +157,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     proc_comm_lib_argo::model::Workflow workflow;
 
     std::cerr << "start9"<<std::endl;
-    argoLib->submit_workflow(application.get(), argoNamespace, workflow, awConfig.argoUri);
+    argoLib->submit_workflow(application.get(), argoNamespace, workflow, *argoWorkflowConfigData.get_argo_url());
 
     std::cerr << "start10"<<std::endl;
     id = workflow.get_metadata()->get_name()->c_str();
@@ -155,7 +167,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
 }
 
 extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const std::string &argoWorkfloId, int &percent, std::string &message) {
-
+    proc_ades_argo::model::ArgoWorkflowConfigParsed argoWorkflowConfigData = nlohmann::json::parse(awConfig.argoConfigFile);
 
     std::cerr<<"getstatus1"<<std::endl;
     // argolib
@@ -165,7 +177,7 @@ extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, cons
     proc_comm_lib_argo::model::Workflow workflow;
     try {
         std::cerr<<"getstatus11"<<std::endl;
-        argoLib->get_workflow_from_name(argoWorkfloId, argoNamespace, workflow, awConfig.argoUri);
+        argoLib->get_workflow_from_name(argoWorkfloId, argoNamespace, workflow, *argoWorkflowConfigData.get_argo_url());
         std::cerr<<"getstatus12"<<std::endl;
         if ( workflow.get_status() && workflow.get_status()->get_phase()) {
             message = *workflow.get_status()->get_phase();
@@ -207,11 +219,13 @@ extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, cons
 
 extern "C" int getResults(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const std::string &argoWorkflowId, std::list<std::pair<std::string, std::string>> &outPutList) {
 
+
+    proc_ades_argo::model::ArgoWorkflowConfigParsed argoWorkflowConfigData = nlohmann::json::parse(awConfig.argoConfigFile);
     // argolib
     auto argoLib = std::make_unique<EOEPCA::EOEPCAargo>(awConfig.eoepcaargoPath);
 
     std::string argoNamespace = "default";
-    argoLib->get_workflow_results_from_name(argoWorkflowId, argoNamespace, outPutList, awConfig.argoUri, awConfig.k8Uri);
+    argoLib->get_workflow_results_from_name(argoWorkflowId, argoNamespace, outPutList, *argoWorkflowConfigData.get_argo_url(), *argoWorkflowConfigData.get_k8_url());
 
     return 0;
 }

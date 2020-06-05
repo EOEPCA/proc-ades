@@ -8,14 +8,15 @@
 			"password":""
 		},
 		"in":{
-			"docker":"docker/host.me",
+			"docker":"blasco/eoepca-eo-tools:latest",
 			"credential":{
 				"user":"",
 				"password":""
 			}
 		},
 		"out":{
-			"docker":"docker/host.me",
+			"docker":"blasco/eoepca-stageout:latest",
+			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage",
 			"credential":{
 				"user":"",
 				"password":""

@@ -9,12 +9,12 @@
 #define ARGO_URI "http://localhost:8080"
 #define K8_URI "http://127.0.0.1:2746"
 #define CWLPATH                                                                \
-  "/home/bla/dev/EOEPCA_dev/ades-core-engine-api-framework/assets/workflow.yaml"
+  "/home/bla/dev/EOEPCA_dev/proc-ades/assets/workflow.yaml"
 #define LIBPATH                                                                \
-  "/home/bla/dev/EOEPCA_dev/ades-core-engine-api-framework/build/libargo_interface.so"
+  "/home/bla/dev/EOEPCA_dev/proc-ades/build/libargo_interface.so"
 
-#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/ades-core-engine-api-framework/build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so"
-
+#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/proc-ades/build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so"
+#define ARGOCONFIG "/home/bla/dev/EOEPCA_dev/proc-ades/assets/argo.json"
 struct Util {
 
     static int loadFile(const char *filePath, std::stringstream &sBuffer) {
@@ -39,10 +39,14 @@ int main(int a, char **b) {
     std::stringstream cwlBuffer;
     Util::loadFile(CWLPATH, cwlBuffer);
 
+    std::stringstream argoConfigJsonBuffer;
+    Util::loadFile(ARGOCONFIG, argoConfigJsonBuffer);
+
     auto argoConfig = std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();
     argoConfig->argoUri = ARGO_URI;
     argoConfig->k8Uri = K8_URI;
     argoConfig->eoepcaargoPath = EOEPCAARGOPATH;
+    argoConfig->argoConfigFile = argoConfigJsonBuffer.str();
 
     std::string uuidBaseID("6f189344");
     std::string runId("argoservice");

@@ -45,7 +45,7 @@ SET(MODS_LIBS z m dl)
 
 set(src_main src/main.cpp src/templates/zooargo.hpp)
 
-set(LIB_SRC src/templates/argolib.cpp)
+set(LIB_SRC src/templates/argoconfigparser.hpp src/templates/argolib.cpp)
 
 add_library(argo_interface SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(argo_interface sources)#eoepcaargo
