@@ -13,7 +13,7 @@
 #define LIBPATH                                                                \
   "/home/bla/dev/EOEPCA_dev/proc-ades/build/libargo_interface.so"
 
-#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/proc-ades/build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so"
+#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/proc-ades/build/3ty/proc-comm-lib-argo/libeoepcaargo.so"
 #define ARGOCONFIG "/home/bla/dev/EOEPCA_dev/proc-ades/assets/argo.json"
 struct Util {
 
