@@ -11,7 +11,7 @@ if [ -z "${CMAKERELEASE}" ]; then
 fi
 
 if [ -z "${LOCAL_IMAGE_NAME}" ]; then
-  LOCAL_IMAGE_NAME='eoepca-ades-core:1.0'
+  LOCAL_IMAGE_NAME='proc-ades:1.0'
 fi
 
 mkdir -p build

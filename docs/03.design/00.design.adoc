@@ -145,3 +145,24 @@ Not applicable
 * <<ARGO>>
 
 
+== Services
+=== Overview and Purpose
+
+???
+
+=== Software Reuse and Dependencies
+
+The following open-source software is reused:
+
+* ZOO-Services http://zoo-project.org/docs/services/index.html
+
+=== Interfaces
+
+??
+
+=== Data
+
+* OWS COntext
+* CWL
+
+=== Applicable Resources

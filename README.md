@@ -46,16 +46,7 @@
 
 - [Table of Contents](#table-of-contents)
 - [About The Project](#about-the-project)
-  - [Built With](#built-with)
 - [Getting Started](#getting-started)
-  - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
-    - [Docker](#docker)
-    - [Minikube](#minikube)
-    - [Kubectl](#kubectl)
-    - [Argo Workflow](#argo-workflow)
-  - [Building from source using docker](#building-from-source-using-docker)
-  - [Run ADES from docker image](#run-ades-from-docker-image)
-  - [Deploy an application](#deploy-an-application)
   - [Configure](#configure)
     - [argo.json](#argojson)
     - [Kubernetes Persistent Volume](#kubernetes-persistent-volume)
@@ -63,6 +54,10 @@
     - [The application](#the-application)
   - [Usage](#usage)
   - [Persistence](#persistence)
+  - [Setup a](#setup-a)
+    - [Minikube](#minikube)
+    - [Kubectl](#kubectl)
+    - [Argo Workflow](#argo-workflow)
   - [Installation](#installation)
   - [Testing](#testing)
 - [Usage](#usage-1)
@@ -81,551 +76,19 @@
 
 The Processing & Chaining domain area provides an extensible repository of processing functions, tools and applications that can be discovered by search query, invoked individually, and utilised in workflows. ADES is responsible for the execution of the processing service through both a [OGC WPS 1.0 & 2.0 OWS service](https://www.ogc.org/standards/wps) and an [OGC Processes REST API](https://github.com/opengeospatial/wps-rest-binding). The processing request are executed within the target Exploitation Platform (i.e., the one that is close to the data).
 
-### Built With
+The ADES software uses [ZOO-Project](http://zoo-project.org/) as the main framework for exposing the OGC compliant web services. The [ZOO-kernel](http://zoo-project.org/docs/kernel/) powering the web services is included in the software package.
 
-* [ZOO-Project](http://zoo-project.org/)
-* [Kubernetes](https://kubernetes.io)
-* [Minikube](https://github.com/kubernetes/minikube)
-* [Docker](https://docker.com)
+The ADES functions are designed to perform the processing and chaining function on a [Kubernetes](https://kubernetes.io) cluster using the [ARGO workflow](https://argoproj.github.io/) extension. Argo is a robust workflow engine for Kubernetes that enables the implementation of each step in a workflow as a container. It provides simple, flexible mechanisms for specifying constraints between the steps in a workflow and artifact management for linking the output of any step as an input to subsequent steps.
+
+It is therefore necessary to have a Kubernetes cluster with ARGO already configured and running to use properly ADES processing functionnalities.
+More information and a setup guide with [Minikube](https://github.com/kubernetes/minikube) is available in the wiki page dedicated to [ARGO Kubernetes](https://github.com/EOEPCA/proc-ades/wiki/ARGO-Kubernetes)
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-The ADES software source present in this repository is built using docker images to complete properly the integration of the different software components.
-
-This guide will guide you through a step by step procedure to build a local image of the ADES to start it up and having it running locally.
-
-### Prerequisites Installation and Configuration
-
-#### Docker
-
-This step describes how to install and configure [Docker on linux Centos-7](https://docs.docker.com/engine/install/centos/)
-
-```sh
-sudo yum install -y docker-ce docker-ce-cli containerd.io
-sudo systemctl start docker
-```
-
-#### Minikube
-
-[Minikube]( https://kubernetes.io/docs/tasks/tools/install-minikube/
-)
-
-Execute the following command to install Minikube
-```sh
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
-sudo mkdir -p /usr/local/bin/
-sudo install minikube /usr/local/bin/
-```
-For further information please refer to https://kubernetes.io/docs/tasks/tools/install-minikube/
-
-Run the following command to start up a local Kubernetes cluster
-```sh
-minikube start --vm-driver=none
-```
-
-Once minikube start finishes, run the command below to check the status of the cluster:
-```sh
-minikube status
-```
-If your cluster is running, the output from minikube status should be similar to:
-```sh
-host: Running
-kubelet: Running
-apiserver: Running
-kubeconfig: Configured
-```
-
-#### Kubectl
-  
-To install Kubectl execute the following commands:
-```sh
-cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-yum install kubectl-1.17.0
-```
-Start the proxy to the Kubernetes API server:
-```sh
-kubectl proxy --port=8080 &
-
-```
-For further information please refer to https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/
-
-#### Argo Workflow
-
-To install Argo Workflows execute the following commands:
-```sh
-kubectl create namespace argo
-kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
-```
-
-Grant Admin priviledges
-Grant the default ServiceAccount admin privileges (i.e., we will bind the admin Role to the default ServiceAccount of the current namespace):
-```sh
-kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default
-```
-For further information refer to https://argoproj.github.io/docs/argo/getting-started.html
-
-Start argo server port forwarding
-```sh
-kubectl -n argo port-forward deployment/argo-server 2746:2746 & 
-```
-
-### Building from source using docker
-
-The repository include a script to built the software from source.
-
-1. Get into Linux terminal
-
-2. Clone the repository
-
-```sh
-git clone https://github.com/EOEPCA/proc-ades.git
-```
-
-3. Change local directory
-
-```sh
-cd proc-ades
-```
-
-4. Build application
-
-```sh
-./scripts/build.sh
-```
-
-Basically, the last step will pull from the EOEPCA docker hub repository an image to start a container with all the tools to build another docker image with the ADES ready to run.
-At the end, the script shall have created a Docker images:
-
-```text
-eoepca-ades-core:1.0
-proc-comm-zoo:1.0
-```
-
-the image `eoepca-ades-core:1.0` is the built ADES.
-
-### Run ADES from docker image
-
-1. Let's start running the new ADES image. The main web service is running internally on port 7777 and is map to port 80 on the host. This port may be reconfigured if necessary.
-
-```sh
-docker run --rm  -d --name zoo -p 7777:80   eoepca-ades-core:1.0
-```
-
-2. We will now perform a simple OWS WPS GetCapabilities request to check the service is running properly.
-
-```ssh
-curl -L  "http://localhost:7777/zoo/?service=WPS&version=1.0.0&request=GetCapabilities"
-```
-
-The returned reply should be similar to the following
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<wps:Capabilities xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsGetCapabilities_response.xsd" service="WPS" version="1.0.0" xml:lang="en-US">
-  <ows:ServiceIdentification>
-    <ows:Title>Ellip-WPS</ows:Title>
-    <ows:Fees>None</ows:Fees>
-    <ows:AccessConstraints>none</ows:AccessConstraints>
-  </ows:ServiceIdentification>
-  <ows:ServiceProvider>
-    <ows:ProviderName>xxxx</ows:ProviderName>
-    <ows:ProviderSite xlink:href="https://www.xxxxx.com"/>
-    <ows:ServiceContact>
-      <ows:IndividualName>Operations Support team</ows:IndividualName>
-      <ows:PositionName>xxxx</ows:PositionName>
-      <ows:ContactInfo>
-        <ows:Phone>
-          <ows:Voice>+xxxxx</ows:Voice>
-          <ows:Facsimile>False</ows:Facsimile>
-        </ows:Phone>
-        <ows:Address>
-          <ows:DeliveryPoint>xxxxx</ows:DeliveryPoint>
-          <ows:City>xx</ows:City>
-          <ows:AdministrativeArea>False</ows:AdministrativeArea>
-          <ows:PostalCode>xxx</ows:PostalCode>
-          <ows:Country>IT</ows:Country>
-          <ows:ElectronicMailAddress>support@xxxx.com</ows:ElectronicMailAddress>
-        </ows:Address>
-      </ows:ContactInfo>
-    </ows:ServiceContact>
-  </ows:ServiceProvider>
-  <ows:OperationsMetadata>
-    <ows:Operation name="GetCapabilities">
-      <ows:DCP>
-        <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-        </ows:HTTP>
-      </ows:DCP>
-    </ows:Operation>
-    <ows:Operation name="DescribeProcess">
-      <ows:DCP>
-        <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-        </ows:HTTP>
-      </ows:DCP>
-    </ows:Operation>
-    <ows:Operation name="Execute">
-      <ows:DCP>
-        <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-        </ows:HTTP>
-      </ows:DCP>
-    </ows:Operation>
-  </ows:OperationsMetadata>
-  <wps:ProcessOfferings>
-    <wps:Process wps:processVersion="1.0.0">
-      <ows:Identifier>eoepcaadesundeployprocess</ows:Identifier>
-      <ows:Title>Eoepca Deploy Process</ows:Title>
-      <ows:Abstract>This method will undeploy an application encapsulated within a Docker container as a process accessible through the WPS interface.</ows:Abstract>
-    </wps:Process>
-    <wps:Process wps:processVersion="1">
-      <ows:Identifier>longProcess</ows:Identifier>
-      <ows:Title>Demo long process. </ows:Title>
-      <ows:Abstract>This service doesn't do anything except taking its time, it demonstrates how to use the updateStatus function from your ZOO Service. </ows:Abstract>
-      <ows:Metadata xlink:title="Demo GetStatus request"/>
-    </wps:Process>
-    <wps:Process wps:processVersion="1">
-      <ows:Identifier>GetStatus</ows:Identifier>
-      <ows:Title>Produce an updated ExecuteResponse document. </ows:Title>
-      <ows:Abstract>Create an ExecuteResponse document from a sid (Service ID), it will use the niternal ZOO Kernel mechanisms to access the current status from a running Service and update the percentCompleted from the original backup file used by the ZOO Kernel when running a Service in background. </ows:Abstract>
-      <ows:Metadata xlink:title="Demo GetStatus request"/>
-    </wps:Process>
-    <wps:Process wps:processVersion="1.0.0">
-      <ows:Identifier>eoepcaadesdeployprocess</ows:Identifier>
-      <ows:Title>Eoepca Deploy Process</ows:Title>
-      <ows:Abstract>This method will deploy an application encapsulated within a Docker container as a process accessible through the WPS interface.</ows:Abstract>
-    </wps:Process>
-  </wps:ProcessOfferings>
-  <wps:Languages>
-    <wps:Default>
-      <ows:Language>en-US</ows:Language>
-    </wps:Default>
-    <wps:Supported>
-      <ows:Language>en-US</ows:Language>
-      <ows:Language>en-GB</ows:Language>
-    </wps:Supported>
-  </wps:Languages>
-</wps:Capabilities>
-```
-
-3. Let's do the same using the OGC API - Processes with a REST query
-
-```ssh
-curl -s -L "http://localhost:7777/wps3/processes" -H "accept: application/json"
-```
-
-and the output should be
-
-```json
-{
-  "processes": [
-    {
-      "id": "eoepcaadesundeployprocess",
-      "title": "Eoepca Deploy Process",
-      "abstract": "This method will undeploy an application encapsulated within a Docker container as a process accessible through the WPS interface.",
-      "version": "1.0.0",
-      "jobControlOptions": [
-        "sync-execute",
-        "async-execute",
-        "dismiss"
-      ],
-      "outputTransmission": [
-        "value",
-        "reference"
-      ],
-      "links": [
-        {
-          "rel": "canonical",
-          "type": "application/json",
-          "title": "Process Description",
-          "href": "/watchjob/processes/eoepcaadesundeployprocess/"
-        }
-      ]
-    },
-    {
-      "id": "longProcess",
-      "title": "Demo long process. ",
-      "abstract": "This service doesn't do anything except taking its time, it demonstrates how to use the updateStatus function from your ZOO Service. ",
-      "version": "1.0.0",
-      "jobControlOptions": [
-        "sync-execute",
-        "async-execute",
-        "dismiss"
-      ],
-      "outputTransmission": [
-        "value",
-        "reference"
-      ],
-      "links": [
-        {
-          "rel": "canonical",
-          "type": "application/json",
-          "title": "Process Description",
-          "href": "/watchjob/processes/longProcess/"
-        }
-      ]
-    },
-    {
-      "id": "GetStatus",
-      "title": "Produce an updated ExecuteResponse document. ",
-      "abstract": "Create an ExecuteResponse document from a sid (Service ID), it will use the niternal ZOO Kernel mechanisms to access the current status from a running Service and update the percentCompleted from the original backup file used by the ZOO Kernel when running a Service in background. ",
-      "version": "1.0.0",
-      "jobControlOptions": [
-        "sync-execute",
-        "async-execute",
-        "dismiss"
-      ],
-      "outputTransmission": [
-        "value",
-        "reference"
-      ],
-      "links": [
-        {
-          "rel": "canonical",
-          "type": "application/json",
-          "title": "Process Description",
-          "href": "/watchjob/processes/GetStatus/"
-        }
-      ]
-    },
-    {
-      "id": "eoepcaadesdeployprocess",
-      "title": "Eoepca Deploy Process",
-      "abstract": "This method will deploy an application encapsulated within a Docker container as a process accessible through the WPS interface.",
-      "version": "1.0.0",
-      "jobControlOptions": [
-        "sync-execute",
-        "async-execute",
-        "dismiss"
-      ],
-      "outputTransmission": [
-        "value",
-        "reference"
-      ],
-      "links": [
-        {
-          "rel": "canonical",
-          "type": "application/json",
-          "title": "Process Description",
-          "href": "/watchjob/processes/eoepcaadesdeployprocess/"
-        }
-      ]
-    }
-  ]
-}
-```
-
-The ADES already exposes 4 pre-deployed services:
-
-| Service Identifier        | Description                                                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| eoepcaadesdeployprocess   | **Eoepca Deploy Process** is a service to deploy a new application in the ADES as a processing service available.              |
-| eoepcaadesundeployprocess | **Eoepca Undeploy Process** is a service to remove a previously deployed processing service available.                         |
-| longProcess               | This is a demo process to test the getstatus service                                                                           |
-| GetStatus                 | **GetStatus** is a system service used to monitor the status of a job being executed and to retrieve the results when complete |
-
-Next sections will describe how to deploy a new application and submit a job execution on the processing server.
-
-### Deploy an application
-
-This section guides you through the deployment of an integrated application in the ADES.
-An integrated application is described in a specific chapter of the ADES documentation: [Application Data](https://eoepca.github.io/proc-ades/current/#appData)
-
-1. install the new service
-
-create json file parameter `deploy.json`
-
-```json
-{
-  "inputs": [
-    {
-      "id": "applicationPackage",
-      "input": {
-        "format": {
-          "mimeType": "application/xml"
-        },
-        "value": {
-          "inlineValue": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/metadata_extractor/ows.xml"
-        }
-      }
-    }
-  ],
-  "outputs": [
-    {
-      "format": {
-        "mimeType": "string",
-        "schema": "string",
-        "encoding": "string"
-      },
-      "id": "deployResult",
-      "transmissionMode": "value"
-    }
-  ],
-  "mode": "async",
-  "response": "raw"
-}
-```
-
-run:
-
-```shell script
-curl -v -L -X POST "http://localhost/wps3/processes/eoepcaadesdeployprocess/jobs" -H  \
-  "accept: application/json" -H  "Prefer: respond-async" -H  "Content-Type: application/json" -d@deploy.json
-```
-
-```text
->   "accept: application/json" -H  "Prefer: respond-async" -H  "Content-Type: application/json" -d@deploy.json
-* About to connect() to localhost port 7777 (#0)
-*   Trying 127.0.0.1...
-* Connected to localhost (127.0.0.1) port 7777 (#0)
-> POST /wps3/processes/eoepcaadesdeployprocess/jobs HTTP/1.1
-> User-Agent: curl/7.29.0
-> Host: localhost:7777
-> accept: application/json
-> Prefer: respond-async
-> Content-Type: application/json
-> Content-Length: 543
->
-* upload completely sent off: 543 out of 543 bytes
-< HTTP/1.1 201 Created
-< Date: Mon, 25 May 2020 14:11:43 GMT
-< Server: Apache/2.4.6 (CentOS)
-< X-Powered-By: ZOO@ZOO-Project
-< Location: /watchjob/processes/eoepcaadesdeployprocess/jobs/a93616e8-9e91-11ea-a71d-0242ac110002
-< Transfer-Encoding: chunked
-< Content-Type: application/json;charset=UTF-8
-<
-* Connection #0 to host localhost left intact
-```
-
-running again the getProcess we can read a new service:
-
-```json
-{
-      "id": "eo_metadata_generation_1_0",
-      "title": "Earth Observation Metadata Generation",
-      "abstract": "Earth Observation Metadata Generation",
-      "version": "1.0.0.0",
-      "jobControlOptions": [
-        "sync-execute",
-        "async-execute",
-        "dismiss"
-      ],
-      "outputTransmission": [
-        "value",
-        "reference"
-      ],
-      "links": [
-        {
-          "rel": "canonical",
-          "type": "application/json",
-          "title": "Process Description",
-          "href": "/watchjob/processes/eo_metadata_generation_1_0/"
-        }
-      ]
-    }
-```
+The full getting started guide start in the [Wiki home page](https://github.com/EOEPCA/proc-ades/wiki)
 
 
-
-4) Looking for the our service argo:
- 
-```shell script
-curl -s -L "http://localhost/wps3/processes/eo_metadata_generation_1_0" -H "accept: application/json"
-```
-
-```json
-{
-  "process": {
-    "id": "eo_metadata_generation_1_0",
-    "title": "Earth Observation Metadata Generation",
-    "abstract": "Earth Observation Metadata Generation",
-    "version": "1.0.0.0",
-    "jobControlOptions": [
-      "sync-execute",
-      "async-execute",
-      "dismiss"
-    ],
-    "outputTransmission": [
-      "value",
-      "reference"
-    ],
-    "links": [
-      {
-        "rel": "canonical",
-        "type": "application/json",
-        "title": "Execute End Point",
-        "href": "/watchjob/processes/eo_metadata_generation_1_0/jobs/"
-      }
-    ],
-    "inputs": [
-      {
-        "id": "input_file",
-        "title": "EO input file",
-        "abstract": "Mandatory input file to generate metadata for",
-        "minOccurs": "1",
-        "maxOccurs": "0",
-        "input": {
-          "formats": [
-            {
-              "default": true,
-              "mimeType": "application/json"
-            },
-            {
-              "default": false,
-              "mimeType": "application/json"
-            },
-            {
-              "default": false,
-              "mimeType": "application/yaml"
-            },
-            {
-              "default": false,
-              "mimeType": "application/atom+xml"
-            },
-            {
-              "default": false,
-              "mimeType": "application/opensearchdescription+xml"
-            }
-          ]
-        }
-      }
-    ],
-    "outputs": [
-      {
-        "id": "results",
-        "title": "Outputs blah blah",
-        "abstract": "results",
-        "output": {
-          "literalDataDomains": [
-            {
-              "dataType": {
-                "name": "string"
-              },
-              "valueDefinition": {
-                "anyValue": true
-              }
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-
-```
 
 ### Configure
 
@@ -899,7 +362,7 @@ sudo chown 48:48  res/statusInfos
 ```
 and run the Ades Image
 
-sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD/zooservices:/zooservices/  -v  $PWD/res:/var/www/html/res   eoepca-ades-core:1.0
+sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD/zooservices:/zooservices/  -v  $PWD/res:/var/www/html/res   proc-ades:1.0
 
 and now install a new service following the example in the section `Eoepca Ades Deploy process`.
 
@@ -916,6 +379,80 @@ eoepcaadesdeployprocess_final_fea18f9c-a65f-11ea-b533-0242ac110002.json  statusI
 [folder@host tmp]$ ls zooservices/
 eoepcaadesdeployprocess.zcfg    eo_metadata_generation_1_0.yaml  eo_metadata_generation_1_0.zo  libargo_interface.so  libepcatransactional.zo  main.cfg  wps_status.zo
 eoepcaadesundeployprocess.zcfg  eo_metadata_generation_1_0.zcfg  GetStatus.zcfg                 libeoepcaargo.so      longProcess.zcfg         oas.cfg
+```
+
+### Setup a 
+
+#### Minikube
+
+[Minikube]( https://kubernetes.io/docs/tasks/tools/install-minikube/
+)
+
+Execute the following command to install Minikube
+```sh
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+sudo mkdir -p /usr/local/bin/
+sudo install minikube /usr/local/bin/
+```
+For further information please refer to https://kubernetes.io/docs/tasks/tools/install-minikube/
+
+Run the following command to start up a local Kubernetes cluster
+```sh
+minikube start --vm-driver=none
+```
+
+Once minikube start finishes, run the command below to check the status of the cluster:
+```sh
+minikube status
+```
+If your cluster is running, the output from minikube status should be similar to:
+```sh
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+#### Kubectl
+  
+To install Kubectl execute the following commands:
+```sh
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+yum install kubectl-1.17.0
+```
+Start the proxy to the Kubernetes API server:
+```sh
+kubectl proxy --port=8080 &
+
+```
+For further information please refer to https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/
+
+#### Argo Workflow
+
+To install Argo Workflows execute the following commands:
+```sh
+kubectl create namespace argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
+```
+
+Grant Admin priviledges
+Grant the default ServiceAccount admin privileges (i.e., we will bind the admin Role to the default ServiceAccount of the current namespace):
+```sh
+kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default
+```
+For further information refer to https://argoproj.github.io/docs/argo/getting-started.html
+
+Start argo server port forwarding
+```sh
+kubectl -n argo port-forward deployment/argo-server 2746:2746 & 
 ```
 
 ### Installation
