@@ -12,28 +12,28 @@ if [ "${TRAVIS}" == "true" ]; then
 
   sleep 15
 
-  echo "run: bin/transational/01_getProcess.sh"
-  ./bin/transational/01_getProcess.sh
+  echo "run: ./travis/transational/01_getProcess.sh"
+  ./travis/transational/01_getProcess.sh
   echo ""
   sleep 2
 
   echo "run: bin/transational/02_RunAsync.sh"
-  ./bin/transational/02_RunAsync.sh bin/transational/deploy.json
+  ./travis/transational/02_RunAsync.sh travis/transational/deploy.json
   echo ""
   sleep 2
 
   echo "run: bin/transational/01_getProcess.sh"
-  ./bin/transational/01_getProcess.sh
+  ./travis/transational/01_getProcess.sh
   echo ""
   sleep 2
 
   echo "run: bin/transational/05_RunAsyncRemove.sh"
-  ./bin/transational/05_RunAsyncRemove.sh bin/transational/remove.json
+  ./travis/transational/05_RunAsyncRemove.sh travis/transational/remove.json
   echo ""
   sleep 2
 
   echo "run: bin/transational/01_getProcess.sh"
-  ./bin/transational/01_getProcess.sh
+  ./travis/transational/01_getProcess.sh
 
 
 fi
