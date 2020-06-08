@@ -48,9 +48,8 @@
 - [About The Project](#about-the-project)
   - [Built With](#built-with)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Build from source using docker](#build-from-source-using-docker)
   - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
+  - [Building from source using docker](#building-from-source-using-docker)
   - [Run ADES from docker image](#run-ades-from-docker-image)
   - [Deploy an application](#deploy-an-application)
   - [Configure](#configure)
@@ -92,25 +91,16 @@ The ADES software source present in this repository is built using docker images
 
 This guide will guide you through a step by step procedure to build a local image of the ADES to start it up and having it running locally.
 
-### Prerequisites
-
-Things you need to use the software and how to install them.
-
-- [Internet access](https://en.wikipedia.org/wiki/Internet_access)
-- [Docker](https://www.docker.com/) : client must be installed
-
-### Build from source using docker
 ### Prerequisites Installation and Configuration
 
-- [Docker](https://docs.docker.com/engine/install/centos/)
-  
-To install and start Docker Engine, execute the following commands
+This step describes how to install and configure [Docker on linux Centos-7](https://docs.docker.com/engine/install/centos/)
 
 ```sh
 sudo yum install -y docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
 ```
 
+### Building from source using docker
 
 The repository include a script to built the software from source.
 
