@@ -49,6 +49,10 @@
   - [Built With](#built-with)
 - [Getting Started](#getting-started)
   - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
+    - [Docker](#docker)
+    - [Minikube](#minikube)
+    - [Kubectl](#kubectl)
+    - [Argo Workflow](#argo-workflow)
   - [Building from source using docker](#building-from-source-using-docker)
   - [Run ADES from docker image](#run-ades-from-docker-image)
   - [Deploy an application](#deploy-an-application)
@@ -93,11 +97,85 @@ This guide will guide you through a step by step procedure to build a local imag
 
 ### Prerequisites Installation and Configuration
 
+#### Docker
+
 This step describes how to install and configure [Docker on linux Centos-7](https://docs.docker.com/engine/install/centos/)
 
 ```sh
 sudo yum install -y docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
+```
+
+#### Minikube
+
+[Minikube]( https://kubernetes.io/docs/tasks/tools/install-minikube/
+)
+
+Execute the following command to install Minikube
+```sh
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+sudo mkdir -p /usr/local/bin/
+sudo install minikube /usr/local/bin/
+```
+For further information please refer to https://kubernetes.io/docs/tasks/tools/install-minikube/
+
+Run the following command to start up a local Kubernetes cluster
+```sh
+minikube start --vm-driver=none
+```
+
+Once minikube start finishes, run the command below to check the status of the cluster:
+```sh
+minikube status
+```
+If your cluster is running, the output from minikube status should be similar to:
+```sh
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+#### Kubectl
+  
+To install Kubectl execute the following commands:
+```sh
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+yum install kubectl-1.17.0
+```
+Start the proxy to the Kubernetes API server:
+```sh
+kubectl proxy --port=8080 &
+
+```
+For further information please refer to https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/
+
+#### Argo Workflow
+
+To install Argo Workflows execute the following commands:
+```sh
+kubectl create namespace argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
+```
+
+Grant Admin priviledges
+Grant the default ServiceAccount admin privileges (i.e., we will bind the admin Role to the default ServiceAccount of the current namespace):
+```sh
+kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default
+```
+For further information refer to https://argoproj.github.io/docs/argo/getting-started.html
+
+Start argo server port forwarding
+```sh
+kubectl -n argo port-forward deployment/argo-server 2746:2746 & 
 ```
 
 ### Building from source using docker
