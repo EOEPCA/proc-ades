@@ -49,14 +49,20 @@
   - [Built With](#built-with)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
+  - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
   - [Build](#build)
   - [Run local image](#run-local-image)
-  - [Eoepca Ades Deploy Process](#eoepca-ades-deploy-process)
+  - [Eoepca Ades Deploy process](#eoepca-ades-deploy-process)
   - [Configure](#configure)
+    - [argo.json](#argojson)
+    - [Kubernetes Persistent Volume](#kubernetes-persistent-volume)
+    - [Kubernetes Secret Environmental Variables](#kubernetes-secret-environmental-variables)
+    - [The application](#the-application)
+  - [Usage](#usage)
   - [Persistence](#persistence)
   - [Installation](#installation)
   - [Testing](#testing)
-- [Usage](#usage)
+- [Usage](#usage-1)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -90,11 +96,94 @@ To get a local copy up and running follow these simple steps.
 Things you need to use the software and how to install them.
 
 - [Internet access](https://en.wikipedia.org/wiki/Internet_access)
-- [Docker](https://www.docker.com/)
+- [Docker](https://docs.docker.com/engine/install/centos/)
+- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [Linux bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell))
 - [curl](https://en.wikipedia.org/wiki/CURL)
 - [Terraform](https://terraform.io/) 
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+
+### Prerequisites Installation and Configuration
+
+- [Docker](https://docs.docker.com/engine/install/centos/)
+  
+To install and start Docker Engine, execute the following commands
+
+```sh
+sudo yum install -y docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
+```
+
+- [Minikube]( https://kubernetes.io/docs/tasks/tools/install-minikube/
+)
+
+Execute the following command to install Minikube
+```sh
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+sudo mkdir -p /usr/local/bin/
+sudo install minikube /usr/local/bin/
+```
+For further information please refer to https://kubernetes.io/docs/tasks/tools/install-minikube/
+
+Run the following command to start up a local Kubernetes cluster
+```sh
+minikube start --vm-driver=none
+```
+
+Once minikube start finishes, run the command below to check the status of the cluster:
+```sh
+minikube status
+```
+If your cluster is running, the output from minikube status should be similar to:
+```sh
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+- Kubectl
+  
+To install Kubectl execute the following commands:
+```sh
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+yum install kubectl-1.17.0
+```
+Start the proxy to the Kubernetes API server:
+```sh
+kubectl proxy --port=8080 &
+
+```
+For further information please refer to https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/
+
+- Argo Workflow
+
+To install Argo Workflows execute the following commands:
+```sh
+kubectl create namespace argo
+kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
+```
+
+Grant Admin priviledges
+Grant the default ServiceAccount admin privileges (i.e., we will bind the admin Role to the default ServiceAccount of the current namespace):
+```sh
+kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default
+```
+For further information refer to https://argoproj.github.io/docs/argo/getting-started.html
+
+Start argo server port forwarding
+```sh
+kubectl -n argo port-forward deployment/argo-server 2746:2746 & 
+```
 
 ### Build
 
@@ -541,6 +630,8 @@ curl -s -L "http://localhost/wps3/processes/eo_metadata_generation_1_0" -H "acce
 
 ### Configure
 
+#### argo.json
+
 The 'assets/argo.json' file is used to configure the connection to Kubernetes and Argo
 
 ```json
@@ -549,39 +640,241 @@ The 'assets/argo.json' file is used to configure the connection to Kubernetes an
 	"k8Url": "http://localhost:2746",
 	"argoUrl": "http://localhost:8080",
 	"stage":{
-		"credential":{
-			"user":"",
-			"password":""
-		},
 		"in":{
 			"docker":"docker/host.me",
-			"credential":{
-				"user":"",
-				"password":""
-			}
 		},
 		"out":{
 			"docker":"docker/host.me",
-			"credential":{
-				"user":"",
-				"password":""
-			}
+      "webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"
 		}
 	}
 }
 ```
 
-*argopath*: defines.....
+*argopath*: defines the url path to the argo workflow api
 
-*k8Url*: defines.....
+*k8Url*: defines the host of the kubernetes api
 
-*argoUrl*: defines.....
+*argoUrl*: defines the host of the  argo workflow api
 
-*stage*
+
   
-*credential* --> *user*: defines ...
-*credential* --> *password*: defines ...
+*stage* --> *in* --> *docker* : defines the docker image used for the stage in node
 
+*stage* --> *out* -->  *docker*: defines the docker image used for the stage out node
+
+*stage* --> *out* --> *webdav_endpoint* : defines the webdav external storage endpoint 
+
+#### Kubernetes Persistent Volume
+	
+To share a workspace among the various nodes of the workflow, we need a common filesystem, for this application we will use [Kubernetes Persistent Volume and Persistent Volume Claim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/). In order to create one, write the file **eoepca-pv-and-pvc.yaml** with the following content:
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: eoepca-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: "/mnt/data"
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eoepca-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 3Gi
+```
+and run the following  command:
+```
+ kubectl create -f eoepca-pv-and-pvc.yaml
+```
+
+#### Kubernetes Secret Environmental Variables
+
+The stage-out phase of the workflow consists in storing the results of the processing job in an external storage provided by Nextcloud (https://nextcloud.com/). This storage solution provides a Webdav interface which is an extension of the HTTP protocol that allows clients to perform authoring operations. 
+In order to keep the credentials to the external storage hidden, we are using Kubernetes "Secret" environmental variables. For further infomation please refer to Kubernetes officiale guide (https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/).
+
+To store your credentials into Kubernetes secret environmental variables please execute the following commands:
+
+- Use a base64 encoding tool to convert your username and password to a base64 representation.
+```sh
+echo -n 'user123' | base64
+echo -n '39528$vdg7Jb' | base64
+```
+
+The output shows that the base-64 representation of your username and password.
+
+
+- Create Kubernetes secret configuration secret.yaml
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: eoepcawebdavsecret
+type: Opaque
+data:
+  username: ZW9lcGNhLWRlbW8tc3R
+  password: VWZqaDEwe
+```
+
+- Create the Kubernetes secret using the following command:
+
+```sh
+kubectl create -f secret.yaml
+```
+#### The application
+The docker images used for this sample application can be found at the following address:
+- [https://hub.docker.com/r/blasco/eoepca-eo-tools](https://hub.docker.com/r/blasco/eoepca-eo-tools)
+- [https://hub.docker.com/r/blasco/stagein](https://hub.docker.com/r/blasco/stagein)
+- [https://hub.docker.com/r/blasco/stageout](https://hub.docker.com/r/blasco/stageout)
+  
+For further information, please find their dockerfiles under *assets/dockerfiles*.
+
+### Usage
+Once the deploy and configuration is complete, you can proceed running the application that the Ades service provides and that is defined in the following (cwl)(https://github.com/EOEPCA/proc-ades/blob/develop/test/sample_apps/metadata_extractor/workflow.cwl).
+
+
+Create the job parameter file *app_params.json* as follows:
+```json
+{
+  "inputs": [
+    {
+      "id": "input_file",
+      "input": {
+        "format": {
+          "mimeType": "application/atom+xml"
+        },
+        "value": {
+          "inlineValue": "https://catalog.terradue.com/sentinel3/search?uid=S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "results",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "async",
+  "response": "raw"
+} 
+```
+
+Run:
+```sh
+curl -v -L -X POST "http://localhost/wps3/processes/eo_metadata_generation_1_0/jobs" -H  \
+  "accept: application/json" -H  "Prefer: respond-async" -H  "Content-Type: application/json" -d@app_params.json
+```
+Get Argo Jobs:
+
+```shell script
+curl  -v  -s -L "http://localhost/wps3/processes/eo_metadata_generation_1_0/jobs" -H "accept: application/json" 
+```
+
+```text
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to localhost (127.0.0.1) port 80 (#0)
+> GET /wps3/processes/eo_metadata_generation_1_0/jobs HTTP/1.1
+> Host: localhost
+> User-Agent: curl/7.58.0
+> accept: application/json
+> 
+< HTTP/1.1 200 OK 
+< Date: Mon, 25 May 2020 15:53:53 GMT
+< Server: Apache/2.4.6 (CentOS)
+< X-Powered-By: ZOO@ZOO-Project
+< Transfer-Encoding: chunked
+< Content-Type: application/json;charset=UTF-8
+< 
+{ [421 bytes data]
+* Connection #0 to host localhost left intact
+[
+  {
+    "id": "06223bbe-9e9e-11ea-8f64-a0c5899f98fe",
+    "infos": {
+      "status": "successful",
+      "message": "ZOO-Kernel successfully run your service!",
+      "links": [
+        {
+          "Title": "Status location",
+          "href": "/watchjob/processes/eo_metadata_generation_1_0/jobs/06223bbe-9e9e-11ea-8f64-a0c5899f98fe"
+        },
+        {
+          "Title": "Result location",
+          "href": "/watchjob/processes/eo_metadata_generation_1_0/jobs/06223bbe-9e9e-11ea-8f64-a0c5899f98fe/result"
+        }
+      ]
+    }
+  }
+]
+
+```
+
+and Get Result
+
+```shell script
+curl  -v  -s -L "http://localhost/watchjob/processes/eo_metadata_generation_1_0/jobs/06223bbe-9e9e-11ea-8f64-a0c5899f98fe/result" -H "accept: application/json"
+```
+
+```text
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to localhost (127.0.0.1) port 80 (#0)
+> GET /watchjob/processes/eo_metadata_generation_1_0/jobs/06223bbe-9e9e-11ea-8f64-a0c5899f98fe/result HTTP/1.1
+> Host: localhost
+> User-Agent: curl/7.58.0
+> accept: application/json
+> 
+< HTTP/1.1 200 OK
+< Date: Mon, 25 May 2020 15:46:09 GMT
+< Server: Apache/2.4.6 (CentOS)
+< Transfer-Encoding: chunked
+< Content-Type: application/json;charset=UTF-8
+< 
+{ [178 bytes data]
+* Connection #0 to host localhost left intact
+{
+  "outputs": [
+    {
+      "id": "results",
+      "value": {
+        "results": "https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage/fad0bd5c-a95c-11ea-9a94-08002798a283eo-metadata-generation-1-0/S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004.atom"
+      }
+    }
+  ]
+}
+
+```
+To download the result file use the following command:
+
+```
+curl -u eoepca-demo-storage:somepassword123 https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage/fad0bd5c-a95c-11ea-9a94-08002798a283eo-metadata-generation-1-0/S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004.atom -o /tmp/metadata.atom
+```
 
 ### Persistence
 

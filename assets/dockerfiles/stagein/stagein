@@ -1,0 +1,14 @@
+#!/bin/bash
+
+URL=$1
+echo "retrieving enclosure of $URL"
+enclosure=$(opensearch-client -p count=1 -p do=terradue $URL enclosure)
+echo "Enclosure: $enclosure"
+
+DOWNLOAD_PATH="/tmp/eoepca"
+mkdir -p $DOWNLOAD_PATH
+echo "Downloading product to $DOWNLOAD_PATH"
+path=$(ciop-copy $enclosure -O $DOWNLOAD_PATH)
+
+echo "Downloaded to $path"
+echo $path >> /tmp/output.txt

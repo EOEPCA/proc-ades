@@ -3,24 +3,12 @@
 	"k8Url": "http://localhost:2746",
 	"argoUrl": "http://localhost:8080",
 	"stage":{
-		"credential":{
-			"user":"",
-			"password":""
-		},
 		"in":{
-			"docker":"blasco/eoepca-eo-tools:latest",
-			"credential":{
-				"user":"",
-				"password":""
-			}
+			"docker":"blasco/eoepca-stagein:latest",
 		},
 		"out":{
 			"docker":"blasco/eoepca-stageout:latest",
-			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage",
-			"credential":{
-				"user":"",
-				"password":""
-			}
+			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"s
 		}
 	}
 }

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+productname=$(basename $1)
+metadata_output="/tmp/eoepca/$productname.atom"
+echo "Running metadata-extractor on folder $1 and saving atom to $metadata_output"
+mkdir -p /tmp/eoepca
+metadata-extractor -p --format=atom -m SENTINEL3 $1 > $metadata_output
+
+# passing path reference to next node
+echo "$metadata_output" >> /tmp/output.txt
