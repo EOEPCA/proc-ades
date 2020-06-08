@@ -4,11 +4,11 @@
 	"argoUrl": "http://localhost:8080",
 	"stage":{
 		"in":{
-			"docker":"blasco/eoepca-stagein:latest",
+			"docker":"blasco/eoepca-stagein:latest"
 		},
 		"out":{
 			"docker":"blasco/eoepca-stageout:latest",
-			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"s
+			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"
 		}
 	}
 }
