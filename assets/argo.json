@@ -2,13 +2,13 @@
 	"argopath": "/apis/argoproj.io/v1alpha1",
 	"k8Url": "http://localhost:2746",
 	"argoUrl": "http://localhost:8080",
-	"stage":{
-		"in":{
-			"docker":"blasco/eoepca-stagein:latest"
+	"stage": {
+		"in": {
+			"docker": "eoepca/proc-ades-stagein:latest"
 		},
-		"out":{
-			"docker":"blasco/eoepca-stageout:latest",
-			"webdav_endpoint":"https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"
+		"out": {
+			"docker": "eoepca/proc-ades-stageout:latest",
+			"webdav_endpoint": "https://nx10438.your-storageshare.de/remote.php/dav/files/eoepca-demo-storage"
 		}
 	}
 }
