@@ -49,10 +49,9 @@
   - [Built With](#built-with)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
-  - [Build](#build)
-  - [Run local image](#run-local-image)
-  - [Eoepca Ades Deploy process](#eoepca-ades-deploy-process)
+  - [Build from source using docker](#build-from-source-using-docker)
+  - [Run ADES from docker image](#run-ades-from-docker-image)
+  - [Deploy an application](#deploy-an-application)
   - [Configure](#configure)
     - [argo.json](#argojson)
     - [Kubernetes Persistent Volume](#kubernetes-persistent-volume)
@@ -76,12 +75,11 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://github.com/EOEPCA/)
 
-The Processing & Chaining domain area provides an extensible repository of processing functions, tools and applications that can be discovered by search query, invoked individually, and utilised in workflows. ADES is responsible for the execution of the processing service as a OGC WPS 2.0 request within the target Exploitation Platform (i.e., the one that is close to the data).
+The Processing & Chaining domain area provides an extensible repository of processing functions, tools and applications that can be discovered by search query, invoked individually, and utilised in workflows. ADES is responsible for the execution of the processing service through both a [OGC WPS 1.0 & 2.0 OWS service](https://www.ogc.org/standards/wps) and an [OGC Processes REST API](https://github.com/opengeospatial/wps-rest-binding). The processing request are executed within the target Exploitation Platform (i.e., the one that is close to the data).
 
 ### Built With
 
-* [Terraform](https://terraform.io/)
-* [Ansible](https://ansible.com)
+* [ZOO-Project](http://zoo-project.org/)
 * [Kubernetes](https://kubernetes.io)
 * [Minikube](https://github.com/kubernetes/minikube)
 * [Docker](https://docker.com)
@@ -89,21 +87,18 @@ The Processing & Chaining domain area provides an extensible repository of proce
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple steps.
+The ADES software source present in this repository is built using docker images to complete properly the integration of the different software components.
+
+This guide will guide you through a step by step procedure to build a local image of the ADES to start it up and having it running locally.
 
 ### Prerequisites
 
 Things you need to use the software and how to install them.
 
 - [Internet access](https://en.wikipedia.org/wiki/Internet_access)
-- [Docker](https://docs.docker.com/engine/install/centos/)
-- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-- [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-- [Linux bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell))
-- [curl](https://en.wikipedia.org/wiki/CURL)
-- [Terraform](https://terraform.io/) 
-- [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+- [Docker](https://www.docker.com/) : client must be installed
 
+### Build from source using docker
 ### Prerequisites Installation and Configuration
 
 - [Docker](https://docs.docker.com/engine/install/centos/)
@@ -115,77 +110,8 @@ sudo yum install -y docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
 ```
 
-- [Minikube]( https://kubernetes.io/docs/tasks/tools/install-minikube/
-)
 
-Execute the following command to install Minikube
-```sh
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
-sudo mkdir -p /usr/local/bin/
-sudo install minikube /usr/local/bin/
-```
-For further information please refer to https://kubernetes.io/docs/tasks/tools/install-minikube/
-
-Run the following command to start up a local Kubernetes cluster
-```sh
-minikube start --vm-driver=none
-```
-
-Once minikube start finishes, run the command below to check the status of the cluster:
-```sh
-minikube status
-```
-If your cluster is running, the output from minikube status should be similar to:
-```sh
-host: Running
-kubelet: Running
-apiserver: Running
-kubeconfig: Configured
-```
-
-- Kubectl
-  
-To install Kubectl execute the following commands:
-```sh
-cat <<EOF > /etc/yum.repos.d/kubernetes.repo
-[kubernetes]
-name=Kubernetes
-baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-enabled=1
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-EOF
-yum install kubectl-1.17.0
-```
-Start the proxy to the Kubernetes API server:
-```sh
-kubectl proxy --port=8080 &
-
-```
-For further information please refer to https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/
-
-- Argo Workflow
-
-To install Argo Workflows execute the following commands:
-```sh
-kubectl create namespace argo
-kubectl apply -n argo -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/install.yaml
-```
-
-Grant Admin priviledges
-Grant the default ServiceAccount admin privileges (i.e., we will bind the admin Role to the default ServiceAccount of the current namespace):
-```sh
-kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default
-```
-For further information refer to https://argoproj.github.io/docs/argo/getting-started.html
-
-Start argo server port forwarding
-```sh
-kubectl -n argo port-forward deployment/argo-server 2746:2746 & 
-```
-
-### Build
+The repository include a script to built the software from source.
 
 1. Get into Linux terminal
 
@@ -207,26 +133,31 @@ cd proc-ades
 ./scripts/build.sh
 ```
 
-If you are performing a local build the script creates two Docker Images:
+Basically, the last step will pull from the EOEPCA docker hub repository an image to start a container with all the tools to build another docker image with the ADES ready to run.
+At the end, the script shall have created a Docker images:
 
 ```text
 eoepca-ades-core:1.0
 proc-comm-zoo:1.0
 ```
 
-### Run local image
+the image `eoepca-ades-core:1.0` is the built ADES.
 
-Run:
+### Run ADES from docker image
+
+1. Let's start running the new ADES image. The main web service is running internally on port 7777 and is map to port 80 on the host. This port may be reconfigured if necessary.
 
 ```sh
 docker run --rm  -d --name zoo -p 7777:80   eoepca-ades-core:1.0
 ```
 
-2. Send a GetCapabilities request
+2. We will now perform a simple OWS WPS GetCapabilities request to check the service is running properly.
 
 ```ssh
 curl -L  "http://localhost:7777/zoo/?service=WPS&version=1.0.0&request=GetCapabilities"
 ```
+
+The returned reply should be similar to the following
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -320,11 +251,13 @@ curl -L  "http://localhost:7777/zoo/?service=WPS&version=1.0.0&request=GetCapabi
 </wps:Capabilities>
 ```
 
-3. Send a OGC API - Processes request 
+3. Let's do the same using the OGC API - Processes with a REST query
 
 ```ssh
 curl -s -L "http://localhost:7777/wps3/processes" -H "accept: application/json"
 ```
+
+and the output should be
 
 ```json
 {
@@ -425,7 +358,18 @@ curl -s -L "http://localhost:7777/wps3/processes" -H "accept: application/json"
 }
 ```
 
-### Eoepca Ades Deploy process
+The ADES already exposes 4 pre-deployed services:
+
+| Service Identifier        | Description                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| eoepcaadesdeployprocess   | **Eoepca Deploy Process** is a service to deploy a new application in the ADES as a processing service available.              |
+| eoepcaadesundeployprocess | **Eoepca Undeploy Process** is a service to remove a previously deployed processing service available.                         |
+| longProcess               | This is a demo process to test the getstatus service                                                                           |
+| GetStatus                 | **GetStatus** is a system service used to monitor the status of a job being executed and to retrieve the results when complete |
+
+Next sections will describe how to deploy a new application and submit a job execution on the processing server.
+
+### Deploy an application
 
 Our tutorial will start in the dev-env-argo environment
 
