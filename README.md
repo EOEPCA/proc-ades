@@ -217,13 +217,13 @@ the image `eoepca-ades-core:1.0` is the built ADES.
 1. Let's start running the new ADES image. The main web service is running internally on port 7777 and is map to port 80 on the host. This port may be reconfigured if necessary.
 
 ```sh
-docker run --rm  -d --name zoo -p 7777:80   eoepca-ades-core:1.0
+docker run --rm  -d --name zoo --network host eoepca-ades-core:1.0
 ```
 
 2. We will now perform a simple OWS WPS GetCapabilities request to check the service is running properly.
 
 ```ssh
-curl -L  "http://localhost:7777/zoo/?service=WPS&version=1.0.0&request=GetCapabilities"
+curl -L  "http://localhost/zoo/?service=WPS&version=1.0.0&request=GetCapabilities"
 ```
 
 The returned reply should be similar to the following
@@ -262,24 +262,24 @@ The returned reply should be similar to the following
     <ows:Operation name="GetCapabilities">
       <ows:DCP>
         <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
+          <ows:Get xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
+          <ows:Post xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
         </ows:HTTP>
       </ows:DCP>
     </ows:Operation>
     <ows:Operation name="DescribeProcess">
       <ows:DCP>
         <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
+          <ows:Get xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
+          <ows:Post xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
         </ows:HTTP>
       </ows:DCP>
     </ows:Operation>
     <ows:Operation name="Execute">
       <ows:DCP>
         <ows:HTTP>
-          <ows:Get xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
-          <ows:Post xlink:href="http://localhost:7777/zoo-bin/zoo_loader.cgi"/>
+          <ows:Get xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
+          <ows:Post xlink:href="http://localhost/zoo-bin/zoo_loader.cgi"/>
         </ows:HTTP>
       </ows:DCP>
     </ows:Operation>
@@ -323,7 +323,7 @@ The returned reply should be similar to the following
 3. Let's do the same using the OGC API - Processes with a REST query
 
 ```ssh
-curl -s -L "http://localhost:7777/wps3/processes" -H "accept: application/json"
+curl -s -L "http://localhost/wps3/processes" -H "accept: application/json"
 ```
 
 and the output should be
@@ -882,7 +882,7 @@ You can create a persistence of the installed services and the results of the pr
 The applications, inside the Docker container, are run by the user `apache` with
 id `48`. This information defines the types of permissions that must be assigned to the shared filesystem.
 
-I paths esterni da condividere sono:
+The container paths to share are:
 
 1. /zooservices/
 1. /var/www/html/res/
