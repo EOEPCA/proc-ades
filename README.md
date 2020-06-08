@@ -50,6 +50,7 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Build from source using docker](#build-from-source-using-docker)
+  - [Prerequisites Installation and Configuration](#prerequisites-installation-and-configuration)
   - [Run ADES from docker image](#run-ades-from-docker-image)
   - [Deploy an application](#deploy-an-application)
   - [Configure](#configure)
@@ -371,24 +372,10 @@ Next sections will describe how to deploy a new application and submit a job exe
 
 ### Deploy an application
 
-Our tutorial will start in the dev-env-argo environment
+This section guides you through the deployment of an integrated application in the ADES.
+An integrated application is described in a specific chapter of the ADES documentation: [Application Data](https://eoepca.github.io/proc-ades/current/#appData)
 
-1) Start "eoepca-ades-core"
-
-```shell script
-docker run --rm  -d --name zoo -p 7777:80 --network host  eoepca-ades-core:1.0
-```
-
-with the option `--network host` the port 7777 will be ignored
-
-2) run a getProcess to test the installation:
-
-```shell script
-curl -s -L "http://localhost/wps3/processes" -H "accept: application/json"
-```
-
-
-3) install the new service
+1. install the new service
 
 create json file parameter `deploy.json`
 
