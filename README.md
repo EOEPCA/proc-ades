@@ -345,7 +345,7 @@ You can create a persistence of the installed services and the results of the pr
 The applications, inside the Docker container, are run by the user `apache` with
 id `48`. This information defines the types of permissions that must be assigned to the shared filesystem.
 
-I paths esterni da condividere sono:
+The container paths to share are:
 
 1. /zooservices/
 1. /var/www/html/res/
