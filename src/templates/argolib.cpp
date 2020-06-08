@@ -6,6 +6,7 @@
 #include <graph.hpp>
 #include <zconf.h>
 #include <memory>
+#include <iomanip>
 #include "argoconfigparser.hpp"
 
 #include "zooargo.hpp"
@@ -129,8 +130,11 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     stageOutApplication->setDockerImage(*argoWorkflowConfigData.get_stage()->get_out()->get_docker());
     stageOutApplication->setUseShell(true);
 
-    std::string resultFolder= newRunId+"-"+newUuidBaseID;
-    stageOutApplication->setCommand("eoepca_webdav_client.py -d " + *argoWorkflowConfigData.get_stage()->get_out()->get_webdav_endpoint() + "/ -p /" + resultFolder + "/ -a $SECRET_USERNAME:$SECRET_PASSWORD -s ");
+
+
+    std::string resultFolder= newRunId+newUuidBaseID;
+    std::string command="eoepca_webdav_client -d " + *argoWorkflowConfigData.get_stage()->get_out()->get_webdav_endpoint() + "/ -p '/" + resultFolder + "' -u $SECRET_USERNAME -P $SECRET_PASSWORD -s ";
+    stageOutApplication->setCommand(command);
     stageOutApplication->setIncludeTee(true);
 
     std::map<std::string, std::pair<std::string, std::string>> secretEnvVars;
@@ -148,7 +152,13 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     volume["volumeMountPath"] = "/tmp/eoepca";
     application->setVolume(volume);
 
+    std::cerr << "start8.2"<<std::endl;
 
+    std::cerr << "argolib path "<< awConfig.eoepcaargoPath <<std::endl;
+
+    if(!argoLib){
+        throw std::runtime_error("no argolib");
+    }
     std::string yaml;
     argoLib->create_workflow_yaml_from_app(application.get(),yaml);
     std::cerr<<yaml<<std::endl;
