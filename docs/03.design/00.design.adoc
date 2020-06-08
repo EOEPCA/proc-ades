@@ -1,4 +1,168 @@
-[[mainDesign]]
-= Design
+[[mainComponents]]
+= Building Block Design
 
-TBD
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* A concise breakdown of the Building Block in several independent services (when applicable). For each component, the following subsections are added:
+** Overview and purpose: indicating the functionality covered by the component
+** SW Reuse and Dependencies: indicating reuse of third party open source solutions (if any) and any pre-required Dependencies
+** Interfaces: both internal to the building block and those exposed externally
+** Data: Data usage of the building block, data flow and any GDPR concerns should be addressed here
+** Applicable Resources: links and references to (Reference Docs), and repositories.
+
+When a breakdown is necessary, a genral overview of the building block can be given. On the contrary, no breakdown indicates a single component development with the same expected sections.
+
+================================
+
+== ADES Core Framework
+=== Overview and Purpose
+
+The ADES Core Framework is the main software container for all the components composing the ADES.
+
+=== Software Reuse and Dependencies
+
+All software and their dependecies are described in the nextr sections
+
+=== Interfaces
+
+All interfaces are provided by the WPS Server described in the next section
+
+=== Data
+
+Not applicable
+
+=== Applicable Resources
+
+* <<TB13-ADES>>
+* <<TB14-WPS-T>>
+
+== WPS Server
+=== Overview and Purpose
+
+The WPS Server provides the external interface of the ADES, available to the EMS.
+
+==== WPS 1.0 & 2.0 compliance
+
+_"ZOO-Kernel implements and complies with the WPS 1.0.0 and the WPS 2.0.0 standards edited by the Open Geospatial Consortium"._ 
+The Dismiss operation, which is _"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"_, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context, the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.
+
+=== Software Reuse and Dependencies
+
+The following open-source software is reused:
+
+* WPS Server
+** ZOO-Kernel http://zoo-project.org/docs/kernel/
+
+=== Interfaces
+
+The WPS Server exposes the OGC OWS services WPS 1.0 & WPS 2.0 as well as an OGC API Processes. According to their respective specifications, they allow to deploy, execute, monitor and dismiss processing services.
+
+=== Data
+
+Not Applicable.
+
+=== Applicable Resources
+
+* <<OGC-WPS>>
+* <<OGC-WPS2>>
+* <<OGC-API-PROC>>
+
+== OWS Context Parser
+=== Overview and Purpose
+
+The aim of the software component is to provide a library for parsing an OWS document.
+
+=== Software Reuse and Dependencies
+
+Software developed in C++ language with no particular dependencies
+
+=== Interfaces
+
+Not Applicable
+
+=== Data
+
+The https://github.com/EOEPCA/proc-comm-lib-ows/blob/develop/tests/application/assetes/ows1.xml[OWS Context file] describes the elements necessary for the publication of an EOEPCA/ADES service.
+
+=== Applicable Resources
+
+* <<OGC-OWC>>
+* <<OGC-OWC-ATOM>>
+
+== CWL Parser
+=== Overview and Purpose
+
+The software component is a shared library to provides the means to parse a Common Workflow Language Specification document.
+
+=== Software Reuse and Dependencies
+
+Software developed in C++ language with no particular dependencies
+
+=== Interfaces
+
+Not applicable
+
+=== Data
+
+*TODO* : _Sample CWL data to be provided as a repo_
+
+=== Applicable Resources
+
+* <<CWL>>
+
+== CWL to ARGO Engine
+=== Overview and Purpose
+
+
+
+=== Software Reuse and Dependencies
+=== Interfaces
+=== Data
+=== Applicable Resources
+
+== Argo Workflows Client
+=== Overview and Purpose
+
+this software component is a shared library to provides the means to perform CRUD actions against Argo Workflows application resources.
+
+=== Software Reuse and Dependencies
+
+Software developed in C++ language with no particular dependencies
+
+=== Interfaces
+
+Not applicable
+
+=== Data
+
+Not applicable
+
+=== Applicable Resources
+
+* <<ARGO>>
+
+
+== Services
+=== Overview and Purpose
+
+???
+
+=== Software Reuse and Dependencies
+
+The following open-source software is reused:
+
+* ZOO-Services http://zoo-project.org/docs/services/index.html
+
+=== Interfaces
+
+??
+
+=== Data
+
+* OWS COntext
+* CWL
+
+=== Applicable Resources

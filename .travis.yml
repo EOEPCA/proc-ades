@@ -7,17 +7,27 @@ services:
 
 jobs:
   include:
-    - stage: test
 
-      branch:
-        only:
-        - develop
+    - stage: build (compile, unit test, package)
+      install: skip
+      script: travis/build.sh
+
+    - stage: container creation and publishing
+      install: skip
+      script: travis/containerCreation.sh
+
+    - stage: smoke and acceptance test
+      install: skip
+      script: travis/acceptanceTest.sh
+
+    - stage: test
+      if: branch = develop and env(operation) = local
 
       # Minikube installation taken from: https://github.com/LiliC/travis-minikube/blob/minikube-30-kube-1.12/.travis.yml
       # We need the systemd for the kubeadm and it's default from 16.04+
       dist: xenial
 
-      before_script: sudo sh travis/setupCluster.sh
+      before_script: sudo sh travis/setupMinikube.sh
 
       script: cd terraform/test && terraform init -input=false
 
@@ -28,6 +38,23 @@ jobs:
           on:
             branch: develop
 
+    - stage: deploy on network of resources
+      if: branch = develop and env(operation) = deploy_nor
+
+      dist: bionic
+      before_script: sh -c 'cd ${TRAVIS_BUILD_DIR}/terraform/NoR/ && sh setupOpenstack.sh'
+      script: sh -c 'cd ${TRAVIS_BUILD_DIR}/terraform/NoR/inventory/cf2-kube/ && pwd && ls -la && terraform apply -auto-approve -var-file=cluster.tfvars ./contrib/terraform/openstack'
+      after_script: sh -c 'cd ${TRAVIS_BUILD_DIR}/terraform/NoR && sh setupKubernetes.sh'
+
+    - stage: undeploy from network of resources
+      if: branch = develop and env(operation) = undeploy_nor
+      
+      dist: bionic
+      before_script: sh -c 'cd ${TRAVIS_BUILD_DIR}/terraform/NoR/ && sh setupOpenstack.sh'
+      script: sh -c 'cd ${TRAVIS_BUILD_DIR}/terraform/NoR/inventory/cf2-kube/ && pwd && ls -la && terraform destroy -var-file=cluster.tfvars -auto-approve ./contrib/terraform/openstack'
+      after_script: echo "Undeployed openstack environment"
+                
+
 import:
   - docs/.travis.yml
 
@@ -35,7 +62,7 @@ notifications:
   slack: eoepca:Msk9hjQKAbwSYcVWiepenPim
   email:
     recipients:
-      - a.person@acme.com
+      - a.person @acme.com
       - a.n.other@acme.com
     on_success: never # default: change
     on_failure: never # default: always

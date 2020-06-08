@@ -8,7 +8,7 @@ This document presents the {component-name} Design for the Common Architecture.
 == Structure of the Document
 
 Section 2 - <<mainOverview>>::
-Provides an over of the {component-name} component, within the context of the wider Common Architecture design.
+Provides an overview of the {component-name} component, within the context of the wider Common Architecture design.
 
 Section 3 - <<mainDesign>>::
 Provides the design of the {component-name} component.

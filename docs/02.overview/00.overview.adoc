@@ -1,4 +1,224 @@
 [[mainOverview]]
 = Overview
 
-TBD
+== Building Block Overview
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* High-Level Description of the Building Block
+* Context within EOEPCA
+================================
+
+The ADES provides a WPS 1.0 & 2.0 service interfaces as well as an OGC API Processes compliant API. It is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). In the global scenario, we assume that the EMS ensures that the processor is deployed as a WPS service before it is invoked.
+
+As illustrated in the EOEPCA Master System Design Document (ref. <<EOEPCA-MSD>>), the ADES provides an execution engine that handles the complexities of constructing the jobs and interfacing with the processing cluster. See the context wthin the EOEOPA, as depicted below in <<img_procAdesExecute>>:
+
+[#img_procAdesExecute,reftext='{figure-caption} {counter:figure-num}']
+.ADES Process Execution
+image::processing-ADES-execute.png[width=85%,pdfwidth=85%,align="center"]
+
+The main responsibilities of the ADES are:
+ 
+* Validate and accept an execution request from the EMS
+* Submit the process execution to the processing cluster
+* Monitor the process execution
+* Retrieve the processing results
+
+In order to accomplish the execution and monitor steps above, it also need to be responsible for the operations of:
+
+* Data Stage-In for the process inputs
+* Data Stage-Out for the process outputs
+
+Those operations are internal sub-steps of the execution step.
+
+=== Execution
+
+The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.
+
+When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named https://github.com/argoproj/argo[Argo Workflows], to run the following steps:
+
+* Data Stage-In
+* Processing
+* Data Stage-Out
+
+Argo Workflows is responsible for the internal orchestration of the three steps above.
+Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present. 
+
+==== Data Stage-In
+
+Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.
+
+ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (https://curl.haxx.se/libcurl/[libcurl], https://github.com/s3tools/s3cmd[s3cmd]) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.
+
+==== Processing
+
+Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.
+
+ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).
+
+==== Data Stage-Out
+
+Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.
+
+ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output. 
+Monitor
+
+=== Monitor
+
+ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.
+
+=== Dismiss
+
+ADES can remove from the execution environment an alredy started processing job.
+
+== Static Architecture
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Diagram and description of the major logical components within the Building Block
+
+================================
+
+The ADES is based on an Web API framework architecture. It offers primarly an OWS Server with WPS 1.0 & 2.0 OGC services and it exposes a REST/JSON interface compliant with the OGC Processes API <<OGC-API-PROC>> compliant with the OpenAPI specification <<OPENAPI>>.
+
+<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Argo Workflows API.
+
+[#img_procAdesOverview,reftext='{figure-caption} {counter:figure-num}']
+.ADES building block overview
+image::processing-ADES-overview.png[width=95%,pdfwidth=95%,align="center"]
+
+The WPS Service provides the external interface of the ADES, available to the EMS only. It enables internal code and configuration for creating the Processing Services via the Deploy/Undeploy WPS operations.
+Then, the WPS service triggers various function oif the Processing Services for the Execute, GetStatus, GetResult and Dismiss WPS operations.
+Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it's execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution. 
+
+Section <<Building Block Design>> contains a detailed description of the ADES components.
+
+== Use Cases
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Diagrams and definition of the use cases covered by this Building Block
+
+================================
+
+The following diagram describes the main use cases of the ADES
+
+[plantuml, diagram-usecases, png] 
+....
+@startuml Backend Use Cases
+
+:EMS: as ems <<service>>
+
+rectangle "ADES" as ades {
+
+    usecase "Deploy\nProcessing Service" as deploy
+    usecase "Execute Service\nas a Job" as execute
+    usecase "Monitor Job" as getStatus
+    usecase "Retrieve Result" as getResult
+
+    getResult ..> getStatus : <<extend>>
+}
+
+ems --> deploy
+ems --> execute
+ems --> getStatus
+ems --> getResult
+
+@enduml
+....
+
+=== Deploy Processing Service
+
+_As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a OWS Context from a Resource Catalog referencing a CWL so that I can make it available (or remove) for the Execution, on behalf of my User._
+
+=== Execute Service as Job
+
+_As an EMS service, I want to Execute an available processing service via the WPS & API interface, so that I can submit an execution, on behalf of my User._
+
+=== Monitor Job
+
+_As an EMS service, I want to get the status of a given processing job, via the WPS & API interface, so that I can monitor a current or past execution, and provide the information back to my User._
+
+=== Retrieve Result
+
+_As an EMS service, I want to get the reference of the processing results of a given processing job, via the WPS & API interface, so that I can provide the information back to my User._
+
+
+== External Interfaces
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Listing of technical external interfaces (with other Building Blocks)
+
+================================
+
+=== Processing interface
+
+The ADES exposes an OGC WPS 1.0 & 2.0 as well as the OGC Processes API (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
+
+=== AuthN / AuthZ interface
+
+The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:
+
+* A request for Authentication
+** The Authentication flow is implemented using the OpenID Connect 1.0 protocol
+
+* A request for Authorization
+** The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)
+
+The PEP module is provided by *Task 1: User Management*, and it is part of the ADES architecture.
+
+== Required Resources
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* List of HW and SW required resources for the correct functioning of the building Block
+* References to open repositories (when applicable)
+
+================================
+
+=== Software 
+
+The following open-source software are required to support the implementation of the ADES:
+
+* HTTP(S), FTP(S), FILE, OPeNDAP Client
+** libcurl https://curl.haxx.se/libcurl/ 
+* OpenSearch Client
+** DotNetOpenSearchClient https://github.com/Terradue/DotNetOpenSearchClient 
+* Kubernetes Client
+** libcurl https://curl.haxx.se/libcurl/ 
+* Kubernetes Extension
+** Argoproj https://argoproj.github.io/argo
+* S3 Client
+** s3cmd https://github.com/s3tools/s3cmd
+* WPS Server
+** ZOO-Kernel http://zoo-project.org/docs/kernel/
+
+== Design Standards, Conventions and Procedures
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* Explanations on the UML Design notation and necessary naming conventions used throughout the document
+
+================================
+
+=== UML Design
+=== Naming Conventions
