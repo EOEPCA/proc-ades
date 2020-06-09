@@ -3,6 +3,7 @@
 ORIG_DIR="$(pwd)"
 cd "$(dirname "$0")"
 BIN_DIR="$(pwd)"
+BRANCH="$1";
 
 trap "cd '${ORIG_DIR}'" EXIT
 
@@ -27,9 +28,9 @@ git clone --branch gh-pages --single-branch "https://${GH_TOKEN}@github.com/EOEP
 
 # Move generated doc outputs to the repos
 cd repos
-rm -rf current
-mv ../output current
-mv current/index.pdf current/EOEPCA-${GH_REPOS_NAME}.pdf
+rm -rf ${BRANCH}
+mv ../output ${BRANCH}
+mv ${BRANCH}/index.pdf ${BRANCH}/EOEPCA-${GH_REPOS_NAME}.pdf
 
 # Prepare the root landing page/README - but don't overwrite if they already exist
 if [ ! -e index.html ]; then cp ../gh-page-root.html index.html; fi
