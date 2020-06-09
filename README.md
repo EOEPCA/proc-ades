@@ -29,7 +29,7 @@
   <p align="center">
     Application Deployment and Execution Service (ADES) building block
     <br />
-    <a href="https://github.com/EOEPCA/proc-ades"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/EOEPCA/proc-ades/wiki"><strong>Explore the docs »</strong></a>
     <br />
     <a href="https://github.com/EOEPCA/proc-ades">View Demo</a>
     ·

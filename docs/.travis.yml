@@ -1,7 +1,7 @@
 jobs:
   include:
     - stage: generate docs
-      if: branch = develop AND NOT type IN (pull_request)
+      if: (branch = develop OR branch = master) AND NOT type IN (pull_request)
 
       # Assume that 'docker' service is stated at the Travis global level. It seems that re-stating it here confuses Travis.
       # services:
@@ -22,4 +22,4 @@ jobs:
         - docker logs asciidoc-to-pdf
 
       after_success:
-        - ./docs/bin/publish-docs.sh
+        - ./docs/bin/publish-docs.sh ${TRAVIS_BRANCH}
