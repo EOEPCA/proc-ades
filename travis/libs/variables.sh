@@ -42,12 +42,12 @@ export DOCKER_ZOO='eoepca/proc-comm-zoo:latest'
 export TRAVIS_BUILD_NUMBER="${TRAVIS_BUILD_NUMBER:-0}"
 
 #docker temp image name
-export LOCAL_IMAGE_NAME="eoepca-ades-core:1.0"
+export LOCAL_IMAGE_NAME="proc-ades:1.0"
 
 #eoepca repository
 export EOEPCA_REPOSITORY='eoepca'
 #eoepca name
-export EOEPCA_IMAGE="eoepca-ades-core"
+export EOEPCA_IMAGE="proc-ades"
 #eoepca tag
 export EOEPCA_TAG="${TRAVIS_NAME}${TRAVIS_BRANCH}_${TRAVIS_BUILD_NUMBER}"
 #final image

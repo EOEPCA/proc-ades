@@ -17,8 +17,8 @@ COPY build/3ty/proc-comm-lib-ows-1.03/libeoepcaows.so /opt/t2libs/
 COPY build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so /opt/t2service/libeoepcaargo.so
 COPY build/libargo_interface.so /opt/t2service/libargo_interface.so
 
-#sudo docker run --rm  -d --name zoo -p 7777:80    eoepca-ades-core:1.0
-#sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD:/project  eoepca-ades-core:1.0
+#sudo docker run --rm  -d --name zoo -p 7777:80    proc-ades:1.0
+#sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD:/project  proc-ades:1.0
 #alias ll='ls -ltr'
 # docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" zoo  bash
 #alias ll='ls -ltr'
