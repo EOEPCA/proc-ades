@@ -214,6 +214,7 @@ int simpleRemove(std::string finalPath, std::string_view owsOri, maps *&conf,
 
   setMapInMaps(outputs, "unDeployResult", "value", strBuffer.str().c_str());
   setStatus(conf, "done", "");
+  updateStatus(conf, 100, "done");
   return SERVICE_SUCCEEDED;
 }
 
@@ -267,18 +268,21 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   if (buildPath.empty()) {
     std::string message{"zoo buildPath empty()"};
     setStatus(conf, "failed", message.c_str());
+    updateStatus(conf, 100, message.c_str());
     return setZooError(conf, message, "NoApplicableCode");
   }
 
   if (confMain["servicePath"].empty()) {
     std::string message{"zoo servicePath empty()"};
     setStatus(conf, "failed", message.c_str());
+    updateStatus(conf, 100, message.c_str());
     return setZooError(conf, message, "NoApplicableCode");
   }
 
   if (confEoepca["userworkspace"].empty()) {
     std::string message{"zoo userworkspace empty()"};
     setStatus(conf, "failed", message.c_str());
+    updateStatus(conf, 100, message.c_str());
     return setZooError(conf, message, "NoApplicableCode");
   }
 
@@ -298,10 +302,44 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   if (!userEoepca["user"].empty()){
     user->setUsername(userEoepca["user"]);
   }
+
+  for(auto& [k,q]:userEoepca){
+    fprintf(stderr, "-----> %s,%s  \n",k.c_str(),q.c_str());
+  }
+
+  if (userEoepca["grant"].empty()) {
+    std::string message{"Grants for this user are not  defined"};
+    setStatus(conf, "failed", message.c_str());
+    updateStatus(conf, 100, message.c_str());
+    return setZooError(conf, message, "NoApplicableCode");
+  }else {
+
+    auto grant=userEoepca["grant"];
+    if (grant.size()!=3){
+      std::string message{"Grants format error: "};
+      message.append(grant);
+      setStatus(conf, "failed", message.c_str());
+      updateStatus(conf, 100, message.c_str());
+      return setZooError(conf, message, "NoApplicableCode");
+    }
+
+    std::cerr << "user: "<< userEoepca["user"] << " grants: "  << grant << "\n";
+
+    if(grant.at(2) == '-'){
+      std::string message{"The user "};
+      message.append(userEoepca["user"]).append(" does not have permissions to perform this operation");
+      setStatus(conf, "failed", message.c_str());
+      updateStatus(conf, 100, message.c_str());
+      return setZooError(conf, message, "NoApplicableCode");
+    }
+
+  }
+
   auto resU=user->prepareUserWorkspace();
   if (!resU.empty()){
     std::string message{resU};
     setStatus(conf, "failed", message.c_str());
+    updateStatus(conf, 100, message.c_str());
     return setZooError(conf, message, "NoApplicableCode");
   }
 
@@ -528,10 +566,12 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   } catch (std::runtime_error &err) {
     std::cerr << err.what();
     setStatus(conf, "failed", err.what());
+    updateStatus(conf, 100, err.what() );
     return setZooError(conf, err.what(), "NoApplicableCode");
   } catch (...) {
     std::cerr << "Unexpected server error";
     setStatus(conf, "failed", "Unexpected server error");
+    updateStatus(conf, 100, "Unexpected server error");
     return setZooError(conf, "Unexpected server error", "NoApplicableCode");
   }
 
@@ -542,16 +582,17 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 extern "C" {
 
 ZOO_DLL_EXPORT int eoepcaadesdeployprocess(maps *&conf, maps *&inputs,
-                                           maps *&outputs) {
-
+                                           maps *&outputs){
+  dumpMaps(inputs);
   dumpMaps(conf);
-
 
   return job(conf, inputs, outputs, Operation::DEPLOY);
 }
 
 ZOO_DLL_EXPORT int eoepcaadesundeployprocess(maps *&conf, maps *&inputs,
                                              maps *&outputs) {
+  dumpMaps(inputs);
+  dumpMaps(conf);
   return job(conf, inputs, outputs, Operation::UNDEPLOY);
 }
 }
