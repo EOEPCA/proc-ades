@@ -145,6 +145,14 @@ extern "C" int crlex ();
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
 
+//rdr
+//#ifndef WIN32
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+//#endif
+//rdr
+
 #ifndef WIN32
 extern char **environ;
 #endif
@@ -244,6 +252,24 @@ int dumpBackFinalFile(maps* m,char* fbkp,char* fbkp1)
   return 1;
 }
 
+//rdr
+int mkpath(char *file_path, mode_t mode) {
+  // assert(file_path && *file_path);
+  if (file_path!=nullptr)
+    for (char *p = strchr(file_path + 1, '/'); p; p = strchr(p + 1, '/')) {
+      *p = '\0';
+      if (mkdir(file_path, mode) == -1) {
+        if (errno != EEXIST) {
+          *p = '/';
+          return -1;
+        }
+      }
+      *p = '/';
+    }
+  return 0;
+}
+
+
 //rdr  
 int 
 getUserWorkspacePath(maps* m,char* oldPatr,char* newPath,int maxSize){
@@ -253,7 +279,8 @@ getUserWorkspacePath(maps* m,char* oldPatr,char* newPath,int maxSize){
   if (rdrMAP && rdrMAP->value && userWorkspace && userWorkspace->value){
     snprintf (newPath,maxSize, "%s/%s", userWorkspace->value,rdrMAP->value);
   }else{
-    snprintf (newPath,maxSize, "%s", oldPatr);
+    if (oldPatr)
+      snprintf (newPath,maxSize, "%s", oldPatr);
   }
   return 0;
 }
@@ -288,24 +315,77 @@ int Base64Decode(char* b64message, unsigned char** buffer, size_t* length) { //D
 
 	return (0); //success
 }
+
+int  exitFolder(const char* path){
+   int ret=0;
+   DIR *dirp = opendir (path);
+   if (dirp != NULL){
+     ret=1;
+   }
+   closedir (dirp);
+  return ret;
+}
+
+//rdr
+int createUserSpace(maps* conf,const char* User){
+  int ret=0;
+  char* thePath=(char*)malloc(1024);
+  memset(thePath,'\0',1024);
+  getUserWorkspacePath(conf,NULL,thePath,1023);
+
+  char* script=(char*)malloc(1024*3);
+  memset(script,'\0',1024*3);
+
+  map *rdrMAP = getMapFromMaps (conf, "eoepca", "userSpaceScript");
+
+  if(rdrMAP && rdrMAP->value && strlen(rdrMAP->value)>0){
+    sprintf(script,"%s \"%s\" 1>/dev/null",rdrMAP->value,thePath);
+  }else{
+    sprintf(script,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+  }
+
+  fprintf(stderr,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+
+  int y=system(script);
+//  if(!exitFolder(thePath)){
+//    int a=zMkdir(thePath,0777);
+//  }else{
+//  }
+//
+  free(thePath);
+  free(script);
+
+  return y;
+}
+
 //rdr
 int
 addUserToMap(maps* conf){
+  int ret=0;
   int ei = 1;
   int canContinue=false;
   char **orig = environ;
   char *s=*orig;
   char* username=NULL;
 
-  dumpMaps(conf);
+  char* anonymousUser=NULL;
 
+  if (conf){
+    maps* anonymousMap=getMaps(conf,"eoepca");
+    if (anonymousMap){
+      map* defaultUser=getMap(anonymousMap->content,"defaultUser");
+      if (defaultUser){
+        anonymousUser=zStrdup(defaultUser->value);
+      }
+    }
+  }
 
   if(orig!=NULL)
     for (; s; ei++ ) {
       if(strstr(s,"=")!=NULL && strlen(strstr(s,"="))>1){
         
       	// int len=strlen(s);
-      	// char* tmpName=zStrdup(s);
+      	// char* tmpName=;
       	// char* tmpValue=strstr(s,"=")+1;
       	// char* tmpName1=(char*)malloc((1+(len-(strlen(tmpValue)+1)))*sizeof(char));
       	// snprintf(tmpName1,(len-strlen(tmpValue)),"%s",tmpName);
@@ -371,6 +451,7 @@ addUserToMap(maps* conf){
                             medi_array_obj=json_object_array_get_idx(user_names, 0);
 
                             int uLen=json_object_get_string_len(medi_array_obj) * sizeof(char);
+
                             if (uLen>0){
                               username=(char*)malloc(uLen+1);
                               memset(username,'\0',uLen+1);
@@ -379,19 +460,32 @@ addUserToMap(maps* conf){
 
                               maps *_tmpMaps = createMaps("eoepcaUser");
                               if(_tmpMaps->content == NULL)
-                        	      _tmpMaps->content = createMap ("user",username);
-                        	    else
-                        	      addToMap (_tmpMaps->content,"user",username);
+                                  _tmpMaps->content = createMap ("user",username);
+                                else
+                                  addToMap (_tmpMaps->content,"user",username);
+
+                                if( strcmp(anonymousUser,username)==0 ){
+                                  // it is  anonymous, can only reads
+                                  // rwx
+                                  map *theGrants = createMap("grant","1--");
+                                  addMapToMap(&_tmpMaps->content,theGrants);
+                                }else{
+                                  // it is ok!
+                                  map *theGrants = createMap("grant","111");
+                                  addMapToMap(&_tmpMaps->content,theGrants);
+                                }
+
                               if(conf){
                                 addMapsToMaps (&conf, _tmpMaps);
                               }
-                              free(username);
+
                             }
                           }
                         }
                       }
                     }else{
-                      fprintf(stderr,"can't convert the json string >%s< \n",(char*)buffer);                          
+                      fprintf(stderr,"can't convert the json string >%s< \n",(char*)buffer);
+                      ret=1;
                     }
 
                     if(jobj){
@@ -404,25 +498,35 @@ addUserToMap(maps* conf){
               }
             }
           }
-
-          // if (canContinue){
-          //   maps *_tmpMaps = createMaps("eoepcaUser");
-          //   if(_tmpMaps->content == NULL)
-      	  //     _tmpMaps->content = createMap ("user",tmpValue);
-      	  //   else
-      	  //     addToMap (_tmpMaps->content,"user",tmpValue);
-          //   if(conf){
-          //     addMapsToMaps (&conf, _tmpMaps);
-          //   }
-          // }
-          
         }
-      	// free(tmpName1);
-      	// free(tmpName);
       }
       s = *(orig+ei);
-    } 
-  return 0;
+    }
+
+  maps* userMap=getMaps(conf,"eoepcaUser");
+  if(!userMap && ret==0){
+    maps *_tmpMaps = createMaps("eoepcaUser");
+    _tmpMaps->content = createMap ("user", (anonymousUser?anonymousUser:"anonymous"));
+    map *theGrants = createMap("grant","1--");
+    addMapToMap(&_tmpMaps->content,theGrants);
+    addMapsToMaps (&conf, _tmpMaps);
+    if(username){
+      free(username);
+    }
+    username=zStrdup( anonymousUser?anonymousUser:"anonymous" );
+  }
+
+  int sc=createUserSpace(conf,username);
+
+  if(username){
+    free(username);
+  }
+
+  if(anonymousUser){
+    free(anonymousUser);
+  }
+
+  return ret;
 }
 
 

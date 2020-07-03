@@ -543,6 +543,10 @@ extern "C" {
 
 ZOO_DLL_EXPORT int eoepcaadesdeployprocess(maps *&conf, maps *&inputs,
                                            maps *&outputs) {
+
+  dumpMaps(conf);
+
+
   return job(conf, inputs, outputs, Operation::DEPLOY);
 }
 

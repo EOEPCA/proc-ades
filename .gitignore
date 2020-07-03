@@ -44,3 +44,4 @@ build
 .vscode/sftp.json
 .idea/
 /3ty/proc-comm-lib-cwl/.idea/
+cmake-build-debug
