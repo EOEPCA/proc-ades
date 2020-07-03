@@ -14,8 +14,29 @@
 #include <utility>
 #include <zooconverter.hpp>
 
+// LINUX MKDIR
+#include <sys/stat.h>
+#include <sys/types.h>
+// LINUX MKDIR
+
 #include "service.h"
 #include "service_internal.h"
+
+int mkpath(char *file_path, mode_t mode) {
+  // assert(file_path && *file_path);
+  if (file_path!=nullptr)
+    for (char *p = strchr(file_path + 1, '/'); p; p = strchr(p + 1, '/')) {
+      *p = '\0';
+      if (mkdir(file_path, mode) == -1) {
+        if (errno != EEXIST) {
+          *p = '/';
+          return -1;
+        }
+      }
+      *p = '/';
+    }
+  return 0;
+}
 
 void getT2ConfigurationFromZooMapConfig(
     maps *&conf, std::string what,
@@ -196,6 +217,44 @@ int simpleRemove(std::string finalPath, std::string_view owsOri, maps *&conf,
   return SERVICE_SUCCEEDED;
 }
 
+class User{
+  std::string username_{"anonymous"};
+  std::string basePath_{""};
+
+  public:
+   
+    User()=default;
+    User(std::string username):username_(std::move(username)){
+    }
+    void setUsername(std::string username){
+      username_=std::move(username);
+    }
+    void setBasePath(std::string basePath){
+      basePath_=std::move(basePath);
+      if (*basePath_.rbegin() != '/') {
+        basePath_.append("/");
+      }
+      fprintf(stderr,"setBasePath: %s\n",basePath_.c_str());
+    }
+    std::string getPath(){
+      return  basePath_+username_ + "/";
+    }
+    std::string prepareUserWorkspace(){
+     
+      auto p=getPath();
+      auto co=std::make_unique<char[]>(p.size()+1);
+      memset(co.get(), '\0',p.size()+1);
+      memcpy(co.get(), p.c_str(), p.size());
+      
+      if (mkpath(co.get(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)!=0){
+        return "Can't create the user workspace: " + getPath();
+      }
+
+      return std::string();
+    }
+};
+
+
 int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
   std::map<std::string, std::string> confEoepca;
@@ -206,17 +265,46 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   getT2ConfigurationFromZooMapConfig(conf, "main", confMain);
 
   if (buildPath.empty()) {
-    return setZooError(conf, "zoo buildPath empty()", "NoApplicableCode");
+    std::string message{"zoo buildPath empty()"};
+    setStatus(conf, "failed", message.c_str());
+    return setZooError(conf, message, "NoApplicableCode");
   }
-
 
   if (confMain["servicePath"].empty()) {
-    return setZooError(conf, "zoo servicePath empty()", "NoApplicableCode");
+    std::string message{"zoo servicePath empty()"};
+    setStatus(conf, "failed", message.c_str());
+    return setZooError(conf, message, "NoApplicableCode");
   }
 
-  if (*confMain["servicePath"].rbegin() != '/') {
-    confMain["servicePath"].append("/");
+  if (confEoepca["userworkspace"].empty()) {
+    std::string message{"zoo userworkspace empty()"};
+    setStatus(conf, "failed", message.c_str());
+    return setZooError(conf, message, "NoApplicableCode");
   }
+
+  if (*confEoepca["userworkspace"].rbegin() != '/') {
+    confEoepca["userworkspace"].append("/");
+  }
+
+  std::map<std::string, std::string> userEoepca;
+  getT2ConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
+
+  auto user = std::make_unique<User>("anonymous");
+  if(!confEoepca["defaultUser"].empty()){
+   user->setUsername(confEoepca["defaultUser"]); 
+  }
+  user->setBasePath(confEoepca["userworkspace"]);
+
+  if (!userEoepca["user"].empty()){
+    user->setUsername(userEoepca["user"]);
+  }
+  auto resU=user->prepareUserWorkspace();
+  if (!resU.empty()){
+    std::string message{resU};
+    setStatus(conf, "failed", message.c_str());
+    return setZooError(conf, message, "NoApplicableCode");
+  }
+
 
   std::map<std::string, std::string> confMetadata;
   getT2ConfigurationFromZooMapConfig(conf, "metadata", confMetadata);
@@ -243,7 +331,11 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         }
 
         std::string finalPath = confMain["servicePath"];
+        finalPath=user->getPath();
+
         finalPath.append(owsOri);
+        fprintf(stderr,"finalPath=%s, getPath=%s",finalPath.c_str(),user->getPath().c_str() );
+
         return simpleRemove(finalPath, owsOri, conf, inputs, outputs);
       }
     }
@@ -317,6 +409,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                               : "undeploy");
 
               finalPath = confMain["servicePath"];
+              fprintf(stderr,"finalPath=%s, getPath=%s",finalPath.c_str(),user->getPath().c_str() );
+              finalPath=user->getPath();
+
               finalPath.append(zoo->getIdentifier());
               cwlRef = finalPath;
               zooRef = finalPath;
@@ -340,13 +435,16 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                 zooRef.append(".zo");
 
                 xml->startElement("status");
+                if (!fileExist(zooRef.c_str())) {
+                  std::string COMPILE =
+                      ("make -C " + buildPath +  " USERPATH=\"" +user->getPath() +"\" COMPILE=\"" +
+                       zoo->getIdentifier() + "\"  1>&2  ");
+                  
+                  std::cerr << "***" << COMPILE << "\n";
+                  int COMPILERES = system((char *)COMPILE.c_str());
+                  sleep(2);
+                }
 
-                std::string COMPILE =
-                    ("make -C " + buildPath + " COMPILE=\"" +
-                     zoo->getIdentifier() + "\"  1>&2  ");
-                std::cerr << "***" << COMPILE << "\n";
-                int COMPILERES = system((char *)COMPILE.c_str());
-                sleep(1);
                 if (!fileExist(zooRef.c_str())) {
                   removeFile(finalPath.c_str());
                   removeFile(cwlRef.c_str());
