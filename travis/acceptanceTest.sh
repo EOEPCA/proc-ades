@@ -8,9 +8,13 @@ source travis/libs/variables.sh
 if [ "${TRAVIS}" == "true" ]; then
   docker pull "${EOEPCA_ADES_ZOO}"
 
+
   sudo docker run --rm  -d --name zoo -p 7777:80 ${EOEPCA_ADES_ZOO}
 
   sleep 15
+
+  chmod +x ./travis/transational/0*
+  chmod +x ./travis/transational/wps1_getProcess*
 
   echo "run: ./travis/transational/01_getProcess.sh"
   ./travis/transational/01_getProcess.sh
