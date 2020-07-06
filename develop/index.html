@@ -18,8 +18,8 @@
 <div class="details">
 <span id="author" class="author">TVUK System Team</span><br>
 <span id="email" class="email">&lt;<a href="mailto:Eoepca.SystemTeam@telespazio.com">Eoepca.SystemTeam@telespazio.com</a>&gt;</span><br>
-<span id="revnumber">version 0.1.1,</span>
-<span id="revdate">09/06/2020</span>
+<span id="revnumber">version 2,</span>
+<span id="revdate">06/07/2020</span>
 <br><span id="revremark"></span>
 </div>
 <div id="toc" class="toc2">
@@ -58,32 +58,26 @@
 <li><a href="#_retrieve_result">2.3.4. Retrieve Result</a></li>
 </ul>
 </li>
-<li><a href="#_external_interfaces">2.4. External Interfaces</a>
+<li><a href="#_required_resources">2.4. Required Resources</a>
 <ul class="sectlevel3">
-<li><a href="#_processing_interface">2.4.1. Processing interface</a></li>
-<li><a href="#_authn_authz_interface">2.4.2. AuthN / AuthZ interface</a></li>
-</ul>
-</li>
-<li><a href="#_required_resources">2.5. Required Resources</a>
-<ul class="sectlevel3">
-<li><a href="#_data">2.5.1. Data</a>
+<li><a href="#_data">2.4.1. Data</a>
 <ul class="sectlevel4">
-<li><a href="#_ows_context">2.5.1.1. OWS Context</a></li>
-<li><a href="#_common_workflow_language_cwl">2.5.1.2. Common Workflow Language (CWL)</a></li>
+<li><a href="#_ows_context">2.4.1.1. OWS Context</a></li>
+<li><a href="#_common_workflow_language_cwl">2.4.1.2. Common Workflow Language (CWL)</a></li>
 </ul>
 </li>
-<li><a href="#_software">2.5.2. Software</a></li>
+<li><a href="#_software">2.4.2. Software</a></li>
 </ul>
 </li>
-<li><a href="#_design_standards_conventions_and_procedures">2.6. Design Standards, Conventions and Procedures</a>
+<li><a href="#_design_standards_conventions_and_procedures">2.5. Design Standards, Conventions and Procedures</a>
 <ul class="sectlevel3">
-<li><a href="#_uml_design">2.6.1. UML Design</a></li>
-<li><a href="#_naming_conventions">2.6.2. Naming Conventions</a></li>
+<li><a href="#_uml_design">2.5.1. UML Design</a></li>
+<li><a href="#_naming_conventions">2.5.2. Naming Conventions</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#components">3. Component Design</a>
+<li><a href="#components">3. Components Design</a>
 <ul class="sectlevel2">
 <li><a href="#_ades_core_framework">3.1. ADES Core Framework</a>
 <ul class="sectlevel3">
@@ -99,6 +93,7 @@
 <li><a href="#_overview_and_purpose_2">3.2.1. Overview and Purpose</a>
 <ul class="sectlevel4">
 <li><a href="#_wps_1_0_2_0_compliance">3.2.1.1. WPS 1.0 &amp; 2.0 compliance</a></li>
+<li><a href="#_ogc_api_processes_compliance">3.2.1.2. OGC API Processes compliance</a></li>
 </ul>
 </li>
 <li><a href="#_software_reuse_and_dependencies_2">3.2.2. Software Reuse and Dependencies</a></li>
@@ -157,7 +152,7 @@
 <li><a href="#_applicable_resources_7">4.3.3. Applicable Resources</a></li>
 </ul>
 </li>
-<li><a href="#_workflow_execution">4.4. Workflow execution</a>
+<li><a href="#_workflow_execution">4.4. Workflow Execution</a>
 <ul class="sectlevel3">
 <li><a href="#_overview_and_purpose_9">4.4.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput_4">4.4.2. Data Input/Output</a></li>
@@ -250,6 +245,11 @@ The Amendment Record Sheet below records the history and issue status of this do
 <th class="tableblock halign-center valign-top"><p class="tableblock">0.1.1</p></th>
 <td class="tableblock halign-center valign-top"><p class="tableblock">09/06/2020</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Update Design with ADES release 0.1</p></td>
+</tr>
+<tr>
+<th class="tableblock halign-center valign-top"><p class="tableblock">0.1.2</p></th>
+<td class="tableblock halign-center valign-top"><p class="tableblock">06/07/2020</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Updated Design for ADES release 0.1. Added <a href="#capabilities">Functional Design</a> and <a href="#interfaces">External Interfaces</a> sections</p></td>
 </tr>
 </tbody>
 </table>
@@ -348,6 +348,18 @@ EMSS-EOPS-TN-17-002</p>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>Issue 1,<br>
 12/12/2017</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="OGC-COMMON"></a>[OGC-COMMON]</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>OGC Web Service Common,<br>
+06-121r9,<br>
+<a href="https://www.ogc.org/standards/common" class="bare">https://www.ogc.org/standards/common</a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>06-121r9,<br>
+04/07/2010</p>
 </div></div></td>
 </tr>
 <tr>
@@ -478,6 +490,18 @@ OGC 18-036r1,<br>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>18-036r1,<br>
 07/02/2019</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="OGC-API-HACK2019"></a>[OGC-API-HACK2019]</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>OGC API Hackathon 2019 Engineering Report,<br>
+OGC 19-062,<br>
+<a href="https://docs.ogc.org/per/19-062.html" class="bare">https://docs.ogc.org/per/19-062.html</a></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>19-062,<br>
+14/11/2019</p>
 </div></div></td>
 </tr>
 <tr>
@@ -1272,7 +1296,7 @@ Then, the WPS service triggers various function oif the Processing Services for 
 Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it&#8217;s execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution.</p>
 </div>
 <div class="paragraph">
-<p>Section <a href="#Building Block Design">[Building Block Design]</a> contains a detailed description of the ADES components.</p>
+<p>Section <a href="#components">Components Design</a> contains a detailed description of the ADES components.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1310,7 +1334,7 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 <div class="sect3">
 <h4 id="_deploy_processing_service">2.3.1. Deploy Processing Service</h4>
 <div class="paragraph">
-<p><em>As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <a href="#_ows_context">OWS Context</a>from a Resource Catalog referencing a <a href="#_common_workflow_language_cwl">Common Workflow Language (CWL)</a> so that I can make it available (or remove) for the Execution, on behalf of my User.</em></p>
+<p><em>As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <a href="#_ows_context">OWS Context</a> from a Resource Catalog referencing a <a href="#_common_workflow_language_cwl">Common Workflow Language (CWL)</a> so that I can make it available (or remove) for the Execution, on behalf of my User.</em></p>
 </div>
 </div>
 <div class="sect3">
@@ -1333,71 +1357,7 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 </div>
 </div>
 <div class="sect2">
-<h3 id="_external_interfaces">2.4. External Interfaces</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="title">Content Description</div>
-<div class="paragraph">
-<p>This section contains:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Listing of technical external interfaces (with other Building Blocks)</p>
-</li>
-</ul>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_processing_interface">2.4.1. Processing interface</h4>
-<div class="paragraph">
-<p>The ADES exposes an OGC WPS 1.0 &amp; 2.0 as well as the OGC Processes API (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_authn_authz_interface">2.4.2. AuthN / AuthZ interface</h4>
-<div class="paragraph">
-<p>The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A request for Authentication</p>
-<div class="ulist">
-<ul>
-<li>
-<p>The Authentication flow is implemented using the OpenID Connect 1.0 protocol</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>A request for Authorization</p>
-<div class="ulist">
-<ul>
-<li>
-<p>The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The PEP module is provided by <strong>Task 1: User Management</strong>, and it is part of the ADES architecture.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_required_resources">2.5. Required Resources</h3>
+<h3 id="_required_resources">2.4. Required Resources</h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1427,13 +1387,13 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 </table>
 </div>
 <div class="sect3">
-<h4 id="_data">2.5.1. Data</h4>
+<h4 id="_data">2.4.1. Data</h4>
 <div class="sect4">
-<h5 id="_ows_context">2.5.1.1. OWS Context</h5>
+<h5 id="_ows_context">2.4.1.1. OWS Context</h5>
 
 </div>
 <div class="sect4">
-<h5 id="_common_workflow_language_cwl">2.5.1.2. Common Workflow Language (CWL)</h5>
+<h5 id="_common_workflow_language_cwl">2.4.1.2. Common Workflow Language (CWL)</h5>
 <div class="paragraph">
 <p>Common Workflow Language (CWL) is used as the application package descriptor. It covers the following elements necessary to describe the application:<br>
 * cyclic graph orchestrating the steps in order mapping workflow input/output with steps input/output<br>
@@ -1447,7 +1407,7 @@ The container reference is included in the CWL as a requirement.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_software">2.5.2. Software</h4>
+<h4 id="_software">2.4.2. Software</h4>
 <div class="paragraph">
 <p>The following open-source software are required to support the implementation of the ADES:</p>
 </div>
@@ -1508,7 +1468,7 @@ The container reference is included in the CWL as a requirement.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_design_standards_conventions_and_procedures">2.6. Design Standards, Conventions and Procedures</h3>
+<h3 id="_design_standards_conventions_and_procedures">2.5. Design Standards, Conventions and Procedures</h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1532,18 +1492,18 @@ The container reference is included in the CWL as a requirement.</p>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_uml_design">2.6.1. UML Design</h4>
+<h4 id="_uml_design">2.5.1. UML Design</h4>
 
 </div>
 <div class="sect3">
-<h4 id="_naming_conventions">2.6.2. Naming Conventions</h4>
+<h4 id="_naming_conventions">2.5.2. Naming Conventions</h4>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="components">3. Component Design</h2>
+<h2 id="components">3. Components Design</h2>
 <div class="sectionbody">
 <div class="admonitionblock note">
 <table>
@@ -1606,7 +1566,7 @@ The container reference is included in the CWL as a requirement.</p>
 <div class="sect3">
 <h4 id="_interfaces">3.1.3. Interfaces</h4>
 <div class="paragraph">
-<p>All interfaces are provided by the WPS Server described in the next section</p>
+<p>All interfaces are external and described in the <a href="#interfaces">External Interfaces</a> section</p>
 </div>
 </div>
 <div class="sect3">
@@ -1634,13 +1594,29 @@ The container reference is included in the CWL as a requirement.</p>
 <div class="sect3">
 <h4 id="_overview_and_purpose_2">3.2.1. Overview and Purpose</h4>
 <div class="paragraph">
-<p>The WPS Server provides the external interface of the ADES, available to the EMS.</p>
+<p>The WPS Server provides the processing interfaces of the ADES. Basically, it exposes 2 web services:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OGC Web Services Common <a href="#OGC-COMMON">[OGC-COMMON]</a> hosting WPS 1.0.0 &amp; 2.0.0 processing services</p>
+</li>
+<li>
+<p>OGC API Processes <a href="#OGC-API-PROC">[OGC-API-PROC]</a> hosting WPS in RESTful core OpenAPI</p>
+</li>
+</ul>
 </div>
 <div class="sect4">
 <h5 id="_wps_1_0_2_0_compliance">3.2.1.1. WPS 1.0 &amp; 2.0 compliance</h5>
 <div class="paragraph">
 <p><em>"ZOO-Kernel implements and complies with the WPS 1.0.0 and the WPS 2.0.0 standards edited by the Open Geospatial Consortium".</em><br>
 The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the client ask the server to stop a running service and remove any file it created"</em>, requires changes in the source code to support the EMS operations. The current ZOO-Kernel implementation relies on local processes which are being removed from the execution environment. This approach prevents the management of remote processes. In this context, the ZOO-Kernel third-party software is modified to allow managing remote execution via APIs, in particular when the remote process exposes an OGC WPS-T 2.0.0 interface. It is foreseen an upstream contribution to the open-source ZOO-Project project.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_ogc_api_processes_compliance">3.2.1.2. OGC API Processes compliance</h5>
+<div class="paragraph">
+<p>The ZOO-Project product, available at www.zoo-project.org, is an open-source implementation of both the Web Processing Service (WPS) standard (version 1.0.0 and 2.0) and the OGC API - Processes specification. The ZOO-Kernel is the main component written in C which enables the deployment of geospatial processes on the Web in a way that conforms to OGC standards.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup></a></p>
 </div>
 </div>
 </div>
@@ -1652,14 +1628,7 @@ The Dismiss operation, which is <em>"only available in WPS 2.0.0, it lets the cl
 <div class="ulist">
 <ul>
 <li>
-<p>WPS Server</p>
-<div class="ulist">
-<ul>
-<li>
 <p>ZOO-Kernel <a href="http://zoo-project.org/docs/kernel/" class="bare">http://zoo-project.org/docs/kernel/</a></p>
-</li>
-</ul>
-</div>
 </li>
 </ul>
 </div>
@@ -1682,6 +1651,9 @@ More details in the <a href="#interfaces">External Interfaces</a> section.</p>
 <div class="ulist">
 <ul>
 <li>
+<p><a href="#OGC-COMMON">[OGC-COMMON]</a></p>
+</li>
+<li>
 <p><a href="#OGC-WPS">[OGC-WPS]</a></p>
 </li>
 <li>
@@ -1689,6 +1661,9 @@ More details in the <a href="#interfaces">External Interfaces</a> section.</p>
 </li>
 <li>
 <p><a href="#OGC-API-PROC">[OGC-API-PROC]</a></p>
+</li>
+<li>
+<p><a href="#OGC-API-HACK2019">[OGC-API-HACK2019]</a></p>
 </li>
 </ul>
 </div>
@@ -1713,7 +1688,7 @@ This Service shall be composed of the <a href="#_cwl_parser">workflow</a> of the
 <div class="title">Figure 3. ADES Service Components Diagram</div>
 </div>
 <div class="paragraph">
-<p>The Service component is in charge of orchestrating the application execution when the service in invoked by a <a href="#_execute_service_as_job">job submission</a> from the Web Processing Service layer.</p>
+<p>The Service component is in charge of orchestrating the application execution when the service in invoked by a <a href="#_job_submision">job submission</a> from the Web Processing Service layer.</p>
 </div>
 </div>
 <div class="sect3">
@@ -1977,7 +1952,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="sect3">
 <h4 id="_overview_and_purpose_7">4.2.1. Overview and Purpose</h4>
 <div class="paragraph">
-<p>The submission of a job starts a process instantiation and execution of an application. Basically, the ADES execute the <a href="#appservice">Service Component</a> built during the <a href="#_application_deployment_to_web_processing_service">application deployment</a>.</p>
+<p>The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <a href="#appservice">Service Component</a> built during the <a href="#_application_deployment_to_web_processing_service">application deployment</a>.</p>
 </div>
 <div class="paragraph">
 <p>This function triggers 3 main operations sequantially</p>
@@ -1988,10 +1963,10 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <p><a href="#_data_stage_in">Data Stage-In</a></p>
 </li>
 <li>
-<p><a href="#Workflow Execution">[Workflow Execution]</a></p>
+<p><a href="#_workflow_execution">Workflow Execution</a></p>
 </li>
 <li>
-<p><a href="#Data Stage out">[Data Stage out]</a></p>
+<p><a href="#_data_stage_out">Data Stage-Out</a></p>
 </li>
 </ol>
 </div>
@@ -2086,7 +2061,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect2">
-<h3 id="_workflow_execution">4.4. Workflow execution</h3>
+<h3 id="_workflow_execution">4.4. Workflow Execution</h3>
 <div class="paragraph">
 <p><em>TBD</em></p>
 </div>
@@ -2130,10 +2105,10 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="ulist">
 <ul>
 <li>
-<p>Job Execute Request</p>
+<p>Job Results folder</p>
 </li>
 <li>
-<p>Workflow (CWL)</p>
+<p>Catalog referencing results (optional)</p>
 </li>
 </ul>
 </div>
@@ -2143,10 +2118,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="ulist">
 <ul>
 <li>
-<p>Input data folder</p>
-</li>
-<li>
-<p>Path to catalog referencing input data folder</p>
+<p>Reference to catalog published to the resource manager</p>
 </li>
 </ul>
 </div>
@@ -2159,10 +2131,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
-</li>
-<li>
-<p><a href="#ZOO">[ZOO]</a></p>
+<p><a href="#STAC">[STAC]</a></p>
 </li>
 </ul>
 </div>
@@ -2476,10 +2445,16 @@ The 2 next sections describes</p>
 </div>
 </div>
 </div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnotedef_1">
+<a href="#_footnoteref_1">1</a>. <a href="https://docs.ogc.org/per/19-062.html#_zoo_project" class="bare">https://docs.ogc.org/per/19-062.html#_zoo_project</a> <a href="#OGC-API-HACK2019">[OGC-API-HACK2019
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.1<br>
-Last updated 2020-07-06 17:36:17 UTC
+Version 2<br>
+Last updated 2020-07-06 20:10:03 UTC
 </div>
 </div>
 <link rel="stylesheet" href="stylesheets/coderay-asciidoctor.css">
