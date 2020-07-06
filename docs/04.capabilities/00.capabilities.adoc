@@ -1,0 +1,143 @@
+[[capabilities]]
+= Functional Design
+
+[NOTE]
+.Content Description
+================================
+This section contains:
+
+* A listing of the main functions with regards to the <<Use Cases>>. For each function, 
+** Overview and purpose: description of the function
+** Activity diagram: graphical description of the function 
+** Data Input/Ouput: Data flowing in and out of the function
+** Applicable Resources: links and references to (Reference Docs), and repositories.
+
+When a breakdown is necessary, a general overview of the function can be given. On the contrary, no breakdown indicates a single component development with the same expected sections.
+
+================================
+
+== Application Deployment to Web Processing Service
+=== Overview and Purpose
+
+This is the main function in charge of building a <<appservice,Service>> component from an Application Package.
+Concretely, this function read an <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>. With all the information in those documents, it builds a process describing 
+
+* General information about the service: identifier, title, abstract
+* Input parameters definition: identifiers, types, options, default values,...
+* Ouput results options: identifiers, types, format
+
+Regardless of the deployment mechanism, the <<Common Workflow Language (CWL),CWL Workflow>> is used to convey the information that describes the process inputs/outputs into WPS data model.
+
+The mapping between CWL and WPS follows the work performed in the OGC Testbed 16.
+
+.Application Deployment to Web Processing Service Activity Diagram
+[plantuml, deployfunction, png] 
+....
+include::../include/deployfunction.wsd[]
+....
+
+All software and their dependecies are described in the nextr sections
+
+=== Data Input/Output
+
+* Input
+** <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>
+
+* Output
+** <<appservice,Service Component>>
+
+=== Applicable Resources
+
+* <<TB13-ADES>>
+* <<TB14-WPS-T>>
+
+== Job Submision
+
+=== Overview and Purpose
+
+The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<appservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
+
+This function triggers 3 main operations sequantially
+
+1. <<Data Stage-In>>
+2. <<Workflow Execution>>
+3. <<Data Stage-Out>>
+
+=== Data Input/Output
+
+* Input
+** Job Execute Request
+
+* Output
+** Job Identifier (status location)
+
+
+== Data Stage-In
+
+This is a pre-processing step that provision all the data needed for the workflow execution and referenced in the job execute request.
+
+=== Overview and Purpose
+
+.ADES Data Stage-In Activity Diagram
+[plantuml, datastagein, png] 
+....
+include::../include/datastagein.wsd[]
+....
+
+=== Data Input/Output
+
+* Input 
+** Job Execute Request
+** Workflow (CWL)
+* Output
+** Input data folder
+** Path to catalog referencing input data folder
+
+=== Applicable Resources
+
+* <<CWL>>
+* <<ZOO>>
+
+== Workflow Execution
+
+_TBD_
+
+=== Overview and Purpose
+
+// .ADES Workflow Execution Activity Diagram
+// [plantuml, workflowexec, png] 
+// ....
+// include::../include/workflowexec.wsd[]
+// ....
+
+=== Data Input/Output
+
+_TBD_
+
+=== Applicable Resources
+
+_TBD_
+
+== Data Stage-Out
+
+This is a post-processing step that retrieve all the results produced the workflow execution, copy and publish them in a resource manager.
+
+=== Overview and Purpose
+
+.ADES Data Stage-out Activity Diagram
+[plantuml, datastageout, png] 
+....
+include::../include/datastageout.wsd[]
+....
+
+=== Data Input/Output
+
+* Input 
+** Job Results folder
+** Catalog referencing results (optional)
+* Output
+** Reference to catalog published to the resource manager
+
+=== Applicable Resources
+
+* <<STAC>>

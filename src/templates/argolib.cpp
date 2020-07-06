@@ -7,6 +7,7 @@
 #include <zconf.h>
 #include <memory>
 #include <iomanip>
+#include <fstream>
 #include "argoconfigparser.hpp"
 
 #include "zooargo.hpp"
@@ -57,11 +58,11 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     }
 
 
-    std::cerr << "start1"<<std::endl;
+    std::cerr << "Instanciating argolib"<<std::endl;
     // argolib
     auto argoLib = std::make_unique<EOEPCA::EOEPCAargo>(awConfig.eoepcaargoPath);
 
-    std::cerr << "start2"<<std::endl;
+    std::cerr << "Parsing CWL graph"<<std::endl;
     // parsing Graph
     auto cwl_graph = std::make_unique<Graph>();
     cwl_graph->loadCwlFileContent(cwlContent);
@@ -69,7 +70,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
 
     //--------------------
     // WORKFLOW
-    std::cerr << "start3"<<std::endl;
+    std::cerr << "Retrieving cwl steps"<<std::endl;
     // retrieve the step. We make the assumption that we only deal with a single step
     auto cwl_workflow_list = cwl_graph->getWorkflowList();
     auto cwl_workflow = cwl_workflow_list.front();
@@ -78,22 +79,22 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     }
     auto step = cwl_workflow.getSteps().front();
 
-    std::cerr << "start3"<<std::endl;
+    std::cerr << "Retrieving step label"<<std::endl;
     // step name
     std::string stepName = step.getLabel();
 
-    std::cerr << "start4"<<std::endl;
+    std::cerr << "Retrieving step inputs"<<std::endl;
     //step inputs
     auto inputs = step.getIn();
 
 
     //------------------------------
     // COMMAND LINE TOOL
-    std::cerr << "start5"<<std::endl;
+    std::cerr << "Parsing CommandLineTool"<<std::endl;
     auto cwl_commandLineToolList = cwl_graph->getCommandLineToolList();
     auto cwl_commandLineTool = cwl_commandLineToolList.front();
 
-    std::cerr << "start6"<<std::endl;
+    std::cerr << "Retrieving basecommand and docker image name"<<std::endl;
     // basecommand
     std::string baseCommand = cwl_commandLineTool.getBaseCommand();
 
@@ -102,7 +103,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
 
     //---------------------
     // APPLICATION
-    std::cerr << "start7"<<std::endl;
+    std::cerr << "Instancianting proc_comm_lib_argo::Application"<<std::endl;
     std::unique_ptr<proc_comm_lib_argo::Application> application = std::make_unique<proc_comm_lib_argo::Application>();
     application->setRunId(newRunId);
     application->setUuidBaseId(newUuidBaseID);
@@ -115,7 +116,7 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
         application->addParam(inputPair.second->id, inputPair.second->value);
     }
 
-    std::cerr << "start7"<<std::endl;
+    std::cerr << "Checking if stage in phase is required"<<std::endl;
     if (useStageIn) {
         // pre processing node
         std::unique_ptr<proc_comm_lib_argo::NodeTemplate> stageInApplication = std::make_unique<proc_comm_lib_argo::NodeTemplate>();
@@ -144,21 +145,26 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
 
     application->setPostProcessingNode(stageOutApplication);
 
-    std::cerr << "start8.1"<<std::endl;
-    // temporary hardcoded
-    std::map<std::string, std::string> volume;
-    volume["volumeName"] = "workdir";
-    volume["persistentVolumeClaimName"] = "eoepca-pvc";
-    volume["volumeMountPath"] = "/tmp/eoepca";
-    application->setVolume(volume);
-
-    std::cerr << "start8.2"<<std::endl;
+    std::cerr << "Configuring Kubernetes Persistent Volume binding"<<std::endl;
+    proc_comm_lib_argo::KubernetesVolumeClaim kubernetesVolumeClaim;
+    std::vector<std::string> accessModes;
+    accessModes.push_back("ReadWriteOnce");
+    kubernetesVolumeClaim.setAccessModes(accessModes);
+    kubernetesVolumeClaim.setVolumeName("workingdir");
+    kubernetesVolumeClaim.setVolumeSize("2Gi");
+    application->setKubernetesVolumeClaim(kubernetesVolumeClaim);
 
     std::cerr << "argolib path "<< awConfig.eoepcaargoPath <<std::endl;
+    std::ifstream infile( awConfig.eoepcaargoPath);
+    if (!infile.good()) {
+        throw std::runtime_error(awConfig.eoepcaargoPath + " not found");
+    }
 
     if(!argoLib){
         throw std::runtime_error("no argolib");
     }
+
+    std::cerr << "Previewing argo workflow spec file"<<std::endl;
     std::string yaml;
     argoLib->create_workflow_yaml_from_app(application.get(),yaml);
     std::cerr<<yaml<<std::endl;
@@ -166,20 +172,20 @@ extern "C" int start(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const st
     std::string argoNamespace = "default";
     proc_comm_lib_argo::model::Workflow workflow;
 
-    std::cerr << "start9"<<std::endl;
-    argoLib->submit_workflow(application.get(), argoNamespace, workflow, *argoWorkflowConfigData.get_argo_url());
+    std::cerr << "Submitting argo workflow job"<<std::endl;
+    argoLib->submit_workflow(application.get(), argoNamespace, workflow, *argoWorkflowConfigData.get_k8_url());
 
-    std::cerr << "start10"<<std::endl;
+    std::cerr << "Retrieving job id"<<std::endl;
     id = workflow.get_metadata()->get_name()->c_str();
 
-    std::cerr << "start11"<<std::endl;
+    std::cerr << "Job successfully submitted"<<std::endl;
     return 0;
 }
 
 extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, const std::string &argoWorkfloId, int &percent, std::string &message) {
     proc_ades_argo::model::ArgoWorkflowConfigParsed argoWorkflowConfigData = nlohmann::json::parse(awConfig.argoConfigFile);
 
-    std::cerr<<"getstatus1"<<std::endl;
+    std::cerr<<"Get status method called"<<std::endl;
     // argolib
     auto argoLib = std::make_unique<EOEPCA::EOEPCAargo>(awConfig.eoepcaargoPath);
 
@@ -187,7 +193,7 @@ extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, cons
     proc_comm_lib_argo::model::Workflow workflow;
     try {
         std::cerr<<"getstatus11"<<std::endl;
-        argoLib->get_workflow_from_name(argoWorkfloId, argoNamespace, workflow, *argoWorkflowConfigData.get_argo_url());
+        argoLib->get_workflow_from_name(argoWorkfloId, argoNamespace, workflow, *argoWorkflowConfigData.get_k8_url());
         std::cerr<<"getstatus12"<<std::endl;
         if ( workflow.get_status() && workflow.get_status()->get_phase()) {
             message = *workflow.get_status()->get_phase();
@@ -195,7 +201,7 @@ extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, cons
             message="Retrieving status of the workflow";
             return 1;
         }
-        std::cerr<<"getstatus13"<<std::endl;
+        std::cerr<<"Get Status successfully called"<<std::endl;
     } catch (const std::exception &ex) {
         std::cerr << ex.what() << std::endl;
         message = ex.what();
@@ -211,7 +217,7 @@ extern "C" int getStatus(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, cons
         throw std::runtime_error(message);
     }
 
-    std::cerr<<"getstatus2"<<std::endl;
+    std::cerr<<"Calculating percentage of completion"<<std::endl;
     int totNumberOfWorkflows = workflow.get_status()->get_nodes()->size();
     int completedWorkflows = 0;
     std::string succeededString = "Succeeded";
@@ -235,7 +241,7 @@ extern "C" int getResults(mods::ArgoInterface::ArgoWorkflowConfig &awConfig, con
     auto argoLib = std::make_unique<EOEPCA::EOEPCAargo>(awConfig.eoepcaargoPath);
 
     std::string argoNamespace = "default";
-    argoLib->get_workflow_results_from_name(argoWorkflowId, argoNamespace, outPutList, *argoWorkflowConfigData.get_argo_url(), *argoWorkflowConfigData.get_k8_url());
+    argoLib->get_workflow_results_from_name(argoWorkflowId, argoNamespace, outPutList, *argoWorkflowConfigData.get_k8_url(), *argoWorkflowConfigData.get_argo_url());
 
     return 0;
 }

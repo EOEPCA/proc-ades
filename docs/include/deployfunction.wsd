@@ -1,0 +1,33 @@
+@startuml Data Stage In Activity Diagram
+
+start
+
+:Read **Application Package**;
+note right
+    Deploy Process Input
+    ====
+    **OWS Context**
+    **CWL workflow**
+end note
+:Generate **Web Processing**\n**Service Description**;
+
+:Pre-pull Application Container;
+note right
+    Optional
+end note
+
+:Build **Service Component**;
+note right
+    **Service**
+    ====
+    - Data Staging
+    - CWL workflow for runner
+    - CWL input template
+end note
+
+:Register Service\nin Processes Database;
+
+
+stop
+
+@enduml

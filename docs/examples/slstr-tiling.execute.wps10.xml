@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wps:Execute version="1.0.0" service="WPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">
+    <ows:Identifier>slstr-tiling</ows:Identifier>
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>input_reference</ows:Identifier>
+            <wps:Reference mimeType="application/atom+xml" xlink:href="https://formentera.terradue.com/sentinel3/search?format=atom&amp;uid=S3B_SL_2_LST____20200624T090133_20200624T090433_20200624T105644_0180_040_221_2700_LN2_O_NR_004" method="GET" />
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>input_reference</ows:Identifier>
+            <wps:Reference mimeType="application/atom+xml" xlink:href="https://formentera.terradue.com/sentinel3/search?format=atom&amp;uid=S3B_SL_2_LST____20200623T092744_20200623T093044_20200624T153106_0180_040_207_2700_LN2_O_NT_004" method="GET" />
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>input_reference</ows:Identifier>
+            <wps:Reference mimeType="application/atom+xml" xlink:href="https://formentera.terradue.com/sentinel3/search?format=atom&amp;start=2020-03-06&amp;bbox=-5.801%2C14.009%2C-3.076%2C16.215&amp;pt=SL_2_LST___&amp;od=DESCENDING" method="GET" />
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>tiling_level</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+    </wps:DataInputs>
+    <wps:ResponseForm>
+        <wps:ResponseDocument storeExecuteResponse="true">
+            <wps:Output mimeType="application/json; profile=stac-catalog" asReference="true">
+                <ows:Identifier>catalog</ows:Identifier>
+            </wps:Output>
+        </wps:ResponseDocument>
+    </wps:ResponseForm>
+</wps:Execute>

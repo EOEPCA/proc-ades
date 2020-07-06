@@ -7,8 +7,8 @@
 :component-github-name: proc-ades
 :doc-title: {component-name} Design Document
 :doc-num: {project}.SDD.xxx
-:revnumber: 0.1.1
-:revdate: 09/06/2020
+:revnumber: 2
+:revdate: 06/07/2020
 :revremark:
 :category: Design Document
 :copyrightYear: 2020
@@ -50,11 +50,19 @@ include::02.overview/00.overview.adoc[]
 
 <<<
 
-include::03.design/00.design.adoc[]
+include::03.components/00.components.adoc[]
 
 <<<
 
-include::04.traceability/00.traceability.adoc[]
+include::04.capabilities/00.capabilities.adoc[]
+
+<<<
+
+include::05.interfaces/00.interfaces.adoc[]
+
+<<<
+
+include::06.traceability/00.traceability.adoc[]
 
 '''
 

@@ -1,0 +1,61 @@
+@startuml Data Stage In Activity Diagram
+
+start
+
+:Prepare a **Data StageIn Volume**;
+:Read all **`File`** and **`Directory`**\nWorkflow's parameters\nin CWL;
+note right
+    **CWL workflow**
+    ====
+end note
+repeat :for each parameter;
+:Read corresponding **input**\nin job's Execution Order;
+note right
+    **WPS Execute**
+    ====
+end note
+partition "Resource Supply Module" {
+    :Resolve Resource(s) link(s);
+    note right
+        Supported resources
+        manager
+        ====
+        - HTTP/S3
+        - OpenSearch
+        - STAC
+        - ...
+    end note
+    :Copy or link referenced data\nin the **Data StageIn Volume**;
+}
+:Generate **STAC documents**\nfor all the copied files;
+note right
+    **2 STAC docs**
+    - Item(s) doc
+    - Collection doc
+    ====
+    Collection identified in the CWL
+    or with the input parameter id
+    referencing the items doc
+end note
+repeat while (more parameter?)
+
+:Generate **STAC Catalog doc**\nreferencing all previous\ncollections doc;
+note right
+    **Catalog JSON**
+    ====
+end note
+:Generate **CWL input file**\nreferencing all physical files\nand the Catalog JSON;
+
+(A)
+note right
+    **Data StageIn Volume**
+    + input.json (CWL input)
+    ====
+    All physical files and
+    STAC documents organised
+    in folders
+end note
+
+stop
+
+@enduml

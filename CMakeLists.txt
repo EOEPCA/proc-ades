@@ -24,7 +24,7 @@ include_directories(3ty/yaml-cpp-0.6.3/include)
 
 add_subdirectory(3ty/proc-comm-lib-argo)
 add_subdirectory(3ty/proc-comm-lib-cwl)
-add_subdirectory(3ty/proc-comm-zoo-1.0)
+add_subdirectory(3ty/proc-comm-zoo-1.2-alpha)
 add_subdirectory(3ty/proc-comm-lib-ows-1.03)
 
 include_directories(3ty/proc-comm-lib-ows-1.03/includes)

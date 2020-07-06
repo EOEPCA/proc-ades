@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<ProcessDescriptions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" service="WPS" version="1.0.0" xmlns="http://www.opengis.net/wps/1.0.0">
+  <ProcessDescription xmlns="">
+    <Identifier xmlns="http://www.opengis.net/ows/1.1">slstr-tiling</Identifier>
+    <Title xmlns="http://www.opengis.net/ows/1.1">Sentinel-3 SLSTR Level-2 reprojection and tiling</Title>
+    <Abstract xmlns="http://www.opengis.net/ows/1.1">This service takes as input a Sentinel-3 SLSTR Level 2 (SL_2_LST____) product on DESCENDING pass and does the reprojection and tiling</Abstract>
+    <DataInputs>
+      <Input minOccurs="1" maxOccurs="99">
+        <Identifier xmlns="http://www.opengis.net/ows/1.1">input_reference</Identifier>
+        <Title xmlns="http://www.opengis.net/ows/1.1">Sentinel-3 SLSTR Level-2 (SL_2_LST____ descending pass)</Title>
+        <Abstract xmlns="http://www.opengis.net/ows/1.1">This service takes as input a Sentinel-3 SLSTR Level 2 (SL_2_LST____) product on DESCENDING pass</Abstract>
+        <ComplexData>
+          <Supported>
+            <Format>
+              <MimeType>application/opensearchdescription+xml</MimeType>
+            </Format>
+            <Format>
+              <MimeType>application/atom+xml</MimeType>
+            </Format>
+            <Format>
+              <MimeType>application/geo+json; profile=stac-item</MimeType>
+            </Format>
+            <Format>
+              <MimeType>application/json; profile=stac-catalog</MimeType>
+            </Format>
+          </Supported>
+        </ComplexData>
+      </Input>
+      <Input minOccurs="1" maxOccurs="1">
+        <Identifier xmlns="http://www.opengis.net/ows/1.1">tiling_level</Identifier>
+        <Title xmlns="http://www.opengis.net/ows/1.1">Tiling level</Title>
+        <Abstract xmlns="http://www.opengis.net/ows/1.1">Tiling level</Abstract>
+        <LiteralData>
+          <DataType xmlns="http://www.opengis.net/ows/1.1">string</DataType>
+          <AnyValue xmlns="http://www.opengis.net/ows/1.1" />
+        </LiteralData>
+      </Input>
+    </DataInputs>
+    <ProcessOutputs>
+      <Output>
+        <Identifier xmlns="http://www.opengis.net/ows/1.1">catalog</Identifier>
+        <Title xmlns="http://www.opengis.net/ows/1.1">Link to the catalog.json</Title>
+        <Abstract xmlns="http://www.opengis.net/ows/1.1">STAC Catalog of the results</Abstract>
+        <ComplexOutput>
+          <Supported>
+            <Format>
+              <MimeType>application/json; profile=stac-catalog</MimeType>
+            </Format>
+          </Supported>
+        </ComplexOutput>
+      </Output>
+    </ProcessOutputs>
+  </ProcessDescription>
+</ProcessDescriptions>

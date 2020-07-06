@@ -1,5 +1,4 @@
 {
-	"argopath": "/apis/argoproj.io/v1alpha1",
 	"k8Url": "http://localhost:2746",
 	"argoUrl": "http://localhost:8080",
 	"stage": {

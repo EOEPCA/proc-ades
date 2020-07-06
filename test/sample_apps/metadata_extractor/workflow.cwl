@@ -3,7 +3,7 @@ cwlVersion: v1.0
 $namespaces:
   ows: http://www.opengis.net/ows/1.1
   stac: http://www.me.net/stac/cwl/extension
-  opensearch: http://a9.com/-/spec/opensearch/1.1/
+  schema: https://json-schema.org/draft/2019-09/schema
 
 $graph:
 - baseCommand: eoepca-metadata-extractor
@@ -26,6 +26,14 @@ $graph:
       type: File
       inputBinding:
         position: 1
+    arg3:
+      type:
+        type: array
+        items: string
+        # minLength: 2
+        inputBinding:
+          prefix: -B=
+          separate: false
   outputs:
     results:
       outputBinding:
@@ -45,6 +53,20 @@ $graph:
   doc: Earth Observation Metadata Generation # description [WPS] map to wps:Input/ows:abstract
   ows:version: 1.0 # workflow version
   inputs:
+    optional_combo_parameter: # parameter id [WPS] map to wps:Input/ows:identifier
+      doc: type blah blah blah # [WPS] maps to wps:Input/ows:abstract
+      label: optional type options # [WPS] maps to wps:Input/ows:title
+      type: 
+        - "null" # null option --> optional (like '?') [WPS] maps to minOccurs = 0 (maxOccurs = 99 because it is an array)
+        - type: enum # [WPS] maps to AllowedValues
+          symbols: ['type1', 'type2', 'type3']
+      
+    array_string:
+      type:
+        type: enum
+        schema:minItems: 2
+        schema:maxItems: 10
+
     base_dir: 
       type: Directory? 
       ows:ignore: True # [WPS] no mapping
@@ -74,7 +96,13 @@ $graph:
       in:
         arg1: base_dir
         arg2: input_file
+        arg3: array_string
       out:
       - results
       run: '#metadata_extractor'
+
+  requirements:
+    SchemaDefRequirement:
+      types:
+        - $import: boundingBoxData.yaml
 

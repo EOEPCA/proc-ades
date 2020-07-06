@@ -1,0 +1,52 @@
+
+.ADES OGC API Processes ports
+[cols="30,10,45,15a"]
+|===
+| Resource | Method | Description | Operation
+
+| /
+| GET
+| landing page of this API
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/Capabilities/getLandingPage[getLandingPage]
+
+| /conformance
+| GET
+| Lists all requirements classes specified in the standard (e.g., OGC API - Processes Part 1: Core) that the server conforms to
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/ConformanceDeclaration/getConformanceClasses[getConformanceClasses]
+
+| /processes
+| GET
+| Lists all available processes this server offers.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/ProcessCollection/getProcesses[getProcesses]
+
+| /processes/{id}
+| GET
+| Describes a process.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/ProcessDescription/getProcessDescription[getProcessDescription]
+
+| /processes/{id}/jobs
+| GET
+| Lists available jobs of a process.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/JobCollection/getJobs[getJobs]
+
+| /processes/{id}/jobs
+| POST
+| Submits a new job.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/Execute/execute[execute]
+
+| /processes/{id}/jobs/{jobID}
+| GET
+| Shows the status of a job.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/Status/getStatus[getStatus]
+
+| /processes/{id}/jobs/{jobID}
+| DELETE
+| Cancel a job execution and remove it from the jobs list.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/Dismiss/dismiss[dismiss]
+
+| /processes/{id}/jobs/{jobID}/result
+| GET
+| Lists available results of a job. In case of a failure, lists exceptions instead.
+| https://app.swaggerhub.com/apis/geoprocessing/WPS/1.0-draft.3#/Result/getResult[getResult]
+
+|===

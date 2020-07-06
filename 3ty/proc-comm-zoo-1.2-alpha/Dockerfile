@@ -1,5 +1,9 @@
 FROM centos/devtoolset-7-toolchain-centos7
 USER root
+
+ARG addUserFeature
+ENV addUserFeature=$addUserFeature
+
 #RUN ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
 RUN yum install -y epel-release
@@ -21,6 +25,8 @@ ENV PATH "$PATH:/usr/local/bin"
 
 COPY assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
+COPY  assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_
+RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c && mv /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_ /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c; fi
 
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 
@@ -55,6 +61,11 @@ RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make && cd /opt
 
 COPY scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
 
+RUN echo "...$addUserFeature ..."
+
 CMD ["/opt/t2scripts/entrypoint.sh"]
+
+
+
 
 

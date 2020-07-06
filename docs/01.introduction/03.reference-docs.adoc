@@ -33,6 +33,13 @@ EMSS-EOPS-TN-17-002
 | Issue 1, +
 12/12/2017
 
+| [[OGC-COMMON]][OGC-COMMON]
+| OGC Web Service Common, +
+06-121r9, +
+https://www.ogc.org/standards/common
+| 06-121r9, +
+04/07/2010
+
 | [[OGC-WPS]][OGC-WPS]
 | OGC Web Processing Service, +
 OGC 05-007, +
@@ -107,6 +114,13 @@ OGC 18-036r1, +
 http://docs.opengeospatial.org/per/18-036r1.html
 | 18-036r1, +
 07/02/2019
+
+| [[OGC-API-HACK2019]][OGC-API-HACK2019]
+| OGC API Hackathon 2019 Engineering Report, +
+OGC 19-062, +
+https://docs.ogc.org/per/19-062.html
+| 19-062, +
+14/11/2019
 
 | [[OS-GEO-TIME]][OS-GEO-TIME]
 | OpenSearch GEO: OpenSearch Geo and Time Extensions, +
