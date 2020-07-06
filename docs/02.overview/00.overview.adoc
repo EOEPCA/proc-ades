@@ -97,7 +97,7 @@ The WPS Service provides the external interface of the ADES, available to the EM
 Then, the WPS service triggers various function oif the Processing Services for the Execute, GetStatus, GetResult and Dismiss WPS operations.
 Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it's execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution. 
 
-Section <<Building Block Design>> contains a detailed description of the ADES components.
+Section <<Components Design>> contains a detailed description of the ADES components.
 
 == Use Cases
 
@@ -139,7 +139,7 @@ ems --> getResult
 
 === Deploy Processing Service
 
-_As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <<OWS Context>>from a Resource Catalog referencing a <<Common Workflow Language (CWL)>> so that I can make it available (or remove) for the Execution, on behalf of my User._
+_As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <<OWS Context>> from a Resource Catalog referencing a <<Common Workflow Language (CWL)>> so that I can make it available (or remove) for the Execution, on behalf of my User._
 
 === Execute Service as Job
 
@@ -152,34 +152,6 @@ _As an EMS service, I want to get the status of a given processing job, via the 
 === Retrieve Result
 
 _As an EMS service, I want to get the reference of the processing results of a given processing job, via the WPS & API interface, so that I can provide the information back to my User._
-
-
-== External Interfaces
-
-[NOTE]
-.Content Description
-================================
-This section contains:
-
-* Listing of technical external interfaces (with other Building Blocks)
-
-================================
-
-=== Processing interface
-
-The ADES exposes an OGC WPS 1.0 & 2.0 as well as the OGC Processes API (REST/JSON) interface to deploy, execute, monitor and dismiss processing services.
-
-=== AuthN / AuthZ interface
-
-The ADES is a Protected Resource and its front-end is a Policy Enforcement Point (PEP) module. The PEP performs:
-
-* A request for Authentication
-** The Authentication flow is implemented using the OpenID Connect 1.0 protocol
-
-* A request for Authorization
-** The Authorization flow is implemented using the OAuth 2.0 protocol (only after a successful Authentication flow)
-
-The PEP module is provided by *Task 1: User Management*, and it is part of the ADES architecture.
 
 == Required Resources
 

@@ -55,13 +55,13 @@ All software and their dependecies are described in the nextr sections
 
 === Overview and Purpose
 
-The submission of a job starts a process instantiation and execution of an application. Basically, the ADES execute the <<appservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
+The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<appservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
 
 This function triggers 3 main operations sequantially
 
 1. <<Data Stage-In>>
 2. <<Workflow Execution>>
-3. <<Data Stage out>>
+3. <<Data Stage-Out>>
 
 === Data Input/Output
 
@@ -98,7 +98,7 @@ include::../include/datastagein.wsd[]
 * <<CWL>>
 * <<ZOO>>
 
-== Workflow execution
+== Workflow Execution
 
 _TBD_
 
@@ -133,13 +133,11 @@ include::../include/datastageout.wsd[]
 === Data Input/Output
 
 * Input 
-** Job Execute Request
-** Workflow (CWL)
+** Job Results folder
+** Catalog referencing results (optional)
 * Output
-** Input data folder
-** Path to catalog referencing input data folder
+** Reference to catalog published to the resource manager
 
 === Applicable Resources
 
-* <<CWL>>
-* <<ZOO>>
+* <<STAC>>
