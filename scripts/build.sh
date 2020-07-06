@@ -29,11 +29,12 @@ if [ $? -ne 0 ]; then
 fi
 
 HERE=$PWD
-cd 3ty/proc-comm-zoo-1.0
+cd 3ty/proc-comm-zoo-1.2-alpha
+export addUserFeature="True"
 chmod +x ./scripts/build.sh
 ./scripts/build.sh
 if [ $? -ne 0 ]; then
-  echo "3ty/proc-comm-zoo-1.0/scripts/build.sh  ${LOCAL_IMAGE_NAME} failed"
+  echo "3ty/proc-comm-zoo-1.2-alpha/scripts/build.sh  ${LOCAL_IMAGE_NAME} failed"
   exit 2
 fi
 

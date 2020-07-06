@@ -6,14 +6,15 @@
 #include <sstream>
 #include <unistd.h>
 
-#define ARGO_URI "http://localhost:8080"
-#define K8_URI "http://127.0.0.1:2746"
+#define K8_URI "http://localhost:8080"
+#define ARGO_URI "http://127.0.0.1:2746"
 #define CWLPATH                                                                \
   "/home/bla/dev/EOEPCA_dev/proc-ades/assets/workflow.yaml"
 #define LIBPATH                                                                \
   "/home/bla/dev/EOEPCA_dev/proc-ades/build/libargo_interface.so"
 
-#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/proc-ades/build/3ty/proc-comm-lib-argo/libeoepcaargo.so"
+#define EOEPCAARGOPATH "/home/bla/dev/EOEPCA_dev/proc-ades/build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so"
+
 #define ARGOCONFIG "/home/bla/dev/EOEPCA_dev/proc-ades/assets/argo.json"
 struct Util {
 

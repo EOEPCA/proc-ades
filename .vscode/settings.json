@@ -1,4 +1,5 @@
 {
+    "C_Cpp.intelliSenseCachePath": "${workspaceFolder}/.vscode/cache/",
     "asciidoc.preview.attributes": {
         "plantuml-server-url": "https://www.plantuml.com/plantuml",
         "imagesdir": "./docs/images",
@@ -78,6 +79,9 @@
         "unordered_map": "cpp",
         "utility": "cpp",
         "valarray": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "__memory": "cpp",
+        "filesystem": "cpp",
+        "regex": "cpp"
     }
 }
