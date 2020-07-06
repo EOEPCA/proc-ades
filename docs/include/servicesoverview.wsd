@@ -1,0 +1,66 @@
+@startuml Service Component Diagram
+
+hide stereotype
+
+skinparam component<<tbd>> {
+    BackgroundColor Crimson
+    FontColor white
+}
+
+skinparam component<<3rd>> {
+    BackgroundColor CornFlowerBlue
+    BorderColor DarkBlue
+}
+
+skinparam component<<reuse>> {
+    BackgroundColor Khaki
+    BorderColor Orange
+}
+
+() "Resources APIs" as resources
+
+package "ADES Service"{
+
+    package "Web Processing Service" as wps
+
+    [Service] as zooservice <<3rd>>
+
+    frame "OWS Context" as ows
+
+    [CWL Runner] as cwlrun <<3rd>>
+
+    ows -[hidden]right- cwlrun
+
+    zooservice --> cwlrun : triggers
+
+    frame "Workflow (CWL)" as cwl
+
+    cwlrun --> cwl : read workflow
+    zooservice --> ows : read service\ndescription
+
+}
+
+cloud "processing clusters"{
+
+    node "Application Container" {
+        [Commands] <<reuse>> as commands
+    }
+
+    node "Staging Container" {
+        [Stage-in] as stagein <<tbd>>
+        [Stage-Out] as stageout <<tbd>>
+    }
+
+    commands -[hidden]up- stagein
+}
+
+cwlrun --> stagein : Stage-in data
+cwlrun --> stageout : Stage-out data
+cwlrun -right-> commands : executes
+
+stagein -( resources
+stageout -( resources
+
+wps -down- zooservice
+
+@enduml

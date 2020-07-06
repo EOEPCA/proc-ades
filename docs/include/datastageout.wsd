@@ -1,0 +1,45 @@
+@startuml Data Stage In Activity Diagram
+
+start
+note right
+    **Data StageOut Volume**
+    + catalog.json (STAC Catalog)
+    ====
+    All physical files and
+    STAC documents organised
+    in an output folder
+end note
+
+repeat :for each child or item\n in **Catalog JSON**;
+partition "Resource Shipping Module" {
+    :Upload or link data files\nfrom **Data StageOut Volume**\nto Resource Manager;
+    note right
+        Supported resource
+        manager storage
+        ====
+        - HTTP
+        - S3
+        - WebDAV
+        - ...
+    end note
+    :Publish or Register the data\nand associated Metadata;
+    note right
+        Supported resource
+        manager catalog
+        ====
+        - STAC
+        - WxS
+        - Other catalog
+    end note
+}
+repeat while (more parameter?)
+
+:Generate references in Execution Report;
+note right
+    **WPS Execute Response**
+    ====
+end note
+
+stop
+
+@enduml

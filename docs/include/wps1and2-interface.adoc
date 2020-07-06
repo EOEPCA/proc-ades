@@ -1,0 +1,27 @@
+.ADES WPS 1.0.0 & 2.0.0 ports
+[cols="60,30,25a"]
+|===
+|URL | Methods | Function
+
+|https://ades.eoepca.org/ows
+|GET, POST
+|<<ogcowscommon>>
+
+|===
+
+
+[ogcowscommon]
+=== OGC Web Service Common port
+
+URL: https://ades.eoepca.org/ows
+
+* Description - The WPS server is self-contained, it provides an initial endpoint that can be used by a WPS client to determine the server’s capabilities.
+* Operations - GET, POST according to the payload of the requested service
+* Usage examples
+
+[source,console]
+----
+https://ades.eoepca.org/ows?service=WPS&version=1.0.0&request=GetCapabilities
+----
+
+* Full references : <<OGC-WPS>> <<OGC-WPS2>>

@@ -1,5 +1,5 @@
-[[mainComponents]]
-= Building Block Design
+[[components]]
+= Component Design
 
 [NOTE]
 .Content Description
@@ -59,6 +59,7 @@ The following open-source software is reused:
 === Interfaces
 
 The WPS Server exposes the OGC OWS services WPS 1.0 & WPS 2.0 as well as an OGC API Processes. According to their respective specifications, they allow to deploy, execute, monitor and dismiss processing services.
+More details in the <<interfaces>> section.
 
 === Data
 
@@ -69,6 +70,45 @@ Not Applicable.
 * <<OGC-WPS>>
 * <<OGC-WPS2>>
 * <<OGC-API-PROC>>
+
+[#appservice]
+== Services
+
+Services are the core elements performing the jobs submission by the users
+Indeed, when a user <<Deploy Processing Service,deploys>> a service on the ADES, this latter prepares a service from the Application Package.
+This Service shall be composed of the <<CWL Parser,workflow>> of the pplication of the user and enhanced with <<Data Staging>> as pre and post processing steps of the workflow.
+
+=== Overview and Purpose
+
+The following diagram shows the component used by the Service component to enable the deployed application. 
+
+.ADES Service Components Diagram
+[plantuml, diagram-component, png] 
+....
+include::../include/servicesoverview.wsd[]
+....
+
+The Service component is in charge of orchestrating the application execution when the service in invoked by a <<Execute Service as Job,job submission>> from the Web Processing Service layer.
+
+=== Software Reuse and Dependencies
+
+The following open-source software is reused:
+
+* CWL Tool <<CWL>>
+* Calrissian https://github.com/Duke-GCB/calrissian
+* ZOO-Services http://zoo-project.org/docs/services/index.html
+
+=== Data
+
+* OWS Context
+* CWL
+
+=== Applicable Resources
+
+* <<CWL>>
+* <<ZOO>>
+
+
 
 == OWS Context Parser
 === Overview and Purpose
@@ -97,6 +137,13 @@ The https://github.com/EOEPCA/proc-comm-lib-ows/blob/develop/tests/application/a
 
 The software component is a shared library to provides the means to parse a Common Workflow Language Specification document.
 
+The Common Workflow Language (CWL) targets data-intensive processing scenarios and to make these portable and scalable across platforms capable of interpreting and execute the processes by describing:
+* A runtime environment
+* A Workflow (DAG)
+* Command line tool(s)
+* Parameter of the process
+* Inputs/outputs
+
 === Software Reuse and Dependencies
 
 Software developed in C++ language with no particular dependencies
@@ -113,56 +160,5 @@ Not applicable
 
 * <<CWL>>
 
-== CWL to ARGO Engine
-=== Overview and Purpose
 
 
-
-=== Software Reuse and Dependencies
-=== Interfaces
-=== Data
-=== Applicable Resources
-
-== Argo Workflows Client
-=== Overview and Purpose
-
-this software component is a shared library to provides the means to perform CRUD actions against Argo Workflows application resources.
-
-=== Software Reuse and Dependencies
-
-Software developed in C++ language with no particular dependencies
-
-=== Interfaces
-
-Not applicable
-
-=== Data
-
-Not applicable
-
-=== Applicable Resources
-
-* <<ARGO>>
-
-
-== Services
-=== Overview and Purpose
-
-???
-
-=== Software Reuse and Dependencies
-
-The following open-source software is reused:
-
-* ZOO-Services http://zoo-project.org/docs/services/index.html
-
-=== Interfaces
-
-??
-
-=== Data
-
-* OWS COntext
-* CWL
-
-=== Applicable Resources

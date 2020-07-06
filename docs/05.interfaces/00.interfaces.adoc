@@ -1,0 +1,60 @@
+[[interfaces]]
+= External Interfaces
+
+[NOTE]
+.Work In Progress
+===============================================
+This section focuses on the available functionality published over interfaces.
+
+* List of interfaces
+
+Each interface in the list contains:
+
+* Interface description
+* Applicable standards
+* Base URL of the interface
+* List of exposed port by interface
+
+Each port in the list contains:
+
+* relative URI (\*)
+* Operation
+* Description
+* Conveyed information
+* Usage examples
+
+===============================================
+
+== Description
+
+The ADES provides a WPS 1.0 & 2.0 service interfaces as well as an OGC API Processes compliant API. It is responsible for the execution of the processing service (as a WPS request) within the ‘target’ Exploitation Platform (i.e. one that is close to the data). In the global scenario, we assume that the EMS ensures that the processor is deployed as a WPS service before it is invoked.
+
+Refer to ADES component documentation - https://eoepca.github.io/proc-ades
+
+== Web Processing Services 
+
+The ADES exposes interfaces for the processing based on the OGC "Web Processing Service". This service port is available in 3 versions corresponding to the OGC WPS eveolution.
+The 2 next sections describes
+
+* The 2 first versions implementing the https://www.ogc.org/standards/common[Web Service Common]
+* The latest API implementing a REST interface described in http://openapis.org/[OpenAPI]
+
+== WPS 1.0.0 & 2.0.0
+
+The https://www.ogc.org/standards/wps[OpenGIS® Web Processing Service (WPS)] Interface Standard provides rules for standardizing how inputs and outputs (requests and responses) for geospatial processing services, such as polygon overlay. The standard also defines how a client can request the execution of a process, and how the output from the process is handled. It defines an interface that facilitates the publishing of geospatial processes and clients’ discovery of and binding to those processes. The data required by the WPS can be delivered across a network or they can be available at the server. 
+
+* Applicable standards - <<OGC-WPS>> <<OGC-WPS2>>
+
+Base URL: https://ades.eoepca.org/ows
+
+include::../include/wps1and2-interface.adoc[]
+
+== OGC API Processes
+
+The OGC API - Processes enables the execution of computing processes and the retrieval of metadata describing their purpose and functionality. Typically, these processes combine raster, vector, and/or coverage data with well-defined algorithms to produce new raster, vector, and/or coverage information.
+
+* Applicable standards - <<OGC-API-PROC>>
+
+Base URL: https://ades.eoepca.org/api
+
+include::../include/ogcwps-summary.adoc[]

@@ -1,0 +1,12 @@
+tiling_level: 2
+input_reference:
+  - { class: Directory, path: /workspace/input_folder/input_reference/input1/S3B_SL_2_LST____20200624T090133_20200624T090433_20200624T105644_0180_040_221_2700_LN2_O_NR_004 }
+  - { class: Directory, path: /workspace/input_folder/input_reference/input2/S3B_SL_2_LST____20200623T092744_20200623T093044_20200624T153106_0180_040_207_2700_LN2_O_NT_004 }
+  - { class: Directory, path: /workspace/input_folder/input_reference/input3/S3B_SL_2_LST____20200625T101621_20200625T101921_20200625T121241_0179_040_236_2700_LN2_O_NR_004 }
+  - ...
+  - { class: Directory, path: /workspace/input_folder/input_reference/input3/S3B_SL_2_LST____20200625T101621_20200625T101921_20200625T121241_0179_040_236_2700_LN2_O_NR_004 }
+  - { class: Directory, path: /workspace/input_folder/input_reference/input3/S3B_SL_2_LST____20200624T104232_20200624T104532_20200625T161613_0179_040_222_2700_LN2_O_NT_004 }
+  
+catalog_stac:
+  class: File
+  path: /workspace/input_folder/catalog.json
