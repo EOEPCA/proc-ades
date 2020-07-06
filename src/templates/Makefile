@@ -1,7 +1,7 @@
 CFLAGS= -Iinclude  -I/opt/zoo-project/zoo-project/zoo-kernel -L/var/lib64   `cgicc-config --cxxflags`   -I`cgicc-config --includedir` -L`cgicc-config  --libdir` -I/usr/include/
 all:
 	#g++ -std=c++17 argolib.cpp  -shared -fpic -obuild/libargo_interface.so
-	g++ -std=c++17 -Wunused-function -DSERVICENAME=${COMPILE} template.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -o/zooservices/${COMPILE}.zo
+	g++ -std=c++17 -Wunused-function -DSERVICENAME=${COMPILE} template.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -o${USERPATH}${COMPILE}.zo
 
 interface:
 	g++ -std=c++17  interface.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -olibinterface.so
