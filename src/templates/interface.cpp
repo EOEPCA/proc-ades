@@ -248,6 +248,13 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
   try {
 
+
+    fprintf(stderr,"LA CASA DI \n");
+
+    setStatus(conf, "successful", "TEST ERROR");
+    updateStatus(conf, 100, "Done");
+    return SERVICE_SUCCEEDED;
+
     std::cerr << "interface has been loaded!\n";
     fflush(stderr);
 
