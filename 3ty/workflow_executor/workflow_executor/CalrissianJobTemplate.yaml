@@ -1,0 +1,61 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: calrissian-revsort
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+      containers:
+      - name: calrissian
+        image: dukegcb/calrissian:latest
+        imagePullPolicy: IfNotPresent
+        command: ["calrissian"]
+        args:
+          - "--stdout"
+          - "/calrissian/output-data/revsort-output.json"
+          - "--stderr"
+          - "/calrissian/output-data/revsort-stderr.log"
+          - "--max-ram"
+          - "8G"
+          - "--max-cores"
+          - "8"
+          - "--tmp-outdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--debug"
+          - "--tmpdir-prefix"
+          - "/calrissian/tmpout/"
+          - "--leave-tmpdir"
+          - "--leave-container"
+          - "--no-read-only"
+          - "--outdir"
+          - "/calrissian/output-data/"
+          - "/calrissian/input-data/revsort-array.cwl"
+          - "/calrissian/input-data/revsort-array-job.json"
+        volumeMounts:
+        - mountPath: /calrissian/input-data
+          name: calrissian-input-data
+        - mountPath: /calrissian/tmpout
+          name: calrissian-tmpout
+        - mountPath: /calrissian/output-data
+          name: calrissian-output-data
+        env:
+        - name: CALRISSIAN_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+      restartPolicy: Never
+      volumes:
+      - name: calrissian-input-data
+        persistentVolumeClaim:
+          claimName: calrissian-input-data
+      - name: calrissian-tmpout
+        persistentVolumeClaim:
+          claimName: calrissian-tmpout
+      - name: calrissian-output-data
+        persistentVolumeClaim:
+          claimName: calrissian-output-data
