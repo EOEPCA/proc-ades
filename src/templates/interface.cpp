@@ -387,6 +387,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     //  - successful
     //  - failed
 
+    updateStatus(conf, 100, "Done");
     setStatus(conf, "successful", "");
     return SERVICE_SUCCEEDED;
 
