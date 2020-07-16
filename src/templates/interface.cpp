@@ -306,37 +306,36 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     getConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
     std::cerr << "user: "<< userEoepca["user"] << " grants: "  << userEoepca["grant"] << "\n\n";
 
-    auto argoConfig =
-        std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();{
+//    auto argoConfig =
+//        std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();{
+//
+//            std::stringstream sBuffer;
+//            if(loadFile(confEoepca["argoConfig"].c_str(),sBuffer)){
+//              std::string err{"eoepca configuration cannot load file: "};
+//              err.append(confEoepca["argoConfig"]);
+//
+//              setStatus(conf, "failed", err.c_str());
+//              return SERVICE_FAILED;
+//            }
+//
+//            argoConfig->argoConfigFile=sBuffer.str();
+//        }
+//
+//    argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
+//
+//    setStatus(conf, "running", "argoConfigFile loaded");
+//    std::cerr << argoConfig->argoConfigFile << "\n";
 
-            std::stringstream sBuffer;
-            if(loadFile(confEoepca["argoConfig"].c_str(),sBuffer)){
-              std::string err{"eoepca configuration cannot load file: "};
-              err.append(confEoepca["argoConfig"]);
-
-              setStatus(conf, "failed", err.c_str());
-              return SERVICE_FAILED;
-            }
-            
-            argoConfig->argoConfigFile=sBuffer.str();
-        }
-
-    argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
-
-    setStatus(conf, "running", "argoConfigFile loaded");
-    std::cerr << argoConfig->argoConfigFile << "\n";
-
-    auto argoInterface =
-        std::make_unique<mods::ArgoInterface>(confEoepca["libargo"]);
-
-    if (!argoInterface->IsValid()) {
-      fflush(stderr);
-      std::string err("The library ");
-      err.append(confEoepca["libargo"]);
-      err.append(" is not valid!");
-      setStatus(conf, "failed", err.c_str());
-      return SERVICE_FAILED;
-    }
+//    auto argoInterface =
+//        std::make_unique<mods::ArgoInterface>(confEoepca["libargo"]);
+//    if (!argoInterface->IsValid()) {
+//      fflush(stderr);
+//      std::string err("The library ");
+//      err.append(confEoepca["libargo"]);
+//      err.append(" is not valid!");
+//      setStatus(conf, "failed", err.c_str());
+//      return SERVICE_FAILED;
+//    }
     //==================================GET CONFIGURATION
 
     //==================================GET PARAMETERS
