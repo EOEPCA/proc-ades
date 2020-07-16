@@ -688,9 +688,10 @@ extern "C" {
 	  if(getMaps(conf,"http_requests")==NULL){
 	    maps* tmpMaps=createMaps("http_requests");
 	    tmpMaps->content=createMap("length","1");
-	    addMapsToMaps(&conf,tmpMaps);
+//	    addMapsToMaps(&conf,tmpMaps);//rdr ERROR!!!
 	    freeMaps(&tmpMaps);
 	    free(tmpMaps);
+
 	  }else{
 	    map* tmpMap=getMapFromMaps(conf,"http_requests","length");
 	    int len=atoi(tmpMap->value);
@@ -702,8 +703,8 @@ extern "C" {
 	    tmpStr1=(char*) malloc((14)*sizeof(char));
 	    sprintf(tmpStr1,"input_%d",len);
 	  }
-	  setMapInMaps(conf,"http_requests",tmpStr,json_object_get_string(json_value));
-	  setMapInMaps(conf,"http_requests",tmpStr1,name);
+//	  setMapInMaps(conf,"http_requests",tmpStr,json_object_get_string(json_value));//rdr ERROR!!!
+//	  setMapInMaps(conf,"http_requests",tmpStr1,name);//rdr ERROR!!!
 	  if(createdStr>0){
 	    free(tmpStr);
 	    free(tmpStr1);
@@ -791,7 +792,7 @@ extern "C" {
 	    if(json_object_object_get_ex(json_input,"dataType",&json_cinput)!=FALSE){
 	      parseJLiteral(conf,json_input,cio,cMaps);
 	    } else if(json_object_object_get_ex(json_input,"format",&json_cinput)!=FALSE){
-	      parseJComplex(conf,json_input,cio,cMaps,json_object_get_string(cname));
+              parseJComplex(conf,json_input,cio,cMaps,json_object_get_string(cname));
 	    } else if(json_object_object_get_ex(json_input,"bbox",&json_cinput)!=FALSE){
 	      parseJBoundingBox(conf,json_input,cio,cMaps);
 	    }// else error!
@@ -859,8 +860,70 @@ extern "C" {
 	addToMap(cMaps->content,"inRequest","true");
 	if (ioMaps == NULL)
 	  *ioMaps = dupMaps(&cMaps);
-	else
-	  addMapsToMaps (ioMaps, cMaps);
+	else {
+
+          maps* testIath=getMaps(*ioMaps,cMaps->name);
+          if(testIath){
+
+            int cursor=2;
+            char name[20],cCursor[55];
+            memset(name,'\0',20);
+            memset(cCursor,'\0',55);
+
+            map *getValueMap = getMap(cMaps->content,"value");
+            if (getValueMap){
+              strcpy(name,"value");
+            }
+            map *getXlink = getMap(cMaps->content,"xlink:href");
+            if (getXlink){
+              strcpy(name,"xlink:href");
+            }
+
+            map* isArray=getMap(testIath->content,"isArray");
+            if(isArray){
+
+              map* le=getMap(testIath->content,"length");
+              if (le){
+                cursor  = atoi(le->value);
+                cursor=cursor+1;
+              }else{
+                cursor=2;
+              }
+
+              free(le->value);
+              le->value=NULL;
+
+              snprintf(cCursor,54,"%d",cursor);
+              le->value=zStrdup(cCursor);
+
+            }else{
+              map *addArray = createMap("isArray","true");
+              addMapToMap(&testIath->content,addArray);
+
+              map *addLength = createMap("length","2");
+              addMapToMap(&testIath->content,addLength);
+            }
+
+            if (strlen(name)!=0){
+              memset(cCursor,'\0',55);
+              snprintf(cCursor,54,"%d",cursor-1);
+
+              int newSize=(5+strlen(cCursor) + strlen(name)) +sizeof(char);
+              char* newValueC=(char*)malloc( newSize);
+              memset(newValueC,'\n',newSize);
+
+              sprintf(newValueC,"%s_%s",name,cCursor);
+              map *addValue = createMap(newValueC, getValueMap?getValueMap->value:getXlink->value);
+              addMapToMap(&testIath->content,addValue);
+
+              free(newValueC);
+            }
+
+          }else{
+            addMapsToMaps(ioMaps, cMaps);
+          }
+
+        }
       }
     }
   }

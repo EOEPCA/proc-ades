@@ -253,6 +253,13 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
     setStatus(conf, "successful", "TEST ERROR");
     updateStatus(conf, 100, "Done");
+
+
+//    dumpMaps(conf);
+    fprintf(stderr,"-----------------------\n");
+    dumpMaps(inputs);
+
+
     return SERVICE_SUCCEEDED;
 
     std::cerr << "interface has been loaded!\n";

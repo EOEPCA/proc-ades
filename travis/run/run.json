@@ -7,34 +7,145 @@
           "mimeType": "application/json"
         },
         "value": {
-          "inlineValue": "https://catalog.terradue.com/sentinel3/search?uid=S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004"
+          "href": "http://catalog.terradue.com"
         }
+      }
+    },
+
+    {
+      "id": "input_file",
+      "input": {
+        "format": {
+          "mimeType": "application/json"
+        },
+        "value": {
+          "inlineValue": "sssss"
+        }
+      }
+    },
+
+
+    {
+      "id": "array_string",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "CAPIRIGNA_1"
       }
     },
 
     {
       "id": "array_string",
       "input": {
-        "format": {
-          "mimeType": "string"
+        "dataType": {
+          "name": "string"
         },
-        "value": {
-          "inlineValue": "https://catalog.terradue.com/sentinel3/search?uid=S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004"
-        }
+        "value": "TESTSTRING_2"
       }
     },
+    {
+      "id": "array_string",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "TESTSTRING_3"
+      }
+    },
+    {
+      "id": "array_string",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "TESTSTRING_4"
+      }
+    },
+    {
+      "id": "array_string",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "TESTSTRING_5"
+      }
+    },
+    {
+      "id": "array_string",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "THE TESTS"
+      }
+    },
+    {
+
+      "id":"boundingboxInput",
+      "input": {
+
+        "bbox": [
+          51.9,
+          7,
+          52,
+          7.1
+        ],
+
+        "crs":"EPSG:4326"
+      }
+    },
+
+
+
+    {
+      "id": "theDauble",
+      "input": {
+        "dataType": {
+          "name": "double"
+        },
+        "value":  0.74
+
+      }
+    },
+
 
     {
       "id": "optional_combo_parameter",
       "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value":  "theValue...."
+
+      }
+    },
+
+
+    {
+      "id": "complexInput",
+      "input": {
         "format": {
-          "mimeType": "string"
+          "mimeType": "application/xml"
         },
         "value": {
-          "inlineValue": "https://catalog.terradue.com/sentinel3/search?uid=S3B_SL_1_RBT____20200520T050759_20200520T051059_20200520T060015_0179_039_105_0360_LN2_O_NR_004"
+          "inlineValue": "<test/>"
         }
       }
+    },
+
+
+    {
+      "id": "complexInput2",
+      "input": {
+        "format": {
+          "mimeType": "application/xml"
+        },
+        "value": "ssssss"
+      }
     }
+
+
 
   ],
   "outputs": [
