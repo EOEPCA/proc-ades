@@ -257,7 +257,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
   try {
 
-
     std::cerr << "interface has been loaded!\n";
     fflush(stderr);
 
@@ -271,25 +270,41 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     getConfigurationFromZooMapConfig(conf, "lenv", lenv);
 
     if (confEoepca["libeoepcaargo"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration libeoepcaargo.so empty");
+      std::string err{"eoepca configuration libeoepcaargo.so empty"};
+
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
       return SERVICE_FAILED;
     }
 
     if (confEoepca["libargo"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration libargo.so empty");
+      std::string err{"eoepca configuration libargo.so empty"};
+
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
       return SERVICE_FAILED;
     }
 
 
     if (confEoepca["argoConfig"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration argoConfig empty");
+      std::string err{"eoepca configuration argoConfig empty" };
+
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
       return SERVICE_FAILED;
     }
 
     if (!fileExist(confEoepca["argoConfig"].c_str())){
-      setStatus(conf, "failed", "eoepca configuration argoConfig not exist");
+      std::string err{"eoepca configuration argoConfig not exist"};
+
+      setStatus(conf, "failed",  err.c_str());
+      updateStatus(conf, 100, err.c_str());
       return SERVICE_FAILED;
     }
+
+    std::map<std::string, std::string> userEoepca;
+    getConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
+    std::cerr << "user: "<< userEoepca["user"] << " grants: "  << userEoepca["grant"] << "\n\n";
 
     auto argoConfig =
         std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();{
@@ -305,7 +320,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             
             argoConfig->argoConfigFile=sBuffer.str();
         }
-
 
     argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
 
@@ -330,13 +344,10 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     std::list<InputParameter> params;
     getT2InputConf(inputs, params);
     dumpMaps(inputs);
-
     json_object *jArray=json_object_new_array();
-
     for (auto &a : params) {
       json_object *jParamjParam=json_object_new_object();
       a.add(jParamjParam);
-
       json_object_array_add(jArray, jParamjParam);
     }
 
@@ -348,62 +359,55 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     //==================================GET PARAMETERS
 
 
+    //==================================GET CWL CONTENT
+    std::string path(confEoepca["userworkspace"]);
+    path.append("/").append(userEoepca["user"]).append("/");
 
-//    fprintf(stderr,"LA CASA DI \n");
-//    setStatus(conf, "successful", "TEST ERROR");
-//    updateStatus(conf, 100, "Done");
-//    fprintf(stderr,"-----------------------\n");
-//    return SERVICE_SUCCEEDED;
+    path.append(lenv["Identifier"]).append(".yaml");
+    std::stringstream cwlBuffer;
+    if (loadFile(path.c_str(), cwlBuffer)) {
+      std::string err("CWL file ");
+      err.append(path);
+      err.append(" not found!");
+      setStatus(conf, "failed", err.c_str());
+      return SERVICE_FAILED;
+    }
+    std::cerr << cwlBuffer.str() << "\n";
+    //==================================GET CWL CONTENT
 
+    setStatus(conf, "running", "the service is started");
+    std::string argoWorkflowId("");
 
-//
-//
-//    //==================================GET CWL CONTENT
-//    std::string path("/zooservices/");
-//    path.append(lenv["Identifier"]).append(".yaml");
-//    std::stringstream cwlBuffer;
-//    if (loadFile(path.c_str(), cwlBuffer)) {
-//      std::string err("CWL file ");
-//      err.append(path);
-//      err.append(" not found!");
-//      setStatus(conf, "failed", err.c_str());
-//      return SERVICE_FAILED;
-//    }
-//    //  const char *filePath, std::stringstream &sBuffer
-//    //==================================GET CWL CONTENT
-//
-//    setStatus(conf, "running", "the service is started");
-//    std::string argoWorkflowId("");
-//
-//    std::cerr << "start!\n" <<  std::endl;
+    std::cerr << "start!\n" <<  std::endl;
 //    argoInterface->start(*argoConfig.get(), cwlBuffer.str(), inputParam,
 //                         lenv["Identifier"], lenv["uusid"],
 //                         argoWorkflowId);
 //
-//    std::cerr << "start finished" << std::endl;
-//    int percent = 0;
-//    std::string message("");
-//    std::cerr << "getStats start" << std::endl;
+    std::cerr << "start finished" << std::endl;
+    int percent = 0;
+    std::string message("");
+    std::cerr << "getStats start" << std::endl;
 //    while (argoInterface->getStatus(*argoConfig.get(), argoWorkflowId, percent,
 //                                    message)) {
 //      updateStatus(conf, percent, message.c_str());
 //      std::cerr << "going to sleep" << std::endl;
 //      sleep(10);
 //    }
-//
-//    std::cerr << "status finished" << std::endl;
-//    updateStatus(conf, 100, "Done");
-//    sleep(40);
-//
-//    std::list<std::pair<std::string, std::string>> outPutList{};
-//    std::cerr << "getresult " << argoWorkflowId << std::endl;
+
+    std::cerr << "status finished" << std::endl;
+    updateStatus(conf, 100, "Done");
+    sleep(40);
+
+    std::list<std::pair<std::string, std::string>> outPutList{};
+    std::cerr << "getresult " << argoWorkflowId << std::endl;
 //    argoInterface->getResults(*argoConfig.get(), argoWorkflowId, outPutList);
-//    std::cerr << "getresults finished" << std::endl;
-//    for (auto &[k, p] : outPutList) {
-//      std::cerr << "output" << p << " " << k << std::endl;
-//      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
-//    }
-//    std::cerr << "mapping results" << std::endl;
+
+    std::cerr << "getresults finished" << std::endl;
+    for (auto &[k, p] : outPutList) {
+      std::cerr << "output" << p << " " << k << std::endl;
+      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+    }
+    std::cerr << "mapping results" << std::endl;
 
     //  - accepted
     //  - running
