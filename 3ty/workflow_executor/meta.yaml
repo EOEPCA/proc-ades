@@ -1,0 +1,23 @@
+package:
+  name: workflow_executor
+  version: 1.0.0
+
+source:
+  path: ./
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - python-kubernetes
+
+test:
+  imports:
+    - workflow_executor
+    - kubernetes
+
+about:
+  home:
