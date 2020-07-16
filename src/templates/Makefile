@@ -22,7 +22,7 @@ build:
 
 install:
 
-installinterface:
+	installinterface:
 	cp libinterface.so /opt/t2libs/libinterface.so
 
 local:

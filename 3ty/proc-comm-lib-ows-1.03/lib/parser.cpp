@@ -528,7 +528,7 @@ std::unique_ptr<OWS::Param> CWLTypeParserSpecialization(
       for (auto& a : typeCWL->getSymbols()) {
         literData->addAllowedValues(a);
         if (literData->getDefaultValue().empty()) {
-          literData->setDataType(a);
+          literData->setDefault(a);
         }
       }
     }

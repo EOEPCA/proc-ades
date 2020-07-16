@@ -1,152 +1,16 @@
 {
   "inputs": [
     {
-      "id": "input_file",
-      "input": {
-        "format": {
-          "mimeType": "application/json"
-        },
-        "value": {
-          "href": "http://catalog.terradue.com"
-        }
-      }
-    },
-
-    {
-      "id": "input_file",
-      "input": {
-        "format": {
-          "mimeType": "application/json"
-        },
-        "value": {
-          "inlineValue": "sssss"
-        }
-      }
-    },
-
-
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "CAPIRIGNA_1"
-      }
-    },
-
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "TESTSTRING_2"
-      }
-    },
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "TESTSTRING_3"
-      }
-    },
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "TESTSTRING_4"
-      }
-    },
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "TESTSTRING_5"
-      }
-    },
-    {
-      "id": "array_string",
-      "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value": "THE TESTS"
-      }
-    },
-    {
-
-      "id":"boundingboxInput",
-      "input": {
-
-        "bbox": [
-          51.9,
-          7,
-          52,
-          7.1
-        ],
-
-        "crs":"EPSG:4326"
-      }
-    },
-
-
-
-    {
-      "id": "theDauble",
-      "input": {
-        "dataType": {
-          "name": "double"
-        },
-        "value":  0.74
-
-      }
-    },
-
-
-    {
       "id": "optional_combo_parameter",
       "input": {
-        "dataType": {
-          "name": "string"
-        },
-        "value":  "theValue...."
-
-      }
-    },
-
-
-    {
-      "id": "complexInput",
-      "input": {
         "format": {
-          "mimeType": "application/xml"
+          "mimeType": "application/json"
         },
         "value": {
-          "inlineValue": "<test/>"
+          "href": "http://catalog.terradue.com/asdsadas/asdasdad/assdadasd/dasd"
         }
       }
-    },
-
-
-    {
-      "id": "complexInput2",
-      "input": {
-        "format": {
-          "mimeType": "application/xml"
-        },
-        "value": "ssssss"
-      }
     }
-
-
-
   ],
   "outputs": [
     {

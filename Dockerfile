@@ -7,7 +7,7 @@ COPY assets/oas.cfg /opt/t2service/oas.cfg
 #RUN cd /tmp/zoo && make && make install && rm -fvR /tmp/zoo && chmod +x /opt/t2scripts/entrypoint.sh
 RUN chmod +x /opt/t2scripts/entrypoint.sh
 
-COPY assets/argo.json /opt/t2config/argo.json
+COPY assets/workflowwxecutorconfig.json /opt/t2config/workflowwxecutorconfig.json
 COPY src/templates/template.cpp /opt/t2template/template.cpp
 COPY src/templates/Makefile /opt/t2template/Makefile
 COPY src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/
@@ -15,7 +15,7 @@ COPY src/deployundeploy/zoo/*.zcfg /opt/t2service/
 COPY src/templates/libinterface.so /opt/t2libs/libinterface.so
 COPY build/3ty/proc-comm-lib-ows-1.03/libeoepcaows.so /opt/t2libs/
 #COPY build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so /opt/t2service/libeoepcaargo.so
-#COPY build/libargo_interface.so /opt/t2service/libargo_interface.so
+COPY build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
 RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh
@@ -26,8 +26,8 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh
 # docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" zoo  bash
 #alias ll='ls -ltr'
 
-COPY 3ty/workflow_executor /usr/local/workflow_executor
-RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
-ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-RUN conda install -c conda-forge python-kubernetes
-RUN cd /usr/local/workflow_executor/ && python setup.py install
+#COPY 3ty/workflow_executor /usr/local/workflow_executor
+#RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
+#ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
+#RUN conda install -c conda-forge python-kubernetes
+#RUN cd /usr/local/workflow_executor/ && python setup.py install

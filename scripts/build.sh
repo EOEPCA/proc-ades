@@ -23,11 +23,12 @@ if [ $? -ne 0 ]; then
 fi
 
 #eoepcaargo sources ades_main argo_interface
-docker run --rm -ti -v $PWD:/project/ -w /project/build/ ${BUILDER_DOCKERIMAGE} make eoepcaows
+docker run --rm -ti -v $PWD:/project/ -w /project/build/ ${BUILDER_DOCKERIMAGE} make eoepcaows workflow_executor
 if [ $? -ne 0 ]; then
   echo "make eoepcaargo failed"
   exit 2
 fi
+#cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
 
 HERE=$PWD
 cd 3ty/proc-comm-zoo-1.2-alpha
