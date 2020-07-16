@@ -336,15 +336,26 @@ int createUserSpace(maps* conf,const char* User){
   char* script=(char*)malloc(1024*3);
   memset(script,'\0',1024*3);
 
+  char* statusInfoPath=(char*)malloc(1024)  ;
+  memset(statusInfoPath,'\0',1024);
+
+  map *statusInfoPathMAP = getMapFromMaps (conf, "main", "tmpPath");
+  if (statusInfoPathMAP && statusInfoPathMAP->value && strlen(statusInfoPathMAP->value)>0){
+    sprintf(statusInfoPath,"%s/statusInfos/%s",statusInfoPathMAP->value,User);
+  }else{
+    sprintf(statusInfoPath,"/var/www/html/res/statusInfos/%s",User);
+  }
+
+
   map *rdrMAP = getMapFromMaps (conf, "eoepca", "userSpaceScript");
 
   if(rdrMAP && rdrMAP->value && strlen(rdrMAP->value)>0){
-    sprintf(script,"%s \"%s\" 1>/dev/null",rdrMAP->value,thePath);
+    sprintf(script,"%s \"%s\" \"%s\" \"%s\"    1>/dev/null",rdrMAP->value,thePath,statusInfoPath,User);
   }else{
-    sprintf(script,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+    sprintf(script,"/opt/t2scripts/prepareUserSpace.sh \"%s\" \"%s\" \"%s\" 1>/dev/null",thePath,statusInfoPath,User);
   }
 
-  fprintf(stderr,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+  fprintf(stderr,"creation script: %s \n",script);
 
   int y=system(script);
 //  if(!exitFolder(thePath)){
@@ -352,6 +363,7 @@ int createUserSpace(maps* conf,const char* User){
 //  }else{
 //  }
 //
+  free(statusInfoPath);
   free(thePath);
   free(script);
 
@@ -1418,6 +1430,7 @@ void
 loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
                    maps ** inputs, maps ** ioutputs, int *eres)
 {
+  char eoUserPath[1024];
   char tmps1[1024];
   char ntmp[1024];
   maps *m = *myMap;
@@ -1426,6 +1439,21 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
   /**
    * Extract serviceType to know what kind of service should be loaded
    */
+
+
+  memset(eoUserPath,'\0',1024);
+  map* eoUserMap=getMapFromMaps(m,"eoepcaUser","user");
+  map* eoUserPathMap=getMapFromMaps(m,"eoepca","userworkspace");
+
+  if( eoUserMap && strlen(eoUserMap->value)>0 && eoUserPathMap && strlen(eoUserPathMap->value)>0){
+
+    sprintf(eoUserPath,"%s/%s",eoUserPathMap->value,eoUserMap->value);
+
+    fprintf(stderr,"MAP ALL:--> %s***************0 \n",eoUserPath);
+
+  }
+
+
   map *r_inputs = NULL;
   map* cwdMap=getMapFromMaps(m,"main","servicePath");
   if(cwdMap!=NULL){
@@ -1458,9 +1486,11 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
         else
           sprintf (tmps1, "%s/", ntmp);
 	  
-        char *altPath = zStrdup (tmps1);
+        char *altPath = zStrdup ( strlen(eoUserPath)>0?eoUserPath:tmps1);
+
         r_inputs = getMap (s1->content, "ServiceProvider");
         sprintf (tmps1, "%s/%s", altPath, r_inputs->value);
+        fprintf(stderr,"--->%s \n",tmps1);
         free (altPath);
 	 }
 #ifdef DEBUG

@@ -46,3 +46,5 @@ build
 /3ty/proc-comm-lib-cwl/.idea/
 out/
 cmake-build-debug
+cmake-build-release
+notes
