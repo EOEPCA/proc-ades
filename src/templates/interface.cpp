@@ -16,9 +16,25 @@
 #include <string>
 #include <utility>
 
-#define X3STRING std::string, std::string, std::string
-#define X2STRING std::string, std::string
-#define X2INPUT std::string, std::unique_ptr<mods::ArgoInterface::tgInput>
+#include "json.h"
+
+
+//https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
+struct InputParameter{
+  std::string id{""};
+  std::string href{""};
+  std::string value{""};
+  std::string mimeType{""};
+  std::string dataType{""};
+
+  void add(json_object* json){
+    json_object_object_add(json,"id",json_object_new_string(id.c_str()));
+    json_object_object_add(json,"href",json_object_new_string(href.c_str()));
+    json_object_object_add(json,"value",json_object_new_string(value.c_str()));
+    json_object_object_add(json,"mimeType",json_object_new_string(mimeType.c_str()));
+    json_object_object_add(json,"dataType",json_object_new_string(dataType.c_str()));
+  }
+};
 
 class Util {
 public:
@@ -34,39 +50,39 @@ public:
 };
 
 #define LOGTEST (std::cerr)
-void _MEdumpMap(map *t) {
-  if (t != NULL) {
-    LOGTEST << t->name << ": (" << t->value << ")\n";
-    //        if(t->next!=NULL){
-    //            // _MEdumpMap(t->next);
-    //        }
-  } else {
-    LOGTEST << "NULL\n";
-  }
-}
-
-void MEdumpMap(map *t) {
-  map *tmp = t;
-  while (tmp != NULL) {
-    _MEdumpMap(tmp);
-    tmp = tmp->next;
-  }
-  LOGTEST << "----------------END\n";
-}
-
-void MEdumpMaps(maps *m) {
-  maps *tmp = m;
-  while (tmp != NULL) {
-    LOGTEST << "\n----------------INI\n";
-    LOGTEST << "MAP => [" << tmp->name << "] \n";
-    LOGTEST << " * CONTENT [" << tmp->name << "] \n";
-    LOGTEST << "----------------VALUE" << std::endl;
-    MEdumpMap(tmp->content);
-    LOGTEST << " * CHILD [" << tmp->name << "] \n" << std::endl;
-    MEdumpMaps(tmp->child);
-    tmp = tmp->next;
-  }
-}
+//void _MEdumpMap(map *t) {
+//  if (t != NULL) {
+//    LOGTEST << t->name << ": (" << t->value << ")\n";
+//    //        if(t->next!=NULL){
+//    //            // _MEdumpMap(t->next);
+//    //        }
+//  } else {
+//    LOGTEST << "NULL\n";
+//  }
+//}
+//
+//void MEdumpMap(map *t) {
+//  map *tmp = t;
+//  while (tmp != NULL) {
+//    _MEdumpMap(tmp);
+//    tmp = tmp->next;
+//  }
+//  LOGTEST << "----------------END\n";
+//}
+//
+//void MEdumpMaps(maps *m) {
+//  maps *tmp = m;
+//  while (tmp != NULL) {
+//    LOGTEST << "\n----------------INI\n";
+//    LOGTEST << "MAP => [" << tmp->name << "] \n";
+//    LOGTEST << " * CONTENT [" << tmp->name << "] \n";
+//    LOGTEST << "----------------VALUE" << std::endl;
+//    MEdumpMap(tmp->content);
+//    LOGTEST << " * CHILD [" << tmp->name << "] \n" << std::endl;
+//    MEdumpMaps(tmp->child);
+//    tmp = tmp->next;
+//  }
+//}
 
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
   std::ifstream infile(filePath);
@@ -100,7 +116,7 @@ std::string isBoundingBoxData(maps *&_params, std::string postfix) {
   return "";
 }
 
-std::pair<X2INPUT> getNodeParameter(maps *&_params) {
+void getNodeParameter(maps *&_params,std::list<InputParameter>& parameters) {
   // ZOO puts "NULL" if the value is not present... i want to change in blank
   bool minOccurenceZero = false;
   map *minOcc = getMap(_params->content, "minOccurs");
@@ -108,94 +124,87 @@ std::pair<X2INPUT> getNodeParameter(maps *&_params) {
     minOccurenceZero = !strcmp(minOcc->value, "0");
   }
 
-  auto param = std::make_pair<X2INPUT>("", nullptr);
-
-  param.first = _params->name;
-  param.second = std::make_unique<mods::ArgoInterface::tgInput>();
-  param.second->id = _params->name;
-
+  int len = 0;
   map *isArray = getMap(_params->content, "isArray");
-  if (isArray) {
-    int len = 0;
-    map *length = getMap(_params->content, "length");
-    if (length) {
-      len = std::stoi(length->value);
-      std::string sValue;
-      std::string postFix;
-      for (int i = 0; i < len; i++) {
-        sValue.clear();
-        postFix.clear();
-        sValue = "value";
-        if (i > 0) {
-          postFix = "_" + std::to_string(i);
-          sValue.append(postFix);
-          //                    sValue.append("_");
-          //                    sValue.append(std::to_string(i));
-        }
-        map *value = getMap(_params->content, sValue.c_str());
-        if (value) {
-          auto bb = isBoundingBoxData(_params, postFix);
-          if (i > 0) {
-            if (bb.empty()) {
-              if (param.second)
-                param.second->value.append(",");
-            } else {
-              if (param.second)
-                param.second->value.append("\n");
-            }
-          }
+  map *length = getMap(_params->content, "length");
 
-          if (bb.empty()) {
-            if (param.second)
-              param.second->value.append(value->value);
-          } else {
-            if (param.second)
-              param.second->value.append(bb);
-          }
-        }
-      }
-    }
-  } else {
-    map *value = getMap(_params->content, "value");
-    if (value) {
-      if (minOccurenceZero) {
-        if (strcmp(value->value, "NULL")) {
-          auto bb = isBoundingBoxData(_params, "");
-          if (bb.empty())
-            if (param.second)
-              param.second->value = value->value;
-            else {
-              if (param.second)
-                param.second->value = bb;
-            }
-        }
-      } else {
-        auto bb = isBoundingBoxData(_params, "");
-        if (bb.empty())
-          if (param.second)
-            param.second->value = value->value;
-          else {
-            if (param.second)
-              param.second->value = bb;
-          }
-      }
-    }
+  if (isArray && length){
+    len = std::stoi(length->value);
+  }else{
+    len=1;
   }
+
+  std::string sValue;
+  std::string postFix;
 
   map *mimeType = getMap(_params->content, "mimeType");
-  if (mimeType) {
-    if (param.second)
-      param.second->mimeType = mimeType->value;
+  map *dataType = getMap(_params->content, "dataType");
+
+  for (int i = 0; i < len; i++) {
+
+    //--------------CLEAR
+    InputParameter parameter;
+
+    map *value= nullptr;
+    map *href= nullptr;
+    sValue.clear();
+    postFix.clear();
+    postFix = "_" + std::to_string(i);
+    //--------------CLEAR
+
+    parameter.id=_params->name;
+
+    if (mimeType && strlen(mimeType->value)>0){
+      parameter.mimeType=mimeType->value;
+    }
+    if (dataType && strlen(dataType->value)>0){
+      parameter.dataType=dataType->value;
+    }
+
+    //--------------VALUE
+    sValue = "value";
+    if (i > 0) {
+      sValue.append(postFix);
+    }
+    value = getMap(_params->content, sValue.c_str());
+    //--------------VALUE
+
+    //--------------xlink:href
+    sValue = "xlink:href";
+    if (i > 0) {
+      sValue.append(postFix);
+    }
+    href = getMap(_params->content, sValue.c_str());
+    //--------------xlink:href
+
+    if(value && strlen(value->value)){
+      parameter.value=value->value;
+    }
+
+    if(href && strlen(href->value)){
+      parameter.href=href->value;
+    }
+
+    if (!parameter.value.empty()){
+      auto bb = isBoundingBoxData(_params, postFix);//legacy
+      if (!bb.empty()){
+        parameter.value=bb;
+      }
+
+    }
+
+    parameters.push_back(parameter);
   }
 
-  return param;
 }
 
-void getT2InputConf(maps *m, std::list<std::pair<X2INPUT>> &input) {
+void getT2InputConf(maps *m, std::list<InputParameter>& parameters) {
   maps *tmp = m;
   while (tmp != NULL) {
-    input.push_back(getNodeParameter(tmp));
-    getT2InputConf(tmp->child, input);
+
+    getNodeParameter(tmp,parameters);
+
+    getT2InputConf(tmp->child, parameters);
     tmp = tmp->next;
   }
 }
@@ -249,19 +258,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
   try {
 
 
-    fprintf(stderr,"LA CASA DI \n");
-
-    setStatus(conf, "successful", "TEST ERROR");
-    updateStatus(conf, 100, "Done");
-
-
-//    dumpMaps(conf);
-    fprintf(stderr,"-----------------------\n");
-    dumpMaps(inputs);
-
-
-    return SERVICE_SUCCEEDED;
-
     std::cerr << "interface has been loaded!\n";
     fflush(stderr);
 
@@ -310,13 +306,11 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             argoConfig->argoConfigFile=sBuffer.str();
         }
 
-    // argoConfig->argoUri = confEoepca["argoUrl"];
-    // argoConfig->k8Uri = confEoepca["k8Url"];
+
     argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
 
     setStatus(conf, "running", "argoConfigFile loaded");
     std::cerr << argoConfig->argoConfigFile << "\n";
-
 
     auto argoInterface =
         std::make_unique<mods::ArgoInterface>(confEoepca["libargo"]);
@@ -332,61 +326,84 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     //==================================GET CONFIGURATION
 
     //==================================GET PARAMETERS
-    std::list<std::pair<X2INPUT>> inputParam;
-    getT2InputConf(inputs, inputParam);
-    MEdumpMaps(inputs);
-    for (auto &a : inputParam) {
-      std::cerr << "Inputs: " << a.first << " " << a.second->id << " " << a.second->value
-                << " " << a.second->mimeType << "\n";
+
+    std::list<InputParameter> params;
+    getT2InputConf(inputs, params);
+    dumpMaps(inputs);
+
+    json_object *jArray=json_object_new_array();
+
+    for (auto &a : params) {
+      json_object *jParamjParam=json_object_new_object();
+      a.add(jParamjParam);
+
+      json_object_array_add(jArray, jParamjParam);
     }
+
+    std::string jParams{json_object_to_json_string_ext(jArray, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)};
+    json_object_put(jArray);
+
+    fprintf(stderr,"jParams: %s \n",jParams.c_str());
+    params.clear();
     //==================================GET PARAMETERS
 
-    //==================================GET CWL CONTENT
-    std::string path("/zooservices/");
-    path.append(lenv["Identifier"]).append(".yaml");
-    std::stringstream cwlBuffer;
-    if (loadFile(path.c_str(), cwlBuffer)) {
-      std::string err("CWL file ");
-      err.append(path);
-      err.append(" not found!");
-      setStatus(conf, "failed", err.c_str());
-      return SERVICE_FAILED;
-    }
-    //  const char *filePath, std::stringstream &sBuffer
-    //==================================GET CWL CONTENT
 
-    setStatus(conf, "running", "the service is started");
-    std::string argoWorkflowId("");
 
-    std::cerr << "start!\n" <<  std::endl;
-    argoInterface->start(*argoConfig.get(), cwlBuffer.str(), inputParam,
-                         lenv["Identifier"], lenv["uusid"],
-                         argoWorkflowId);
+//    fprintf(stderr,"LA CASA DI \n");
+//    setStatus(conf, "successful", "TEST ERROR");
+//    updateStatus(conf, 100, "Done");
+//    fprintf(stderr,"-----------------------\n");
+//    return SERVICE_SUCCEEDED;
 
-    std::cerr << "start finished" << std::endl;
-    int percent = 0;
-    std::string message("");
-    std::cerr << "getStats start" << std::endl;
-    while (argoInterface->getStatus(*argoConfig.get(), argoWorkflowId, percent,
-                                    message)) {
-      updateStatus(conf, percent, message.c_str());
-      std::cerr << "going to sleep" << std::endl;
-      sleep(10);
-    }
 
-    std::cerr << "status finished" << std::endl;
-    updateStatus(conf, 100, "Done");
-    sleep(40);
-
-    std::list<std::pair<std::string, std::string>> outPutList{};
-    std::cerr << "getresult " << argoWorkflowId << std::endl;
-    argoInterface->getResults(*argoConfig.get(), argoWorkflowId, outPutList);
-    std::cerr << "getresults finished" << std::endl;
-    for (auto &[k, p] : outPutList) {
-      std::cerr << "output" << p << " " << k << std::endl;
-      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
-    }
-    std::cerr << "mapping results" << std::endl;
+//
+//
+//    //==================================GET CWL CONTENT
+//    std::string path("/zooservices/");
+//    path.append(lenv["Identifier"]).append(".yaml");
+//    std::stringstream cwlBuffer;
+//    if (loadFile(path.c_str(), cwlBuffer)) {
+//      std::string err("CWL file ");
+//      err.append(path);
+//      err.append(" not found!");
+//      setStatus(conf, "failed", err.c_str());
+//      return SERVICE_FAILED;
+//    }
+//    //  const char *filePath, std::stringstream &sBuffer
+//    //==================================GET CWL CONTENT
+//
+//    setStatus(conf, "running", "the service is started");
+//    std::string argoWorkflowId("");
+//
+//    std::cerr << "start!\n" <<  std::endl;
+//    argoInterface->start(*argoConfig.get(), cwlBuffer.str(), inputParam,
+//                         lenv["Identifier"], lenv["uusid"],
+//                         argoWorkflowId);
+//
+//    std::cerr << "start finished" << std::endl;
+//    int percent = 0;
+//    std::string message("");
+//    std::cerr << "getStats start" << std::endl;
+//    while (argoInterface->getStatus(*argoConfig.get(), argoWorkflowId, percent,
+//                                    message)) {
+//      updateStatus(conf, percent, message.c_str());
+//      std::cerr << "going to sleep" << std::endl;
+//      sleep(10);
+//    }
+//
+//    std::cerr << "status finished" << std::endl;
+//    updateStatus(conf, 100, "Done");
+//    sleep(40);
+//
+//    std::list<std::pair<std::string, std::string>> outPutList{};
+//    std::cerr << "getresult " << argoWorkflowId << std::endl;
+//    argoInterface->getResults(*argoConfig.get(), argoWorkflowId, outPutList);
+//    std::cerr << "getresults finished" << std::endl;
+//    for (auto &[k, p] : outPutList) {
+//      std::cerr << "output" << p << " " << k << std::endl;
+//      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+//    }
+//    std::cerr << "mapping results" << std::endl;
 
     //  - accepted
     //  - running

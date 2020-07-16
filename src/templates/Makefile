@@ -4,7 +4,7 @@ all:
 	g++ -std=c++17 -Wunused-function -DSERVICENAME=${COMPILE} template.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -o${USERPATH}${COMPILE}.zo
 
 interface:
-	g++ -std=c++17  interface.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -olibinterface.so
+	g++ -std=c++17 -I/usr/include/json/  interface.cpp ${CFLAGS} -lcgicc -ljson-c -shared -fpic  -lpthread -ldl -lzoo_service -olibinterface.so
 
 argo:
 	mkdir -p  build
