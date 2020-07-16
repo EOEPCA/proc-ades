@@ -1,5 +1,13 @@
 FROM proc-comm-zoo:1.0
 
+
+COPY 3ty/workflow_executor /usr/local/workflow_executor
+RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
+ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
+RUN conda install -c conda-forge python-kubernetes
+RUN cd /usr/local/workflow_executor/ && python setup.py install
+
+
 COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
 
@@ -26,8 +34,3 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh
 # docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" zoo  bash
 #alias ll='ls -ltr'
 
-#COPY 3ty/workflow_executor /usr/local/workflow_executor
-#RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
-#ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-#RUN conda install -c conda-forge python-kubernetes
-#RUN cd /usr/local/workflow_executor/ && python setup.py install
