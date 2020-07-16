@@ -26,7 +26,9 @@ ENV PATH "$PATH:/usr/local/bin"
 COPY assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
 COPY  assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_
+COPY  assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c && mv /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_ /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c; fi
+RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/service_json.c && mv /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_ /opt/zoo-project/zoo-project/zoo-kernel/service_json.c; fi
 
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 
