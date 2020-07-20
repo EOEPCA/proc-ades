@@ -309,6 +309,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     std::string jParams{json_object_to_json_string_ext(jstart, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)};
     json_object_put(jstart);
 
+    Util::innerReplace(jParams,"\\/","/" );
     std::cerr << "\n\nJson Inputs: \n"<< jParams.c_str() << "\n\n";
     params.clear();
     //==================================GET PARAMETERS
