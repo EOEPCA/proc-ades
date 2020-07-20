@@ -297,15 +297,17 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     std::cerr << "ZOO input:\n";
     dumpMaps(inputs);
 
+    json_object *jstart=json_object_new_object();
     json_object *jArray=json_object_new_array();
     for (auto &a : params) {
       json_object *jParamjParam=json_object_new_object();
       a.add(jParamjParam);
       json_object_array_add(jArray, jParamjParam);
     }
+    json_object_object_add(jstart, "inputs", jArray);
 
-    std::string jParams{json_object_to_json_string_ext(jArray, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)};
-    json_object_put(jArray);
+    std::string jParams{json_object_to_json_string_ext(jstart, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)};
+    json_object_put(jstart);
 
     std::cerr << "\n\nJson Inputs: \n"<< jParams.c_str() << "\n\n";
     params.clear();
@@ -334,7 +336,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     //=============================START
     std::cerr << "start!\n" <<  std::endl;
     std::string serviceID{""};
-    auto resStart=workflowExecutor->start(sConfigBuffer.str(),cwlBuffer.str(),jParams,
+    auto resStart=workflowExecutor->start(sConfigBuffer.str(),path/*cwlBuffer.str()*/,jParams,
                             lenv["Identifier"], lenv["uusid"],serviceID);
     if (resStart){
       std::string err{"Start empty"};
