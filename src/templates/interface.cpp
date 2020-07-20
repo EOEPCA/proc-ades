@@ -366,7 +366,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     }
 
     updateStatus(conf, 95, "waiting for logs");
-    sleep(40);
+    sleep(20);
     std::cerr << "status finished" << std::endl;
     //=============================STATUS
 

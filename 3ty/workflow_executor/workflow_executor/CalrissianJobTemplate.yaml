@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissian-revsort
+  name: calrissianjob
 spec:
   template:
     spec:
@@ -21,7 +21,7 @@ spec:
           - "--stderr"
           - "/calrissian/output-data/revsort-stderr.log"
           - "--max-ram"
-          - "8G"
+          - "4G"
           - "--max-cores"
           - "8"
           - "--tmp-outdir-prefix"

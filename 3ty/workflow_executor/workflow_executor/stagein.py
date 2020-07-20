@@ -1,4 +1,5 @@
 import ntpath
+import sys
 import time
 import uuid
 from os import path
@@ -41,7 +42,7 @@ def stac_stagein_run(args):
 
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
-        print(f"Creating stage-in job using the template {yamlFileTemplate} ")
+        print(f"Creating stage-in job using the template {yamlFileTemplate} ", file=sys.stderr)
         # volume
         yaml_modified = f.read().replace("calrissian-input-data", volume_name)
         yaml_modified = yaml_modified.replace("stage-in.yaml", path.join(outputFolder, input_yaml_filename))
@@ -54,9 +55,9 @@ def stac_stagein_run(args):
 
         try:
             resp = api_instance_batch_v1_api.create_namespaced_job(body=body, namespace=namespace)
-            print("Job created. status='%s'" % str(resp.status))
+            print("Job created. status='%s'" % str(resp.status), file=sys.stderr)
         except ApiException as e:
-            print("Exception when submitting job: %s\n" % e)
+            print("Exception when submitting job: %s\n" % e, file=sys.stderr)
             return 1
 
     pretty = True
@@ -67,13 +68,13 @@ def stac_stagein_run(args):
                                                                                        namespace=namespace,
                                                                                        pretty=pretty)
             if not job_status_response.status.succeeded and not job_status_response.status.failed:
-                pprint(f"{job_name} job is running")
+                pprint(f"{job_name} job is running", sys.stderr)
             else:
 
                 if job_status_response.status.succeeded:
-                    print("Stage-in job succeeded")
+                    print("Stage-in job succeeded", file=sys.stderr)
                 elif job_status_response.status.failed:
-                    print("Stage-in job failed")
+                    print("Stage-in job failed", file=sys.stderr)
 
                 api_instance_core_v1_api = client.CoreV1Api()
                 podlist = api_instance_core_v1_api.list_namespaced_pod(namespace=namespace,
@@ -82,7 +83,7 @@ def stac_stagein_run(args):
                 for pod in podlist.items:
                     print("%s\t%s\t%s" % (pod.metadata.name,
                                           pod.status.phase,
-                                          pod.status.pod_ip))
+                                          pod.status.pod_ip), file=sys.stderr)
                     if not pod.status.phase == "Pending":
                         api_response = api_instance_core_v1_api.read_namespaced_pod_log(name=pod.metadata.name,
                                                                                         namespace=namespace)
@@ -93,5 +94,5 @@ def stac_stagein_run(args):
             time.sleep(4)
 
         except ApiException as e:
-            print("Exception when submitting job: %s\n" % e)
+            print("Exception when submitting job: %s\n" % e, file=sys.stderr)
             return 1

@@ -6,6 +6,7 @@ from workflow_executor import prepare
 from workflow_executor import stagein
 from workflow_executor import execute
 from workflow_executor import result
+from workflow_executor import status
 
 from workflow_executor import helpers
 
@@ -90,6 +91,12 @@ def get_parser():
     )
 
     execute_parser.add_argument(
+        '-w', '--workflowname',
+        default=None,
+        help='The id of the workflow to execute'
+    )
+
+    execute_parser.add_argument(
         '-m', '--mount_folder',
         default="/application",
         help='Folder where to save application\'s file'
@@ -104,8 +111,9 @@ def get_parser():
         help='Get workflow status'
     )
     getstatus_parser.add_argument(
-        '-i', '--input_folder',
-        help='The path to the input folder'
+        '-w', '--workflowname',
+        default=None,
+        help='The id of the workflow to execute'
     )
     getstatus_parser.add_argument(
         '-n', '--namespace',
@@ -113,44 +121,50 @@ def get_parser():
         help='The name of the namespace where to execute the cwl'
     )
     getstatus_parser.set_defaults(
-        func=get_status
+        func=status.run
     )
+
+
+
     ###
     getresult_parser = subparsers.add_parser(
         'getresult',
         help='Get workflow result'
     )
     getresult_parser.add_argument(
-        '-i', '--input_folder',
-        help='The path to the input folder'
+        '-c', '--cwl-file',
+        help='The path to the cwl file'
     )
+
+    getresult_parser.add_argument(
+        '-v', '--volume_name_prefix',
+        help='The volume name prefix. Volume name: <prefix>-input-data',
+        required=True
+    )
+
     getresult_parser.add_argument(
         '-n', '--namespace',
         default=None,
         help='The name of the namespace where to execute the cwl'
     )
+
+    getresult_parser.add_argument(
+        '-w', '--workflowname',
+        default=None,
+        help='The id of the workflow to execute'
+    )
+
+    getresult_parser.add_argument(
+        '-m', '--mount_folder',
+        default="/application",
+        help='Folder where to save application\'s file'
+    )
     getresult_parser.set_defaults(
-        func=get_result
+        func=result.run
     )
 
     return parser
 
-
-
-
-
-
-
-def prepare_func(args):
-    prepare(args)
-
-
-def get_status(args):
-    print("Get status")
-
-
-def get_result(args):
-    print("Get result")
 
 
 def main(args=None):

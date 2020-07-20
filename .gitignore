@@ -48,3 +48,6 @@ out/
 cmake-build-debug
 cmake-build-release
 notes
+
+
+*.pyc

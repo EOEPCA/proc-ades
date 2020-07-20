@@ -1,3 +1,5 @@
+import sys
+
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 from pprint import pprint
@@ -10,7 +12,7 @@ def run(args):
     volumeSize = args.volumeSize
     volumeName = args.volumeName
 
-    print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
+    print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName, file=sys.stderr)
 
     v1 = client.CoreV1Api()
 
@@ -18,19 +20,19 @@ def run(args):
     api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
 
     ### Creating namespace
-    print("####################################")
-    print("######### Creating namespace")
+    print("####################################", file=sys.stderr)
+    print("######### Creating namespace", file=sys.stderr)
     try:
         body = client.V1Namespace(metadata=client.V1ObjectMeta(name=args.namespace_name))
         namespace_json = v1.create_namespace(body=body, async_req=False)
         print(str(namespace_json))
     except ApiException as e:
-        print("Exception when creating namespace: %s\n" % e)
+        print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
         return 1
 
     #### Creating pod manager role
-    print("####################################")
-    print("######### Creating pod_manager_role")
+    print("####################################", file=sys.stderr)
+    print("######### Creating pod_manager_role", file=sys.stderr)
     metadata = client.V1ObjectMeta(name='pod-manager-role', namespace=namespace)
     rule = client.V1PolicyRule(api_groups=['*'], resources=['pods'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
@@ -43,12 +45,12 @@ def run(args):
         api_response = api_instance.create_namespaced_role(namespace, body, pretty=pretty)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when creating pod-manager-role: %s\n" % e)
+        print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
         return 1
 
     #### Creating log-reader-role
-    print("####################################")
-    print("######### Creating log-reader-role")
+    print("####################################", file=sys.stderr)
+    print("######### Creating log-reader-role", file=sys.stderr)
     metadata = client.V1ObjectMeta(name='log-reader-role', namespace=namespace)
     rule = client.V1PolicyRule(api_groups=['*'], resources=['pods'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
@@ -62,11 +64,11 @@ def run(args):
         api_response = api_instance.create_namespaced_role(namespace, body, pretty=pretty)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when creating pod-manager-role: %s\n" % e)
+        print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
         return 1
 
-    print("####################################")
-    print("######### Creating pod-manager-default-binding")
+    print("####################################", file=sys.stderr)
+    print("######### Creating pod-manager-default-binding", file=sys.stderr)
     metadata = client.V1ObjectMeta(name='pod-manager-default-binding', namespace=namespace)
 
     role_ref = client.V1RoleRef(api_group='', kind='Role', name='pod-manager-role')
@@ -81,11 +83,11 @@ def run(args):
         api_response = api_instance.create_namespaced_role_binding(namespace, body, pretty=pretty)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when creating pod-manager-default-binding: %s\n" % e)
+        print("Exception when creating pod-manager-default-binding: %s\n" % e, file=sys.stderr)
         return 1
 
-    print("####################################")
-    print("######### Creating log-reader-default-binding")
+    print("####################################", file=sys.stderr)
+    print("######### Creating log-reader-default-binding", file=sys.stderr)
     metadata = client.V1ObjectMeta(name='log-reader-default-binding', namespace=namespace)
 
     role_ref = client.V1RoleRef(api_group='', kind='Role', name='log-reader-role')
@@ -100,11 +102,11 @@ def run(args):
         api_response = api_instance.create_namespaced_role_binding(namespace, body, pretty=pretty)
         pprint(api_response)
     except ApiException as e:
-        print("Exception when creating log-reader-default-binding: %s\n" % e)
+        print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
         return 1
 
-    print("####################################")
-    print("######### Creating Persistent Volume Claims")
+    print("####################################", file=sys.stderr)
+    print("######### Creating Persistent Volume Claims", file=sys.stderr)
 
     metadata1 = client.V1ObjectMeta(name=f"{volumeName}-input-data", namespace=namespace)
     spec1 = client.V1PersistentVolumeClaimSpec(
@@ -144,7 +146,7 @@ def run(args):
         pprint(api_response2)
         pprint(api_response3)
     except ApiException as e:
-        print("Exception when creating persistent_volume_claim: %s\n" % e)
+        print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
         return 1
 
 
