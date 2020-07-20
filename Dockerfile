@@ -28,6 +28,9 @@ RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh
 
+COPY assets/config /opt/t2config/kubeconfig
+RUN chown 48:48 /opt/t2config/kubeconfig
+
 #sudo docker run --rm  -d --name zoo -p 7777:80    proc-ades:1.0
 #sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD:/project  proc-ades:1.0
 #alias ll='ls -ltr'

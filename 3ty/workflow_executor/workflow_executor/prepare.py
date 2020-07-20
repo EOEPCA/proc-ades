@@ -25,7 +25,7 @@ def run(args):
     try:
         body = client.V1Namespace(metadata=client.V1ObjectMeta(name=args.namespace_name))
         namespace_json = v1.create_namespace(body=body, async_req=False)
-        print(str(namespace_json))
+        print(str(namespace_json),file=sys.stderr)
     except ApiException as e:
         print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
         return 1
@@ -43,7 +43,7 @@ def run(args):
 
     try:
         api_response = api_instance.create_namespaced_role(namespace, body, pretty=pretty)
-        pprint(api_response)
+        pprint(api_response,sys.stderr)
     except ApiException as e:
         print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
         return 1
@@ -62,7 +62,7 @@ def run(args):
 
     try:
         api_response = api_instance.create_namespaced_role(namespace, body, pretty=pretty)
-        pprint(api_response)
+        pprint(api_response,sys.stderr)
     except ApiException as e:
         print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
         return 1
@@ -81,9 +81,9 @@ def run(args):
     pretty = True
     try:
         api_response = api_instance.create_namespaced_role_binding(namespace, body, pretty=pretty)
-        pprint(api_response)
+        pprint(api_response,sys.stderr)
     except ApiException as e:
-        print("Exception when creating pod-manager-default-binding: %s\n" % e, file=sys.stderr)
+        print("Exception when creating pod-manager-default-binding: %s\n" % e)
         return 1
 
     print("####################################", file=sys.stderr)
@@ -100,9 +100,9 @@ def run(args):
     pretty = True
     try:
         api_response = api_instance.create_namespaced_role_binding(namespace, body, pretty=pretty)
-        pprint(api_response)
+        pprint(api_response,sys.stderr)
     except ApiException as e:
-        print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
+        print("Exception when creating log-reader-default-binding: %s\n" % e)
         return 1
 
     print("####################################", file=sys.stderr)
@@ -142,11 +142,11 @@ def run(args):
         api_response1 = v1.create_namespaced_persistent_volume_claim(namespace, body1, pretty=pretty)
         api_response2 = v1.create_namespaced_persistent_volume_claim(namespace, body2, pretty=pretty)
         api_response3 = v1.create_namespaced_persistent_volume_claim(namespace, body3, pretty=pretty)
-        pprint(api_response1)
-        pprint(api_response2)
-        pprint(api_response3)
+        pprint(api_response1,sys.stderr)
+        pprint(api_response2,sys.stderr)
+        pprint(api_response3,sys.stderr)
     except ApiException as e:
-        print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
+        print("Exception when creating persistent_volume_claim: %s\n" % e)
         return 1
 
 

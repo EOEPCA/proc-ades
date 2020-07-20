@@ -32,6 +32,7 @@ $graph:
   doc: This service takes as input a Sentinel-3 SLSTR Level 2 (SL_2_LST____) product
     on DESCENDING pass and does the reprojection and tiling
   id: slstr-tiling
+  ows:version: 1.0 # workflow version
   inputs:
     input_reference:
       doc: This service takes as input a Sentinel-3 SLSTR Level 2 (SL_2_LST____) product

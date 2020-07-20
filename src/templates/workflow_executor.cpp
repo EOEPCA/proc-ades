@@ -4,72 +4,100 @@
 
 #include <utility>
 
-
-
 #include <cstdio>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <sstream>
+#include <regex>
+#include "exec.hpp"
 
-std::string exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
+
+int  execute(const std::string& cmd,std::string& buffer) {
+    Exec exec{};
+    exec = cmd;
+    try {
+        exec.exec();
+        buffer=(std::string)exec;
+        if (((int) exec) != 0) {
+            return (int)exec;
+        }
+    } catch (...) {
+        buffer="Unexpected error";
+        return 1;
     }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
+    return (int)exec;
+}
+
+extern "C" int start(const std::string &configFile, const std::string &cwlFile, const std::string &inputsFile, const std::string &wpsServiceID, const std::string &runId, std::string &serviceID) {
+
+    ///////////
+    // preparing kubernetes namespace for workflow
+
+    // generating a workflow id
+    serviceID = wpsServiceID + "_" + runId;
+    serviceID = std::regex_replace(serviceID, std::regex("_"), "-");
+    std::stringstream preparecommand;
+    preparecommand << "workflow_executor --config /opt/t2config/kubeconfig  prepare " << serviceID << " 2  " << serviceID << "-volume";
+    std::string response;
+    auto exitcode = execute(preparecommand.str(), response);
+    if(exitcode != 0 ) {
+        std::cerr << exitcode << std::endl;
+        serviceID=response;
+        return 1;
     }
-    return result;
+
+
+    /////////
+    // executing workflow
+
+    // creating job_order.json file
+    std::string job_inputs_file = "/tmp/job_order.json";
+    std::ofstream file(job_inputs_file);
+    file << inputsFile;
+    std::stringstream executecommand;
+    executecommand << "workflow_executor --config /opt/t2config/kubeconfig execute -i "<< job_inputs_file <<" -c "<< cwlFile << " -v "<< serviceID <<"-volume -n "<< serviceID <<" -m \"/workflow\" -w "<< serviceID;
+    exitcode = execute(executecommand.str(), response);
+    if(exitcode != 0 ) {
+        std::cerr << exitcode << std::endl;
+        serviceID=response;
+        return 1;
+    }
+
+    return 0;
 }
 
+extern "C" int getStatus(const std::string &configFile, const std::string &serviceID, int &percent, std::string &message) {
 
-extern "C" int start(
-    const std::string& configFile,const std::string &cwlFile,const std::string& inputsFile,
-    const std::string &wpsServiceID,const std::string &runId,std::string &serviceID){
+    /////////
+    // executing getStatus command
 
-  serviceID="test_ID";
-
-  std::cerr<< "bla" <<std::endl;
-
-
-
-  exec("echo hello");
-
-  return 0;
+    std::stringstream getstatuscommand;
+    getstatuscommand << "workflow_executor --config /opt/t2config/kubeconfig getstatus -n t2demo -n "<< serviceID <<" -w "<< serviceID;
+    std::string response;
+    auto exitcode = execute(getstatuscommand.str(), response);
+    if(exitcode != 0 ) {
+        std::cerr << exitcode << std::endl;
+        throw std::runtime_error(response);
+    }
+    return 0;
 }
 
-extern "C" int getStatus(const std::string& configFile,
-                 const std::string &serviceID, int &percent,std::string &message) {
+extern "C" int getResults(const std::string &configFile, const std::string &serviceID, std::list<std::pair<std::string, std::string>> &outPutList) {
 
-
-
-
-  return 0;
-}
-
-extern "C" int getResults(const std::string& configFile,
-                  const std::string &serviceID,
-                  std::list<std::pair<std::string, std::string>> &outPutList) {
-
-
-  outPutList.push_back(std::make_pair<std::string, std::string>("results","https://catalog....."));
+    outPutList.push_back(std::make_pair<std::string, std::string>("results", "https://catalog....."));
 
 
 
 //  la funzione viene richiamata ogni volta che torni con 0... != da zero esce dal loop
 //  return 0;
 
-  return 1;
+    return 1;
 }
 
-extern "C" void clear(const std::string& configFile,
-              const std::string &serviceID){
-
-
+extern "C" void clear(const std::string &configFile, const std::string &serviceID) {
 
 
 };
