@@ -36,7 +36,6 @@ def stac_stagein_run(args):
                                  persistentVolumeClaimName=volume_name,
                                  namespace=namespace)
     # Setup K8 configs
-    config.load_kube_config()
     configuration = client.Configuration()
     api_instance_batch_v1_api = client.BatchV1Api(client.ApiClient(configuration))
 
@@ -51,7 +50,7 @@ def stac_stagein_run(args):
         yaml_modified = yaml_modified.replace("mountPath: /tmp", f"mountPath: {mountFolder}")
 
         body = yaml.safe_load(yaml_modified)
-        pprint(body)
+        pprint(body, sys.stderr)
 
         try:
             resp = api_instance_batch_v1_api.create_namespaced_job(body=body, namespace=namespace)
@@ -87,7 +86,7 @@ def stac_stagein_run(args):
                     if not pod.status.phase == "Pending":
                         api_response = api_instance_core_v1_api.read_namespaced_pod_log(name=pod.metadata.name,
                                                                                         namespace=namespace)
-                        pprint(api_response)
+                        pprint(api_response,sys.stderr)
                         return
                 break
             # retry every 2 seconds

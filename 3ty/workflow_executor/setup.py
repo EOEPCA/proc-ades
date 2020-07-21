@@ -8,6 +8,7 @@ setup(name='workflow_executor',
       author_email='blasco.brauzzi@terradue.com',
       license='MIT',
       packages=['workflow_executor'],
+      package_data={'workflow_executor':['*']},
       entry_points={
           'console_scripts': ['workflow_executor=workflow_executor.client:main'],
       },

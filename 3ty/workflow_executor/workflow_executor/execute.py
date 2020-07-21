@@ -67,6 +67,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
 
                     temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
 
+
                     yamlString = yaml.dump(stac_catalog_yaml)
 
                     temp.write(yamlString)
@@ -74,6 +75,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     print(temp.name, file=sys.stderr)
                     print(temp.read(), file=sys.stderr)
                     stagein_params["input_stac_catalog"] = temp.name
+                    os.chmod(temp.name, 0o777)
                     stagein.stac_stagein_run(SimpleNamespace(**stagein_params))
                     temp.close()
 
@@ -131,7 +133,6 @@ def run(args):
     cwlDocumentFilename = ntpath.basename(cwl_document)
 
     # # Setup K8 configs
-    config.load_kube_config()
     configuration = client.Configuration()
     api_instance = client.BatchV1Api(client.ApiClient(configuration))
     yamlFileTemplate = "CalrissianJobTemplate.yaml"
