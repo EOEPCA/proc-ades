@@ -44,7 +44,7 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
 
     // generating a workflow id
     std::time_t result = std::time(nullptr);
-    serviceID = "wf-"+runId;
+    serviceID = "wf-"                                                               +runId;
     serviceID = std::regex_replace(serviceID, std::regex("_"), "-");
     std::stringstream preparecommand;
     preparecommand << "workflow_executor --config /opt/t2config/kubeconfig  prepare " << serviceID << " 2  " << serviceID << "-volume";
