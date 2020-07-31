@@ -456,7 +456,7 @@ std::list<std::unique_ptr<ZooApplication>> ZooConverter::convert(
           supportedDefault->setMimeType("application/json");
 
           theOutput->moveDefaultSupported(supportedDefault);
-          theOutput->moveAddSupported(format);
+          theOutput->moveAddSupported(supportedDefault);
 
           auto res = parseParam<EOEPCA::OWS::Param>(theOutput.get());
 
