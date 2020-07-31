@@ -21,7 +21,7 @@ COPY src/templates/Makefile /opt/t2template/Makefile
 COPY src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/
 COPY src/deployundeploy/zoo/*.zcfg /opt/t2service/
 COPY src/templates/libinterface.so /opt/t2libs/libinterface.so
-COPY build/3ty/proc-comm-lib-ows-1.03/libeoepcaows.so /opt/t2libs/
+COPY build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
 #COPY build/3ty/proc-comm-lib-argo/proc-comm-lib-argo-build/libeoepcaargo.so /opt/t2service/libeoepcaargo.so
 COPY build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
 RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user

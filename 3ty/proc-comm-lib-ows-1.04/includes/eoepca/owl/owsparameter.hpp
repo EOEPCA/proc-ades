@@ -397,6 +397,8 @@ struct Content {
   std::string tag{""};
   std::string err{""};
 
+  Content()=default;
+  Content(const Content&)=default;
   Content(std::string pCode, std::string pHref)
       : type(std::move(pCode)), href(std::move(pHref)) {}
 };
@@ -458,9 +460,18 @@ class OWSOffering {
    */
   std::list<Content> &getContents() { return contents; }
 
-  void addContent(std::string code, std::string href) {
-    if (!code.empty()) {
-      contents.emplace_back(std::move(code), std::move(href));
+  void addContentTag(std::string code_, std::string tag_) {
+    if (!code_.empty()) {
+
+      Content c{};
+      c.type=std::move(code_);
+      c.tag=std::move(tag_);
+      contents.push_back(c);
+    }
+  }
+  void addContent(std::string code_, std::string href) {
+    if (!code_.empty()) {
+      contents.emplace_back(std::move(code_), std::move(href));
     }
   }
 

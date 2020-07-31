@@ -37,6 +37,10 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 
 
+
+find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+
 file(GLOB test_sources [a-z_]*.cpp application/[a-z_]*.hpp application/[a-z_]*.cpp)
 
 SET(MODS_LIBS
@@ -48,6 +52,6 @@ SET(LIB_TEST_NAME
 )
 
 add_executable(${LIB_TEST_NAME} ${test_sources})
-target_link_libraries(${LIB_TEST_NAME} ${MODS_LIBS} gtest_main)
+target_link_libraries(${LIB_TEST_NAME} ${MODS_LIBS} ${CURL_LIBRARIES} gtest_main)
 add_test(NAME eoepca_test_run COMMAND ${LIB_TEST_NAME})
 

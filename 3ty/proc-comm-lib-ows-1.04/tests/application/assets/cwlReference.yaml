@@ -70,7 +70,7 @@ $graph:
       optional_integer_parameter: # parameter id [WPS] map to wps:Input/ows:identifier
         doc: threshold blah blah blah # [WPS] maps to wps:Input/ows:abstract
         label: threshold value # [WPS] maps to wps:Input/ows:title
-        type: int? # question mark indicates it is optional. [WPS] maps to minOccurs = 0 (maxOccurs = 1 because it is not an array)
+        type: int? # question m ark indicates it is optional. [WPS] maps to minOccurs = 0 (maxOccurs = 1 because it is not an array)
 
       optional_combo_parameter: # parameter id [WPS] map to wps:Input/ows:identifier
         doc: type blah blah blah # [WPS] maps to wps:Input/ows:abstract

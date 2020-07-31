@@ -21,7 +21,7 @@ include_directories(${LIBXSLT_INCLUDE_DIR})
 
 include_directories(includes)
 include_directories(/var/lib64 /usr/local/include/t2wpsZoolib /opt/t2build/includes/ /opt/zoo-project/zoo-project/zoo-kernel/ . ./include )
-include_directories(3ty/proc-comm-lib-ows-1.03/includes)
+include_directories(3ty/proc-comm-lib-ows-1.04/includes)
 
 SET(LIB_SRC
         src/deployundeploy/zoo/deploy.cpp

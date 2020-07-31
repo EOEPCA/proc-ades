@@ -11,8 +11,8 @@
 
 class Util {
   const char* ows1 = "ows2.xml";
-  const char* libLinux = "libeoepcaows.dylib";
-  const char* libMac = "libeoepcaows.so";
+  const char* libLinux = "./libeoepcaows.dylib";
+  const char* libMac = "./libeoepcaows.so";
 
  public:
   std::string getLibName() {

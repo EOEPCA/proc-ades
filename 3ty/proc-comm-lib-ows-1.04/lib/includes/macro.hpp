@@ -34,7 +34,7 @@
 
 #define CWLTYPE_LIST                                                       \
   {                                                                        \
-    "null", "boolean", "int", "long", "float", "double", "string", "File", \
+    "null", "boolean","integer", "int", "long", "float", "double", "string", "File", \
         "Directory"                                                        \
   }
 

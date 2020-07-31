@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rm -fvR build demo
+#rm -fvR build demo
 mkdir -p "build"
 
 export BUILDER_ENV_IMAGE="eoepca/eoepca-build-cpp:1.0"

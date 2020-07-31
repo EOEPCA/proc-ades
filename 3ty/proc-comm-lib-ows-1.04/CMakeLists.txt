@@ -9,6 +9,11 @@ set(RUNNER_NAME
 		runner
 )
 
+set(CATALOG_RUNNER_NAME
+		catalogrunner
+		)
+
+
 #XML dependences--------------------------------------
 find_package(LibXml2 REQUIRED)
 find_package(LibXslt REQUIRED)
@@ -51,9 +56,13 @@ SET(LIB_SRC
 		lib/parser.cpp lib/includes/parser.hpp includes/eoepca/owl/eoepcaows.hpp
 		)
 
-SET(MAIN_SRC 
+SET(MAIN_SRC
 	src/run.cpp
 )
+
+SET(CATALOG_SRC
+		src/catalog.cpp
+		)
 
 
 add_library(eoepcaows SHARED ${LIB_SRC} ${LIB_INCLUDE} )
@@ -62,6 +71,8 @@ TARGET_LINK_LIBRARIES(eoepcaows yaml-cpp ${CURL_LIBRARIES} ${LIBXML2_LIBRARIES} 
 add_executable(${RUNNER_NAME} ${INCLUDE_SRC} ${MAIN_SRC})
 TARGET_LINK_LIBRARIES(${RUNNER_NAME} ${MODS_LIBS} ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES})
 
+add_executable(${CATALOG_RUNNER_NAME} ${INCLUDE_SRC} ${CATALOG_SRC})
+TARGET_LINK_LIBRARIES(${CATALOG_RUNNER_NAME} ${MODS_LIBS} ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES}  ${CURL_LIBRARIES} )
 
 if((NOT DEFINED ENV{RUN_TESTS}) OR ($ENV{RUN_TESTS}))
 add_subdirectory(tests)

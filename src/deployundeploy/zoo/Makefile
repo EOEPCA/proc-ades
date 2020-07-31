@@ -1,4 +1,4 @@
-CFLAGS= -I../includes -I/project/3ty/proc-comm-lib-ows-1.03/includes/ -I/usr/include/libxml2 -Iinclude  -I/opt/zoo-project/zoo-project/zoo-kernel -L/var/lib64   `cgicc-config --cxxflags`   -I`cgicc-config --includedir` -L`cgicc-config  --libdir` -I/usr/include/
+CFLAGS= -I../includes -I/project/3ty/proc-comm-lib-ows-1.04/includes/ -I/usr/include/libxml2 -Iinclude  -I/opt/zoo-project/zoo-project/zoo-kernel -L/var/lib64   `cgicc-config --cxxflags`   -I`cgicc-config --includedir` -L`cgicc-config  --libdir` -I/usr/include/
 all:
 	mkdir -p build
 	g++ -std=c++17 ${CFLAGS} -fpic -c sha1.cpp -o build/sha1.o

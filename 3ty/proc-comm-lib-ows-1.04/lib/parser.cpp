@@ -7,6 +7,8 @@
 #include <memory>
 #include <optional>
 
+#include <fstream>//TOREMOVE
+
 #include "includes/httpfuntions.hpp"
 #include "includes/macro.hpp"
 #include "includes/yaml/yaml.hpp"
@@ -60,7 +62,11 @@ class TypeCWL {
 
   void setOtherValue() {
     auto nposBob = typeBase_.find("[]");
-    array_ = (nposBob != std::string::npos);
+
+    if (!array_){
+      array_ = (nposBob != std::string::npos);
+    }
+
     auto nposQM = typeBase_.find("?");
     optional_ = (nposQM != std::string::npos);
 
@@ -75,14 +81,43 @@ class TypeCWL {
     }
   }
 
+  void parseOther(const TOOLS::Object* obj) {
+    if (obj){
+      auto qf=obj->getQlf();
+      if (qf.first=="type" && qf.second.empty()){
+
+        TOOLS::Object a;
+        a.setQlf("noBase","");
+        for (auto& o : obj->getChildren()) {
+            a.addChildren(o.get());
+        }
+        //=============================================
+        //TODO: create operator=
+        //=============================================
+        auto typeCWL = std::make_unique<TypeCWL>( &a);
+        if (empty() && typeCWL->isGood()) {
+          typeBase_ = typeCWL->getTypeBase();
+          typeParsed_ = typeCWL->getTypeParsed();
+          array_ = typeCWL->isArray();
+          optional_ = typeCWL->isOptional();
+          for (auto& s : typeCWL->getSymbols()) symbols_.emplace_back(s);
+        }
+        //=============================================
+      }
+    }
+  }
+
   void parseArray(const TOOLS::Object* obj) {
     if (obj) {
       bool forceOptional{false};
 
       for (auto& o : obj->getChildren()) {
-        if (o->getF() == "null") {
+        if (o->isQlfEmpty()) {
           forceOptional = true;
         } else {
+          //=============================================
+          //TODO: create operator=
+          //=============================================
           auto typeCWL = std::make_unique<TypeCWL>(o.get());
           if (empty() && typeCWL->isGood()) {
             typeBase_ = typeCWL->getTypeBase();
@@ -91,9 +126,12 @@ class TypeCWL {
             optional_ = typeCWL->isOptional();
             for (auto& s : typeCWL->getSymbols()) symbols_.emplace_back(s);
           }
+          //=============================================
         }
       }
-      if (forceOptional) optional_ = true;
+      if (forceOptional) {
+        optional_ = true;
+      }
     }
   }
 
@@ -102,9 +140,6 @@ class TypeCWL {
   explicit TypeCWL(const TOOLS::Object* obj) {
     resetError();
     resetVals();
-
-    //    dumpCWLMODEL(obj, 0);
-
     if (!obj->hasChildren() && !obj->isQlfEmpty()) {
       typeBase_ = obj->getF();
       setOtherValue();
@@ -116,14 +151,28 @@ class TypeCWL {
           if (theF == "array") {
             auto items = obj->find("items", "", false);
             if (items) {
-              parseArray(items);
+
+              if (items->getF().empty()){
+                parseArray(items);
+              }else{
+                typeBase_=items->getF();
+              }
+              bool myOpt=isOptional();
+              setOtherValue();
+
+              if(myOpt){
+                this->optional_=true;
+              }
+              this->array_=true;
+
             }
           } else if (theF == "enum") {
             typeBase_ = "enum";
             auto symbols = obj->find("symbols", "");
-            for (auto& s : symbols->getChildren()) {
-              if (!s->getF().empty()) symbols_.emplace_back(s->getF());
-            }
+            if(symbols)
+              for (auto& s : symbols->getChildren()) {
+                if (!s->getF().empty()) symbols_.emplace_back(s->getF());
+              }
             setOtherValue();
           } else if (theF == "record") {
             setError("Type RecordSchema not supported yet");
@@ -134,7 +183,12 @@ class TypeCWL {
             setOtherValue();
           }
         } else {
-          parseArray(theType);
+
+          if(theType->isArray()){
+            parseArray(theType);
+          }else{
+            parseOther(theType);
+          }
         }
       }
     }
@@ -189,8 +243,8 @@ const std::string& Parser::getName() const { return name; }
 enum class OBJECT_NODE { INPUT, OUTPUT };
 
 using MAP_PARSER =
-    std::map<std::string,
-             const std::function<std::unique_ptr<OWS::Param>(xmlNode*)>>;
+std::map<std::string,
+    const std::function<std::unique_ptr<OWS::Param>(xmlNode*)>>;
 
 auto getWithoutSquareBob = [](const std::string& type) -> std::string {
   auto npos = type.find("[]");
@@ -457,8 +511,9 @@ std::unique_ptr<OWS::Param> CWLTypeParserSpecialization(
 
     auto pCatalog = obj->find(catalog, "", false);
     if (pCatalog) {
-      formats.emplace_back(new EOEPCA::OWS::Format("application/json"));
-      formats.emplace_back(new EOEPCA::OWS::Format("application/yaml"));
+      formats.emplace_back(new EOEPCA::OWS::Format("application/opensearchdescription+xml"));
+      formats.emplace_back(new EOEPCA::OWS::Format("application/atom+xml"));
+      formats.emplace_back(new EOEPCA::OWS::Format("application/geo+json; profile=stac"));
     }
   }
 
@@ -549,7 +604,9 @@ std::unique_ptr<OWS::Param> CWLTypeParserSpecialization(
 
     if (typeCWL->isOptional()) {
       theReturnParam->setMinOccurs(0);
-      theReturnParam->setMaxOccurs(1);
+      if (theReturnParam->getMaxOccurs()==0){
+        theReturnParam->setMaxOccurs(1);
+      }
     }
   }
 
@@ -604,6 +661,10 @@ void parseCwlInputs(MAP_PARSER_CWL& mapParserCwl,
 std::unique_ptr<OWS::Param> CWLTypeEnum(const NamespaceCWL* namespaces,
                                         const TOOLS::Object* obj,
                                         TypeCWL* typeCWL) {
+
+
+//  dumpCWLMODEL(obj,0);
+
   EOEPCA::OWS::Descriptor descriptor;
   descriptor.setTag(typeCWL->getTypeParsed());
   getCWLInputDescriptor(namespaces, obj, descriptor);
@@ -657,7 +718,7 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering) {
                 pWorkflow->findAndReturnF(owsVersion, "", false));
             if (processDescription->getVersion().empty()) {
 
-              dumpCWLMODEL(pWorkflow,0);
+//              dumpCWLMODEL(pWorkflow,0);
 
               std::string err{"Workflow version empty."};
               throw std::runtime_error(err);
@@ -708,13 +769,25 @@ void parseOffering(xmlNode* offering_node,
       xmlChar* type = xmlGetProp(inner_cur_node, (const xmlChar*)"type");
       xmlChar* href = xmlGetProp(inner_cur_node, (const xmlChar*)"href");
 
-      ptrOffering->addContent(std::string(CHAR_BAD_CAST type),
-                              std::string(CHAR_BAD_CAST href));
+      if (href){
+        ptrOffering->addContent(std::string(CHAR_BAD_CAST type),
+                                std::string(CHAR_BAD_CAST href));
+      }{
+
+//        std::ifstream ifs("myfile.txt");
+//        std::string content( (std::istreambuf_iterator<char>(ifs) ),
+//                             (std::istreambuf_iterator<char>()    ) );
+
+        ptrOffering->addContentTag(
+            std::string(CHAR_BAD_CAST type),
+            std::string(CHAR_BAD_CAST xmlNodeGetContent(inner_cur_node))
+            );
+      }
 
     } else if (IS_CHECK(inner_cur_node, "operation", XMLNS_OWC)) {
-      xmlChar* code = xmlGetProp(inner_cur_node, (const xmlChar*)"code");
-      if (code) {
-        if (XML_COMPARE(code, "DescribeProcess")) {
+      xmlChar* mCode = xmlGetProp(inner_cur_node, (const xmlChar*)"code");
+      if (mCode) {
+        if (XML_COMPARE(mCode, "DescribeProcess")) {
           if (inner_cur_node->children) {
             FOR(desc, inner_cur_node->children) {
               if (IS_CHECK(desc, "ProcessDescription", XMLNS_ATOM)) {
@@ -747,12 +820,16 @@ void parseEntry(xmlNode* entry_node, std::unique_ptr<OWS::OWSEntry>& owsEntry) {
 
         for (auto& content : ptrOffering->getContents()) {
           if (content.type == XML_CWL_TYPE) {
-            auto res = getFromWeb(content.tag, content.href.c_str());
-            if (res != 200) {
-              std::string err{"href: "};
-              err.append(content.href).append(" can't be downloaded");
-              throw std::runtime_error(err);
+            if (!content.href.empty()){
+
+              auto res = getFromWeb(content.tag, content.href.c_str());
+              if (res != 200) {
+                std::string err{"href: "};
+                err.append(content.href).append(" can't be downloaded");
+                throw std::runtime_error(err);
+              }
             }
+
           }
         }
 
