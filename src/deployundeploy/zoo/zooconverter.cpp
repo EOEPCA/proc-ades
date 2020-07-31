@@ -451,10 +451,9 @@ std::list<std::unique_ptr<ZooApplication>> ZooConverter::convert(
         {
           theOutput->setIdentifier("wf_outputs");
           theOutput->setTitle("wf_outputs");
-          auto format=std::make_unique<EOEPCA::OWS::Format>();
-          format->setMimeType("application/geo+json; profile=stac");
+
           auto supportedDefault=std::make_unique<EOEPCA::OWS::Format>();
-          supportedDefault->setMimeType("application/geo+json; profile=stac");
+          supportedDefault->setMimeType("application/json");
 
           theOutput->moveDefaultSupported(supportedDefault);
           theOutput->moveAddSupported(format);
