@@ -598,6 +598,8 @@ std::unique_ptr<OWS::Param> CWLTypeParserSpecialization(
     theReturnParam->setTitle(descriptor.getTitle());
     theReturnParam->setAbstract(descriptor.getAbstract());
     theReturnParam->setMinOccurs(1);
+    theReturnParam->setMaxOccurs(1);
+
     if (typeCWL->isArray()) {
       theReturnParam->setMaxOccurs(999);
     }
