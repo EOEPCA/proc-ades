@@ -10,7 +10,7 @@ spec:
         runAsUser: 1000
         runAsGroup: 3000
         fsGroup: 2000
-      containers:
+      initContainers:
       - name: calrissian
         image: dukegcb/calrissian:latest
         imagePullPolicy: IfNotPresent
@@ -21,7 +21,7 @@ spec:
           - "--stderr"
           - "/calrissian/output-data/revsort-stderr.log"
           - "--max-ram"
-          - "4G"
+          - "16G"
           - "--max-cores"
           - "8"
           - "--tmp-outdir-prefix"
@@ -48,6 +48,34 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+      containers:
+        - name: stage-out
+          image: terradue/c7-stage-out:latest
+          command:
+            - "stage-out"
+            - "--source"
+            - "/calrissian/output-data/slstr-tiling-output.json"
+            - "--endpoint"
+            - "https://catalog.terradue.com/bbrauzzi"
+            - "--username"
+            - "bbrauzzi"
+            - "--apikey"
+            - "************"
+            - "--store-host"
+            - "https://nx10438.your-storageshare.de/"
+            - "--store-username"
+            - "eoepca-demo-storage"
+            - "--store-apikey"
+            - "***********"
+            - "--job"
+            - "t2workflow123"
+          volumeMounts:
+            - mountPath: /calrissian/input-data
+              name: calrissian-input-data
+            - mountPath: /calrissian/tmpout
+              name: calrissian-tmpout
+            - mountPath: /calrissian/output-data
+              name: calrissian-output-data
       restartPolicy: Never
       volumes:
       - name: calrissian-input-data

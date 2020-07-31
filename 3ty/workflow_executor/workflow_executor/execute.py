@@ -12,14 +12,11 @@ from kubernetes.client.rest import ApiException
 import tempfile
 
 
-
-
-
-def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, outputFolder, namespace):
-    print(job_input_json_file, file=sys.stderr)
+def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, outputFolder, namespace, state=None):
+    print(job_input_json_file)
     job_input_json = json.load(open(job_input_json_file))
 
-    print("parsing cwl", file=sys.stderr)
+    print("parsing cwl")
     with open(cwl_document, 'r') as stream:
         try:
             graph = yaml.load(stream, Loader=yaml.FullLoader)["$graph"]
@@ -39,10 +36,10 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
         if "stac:collection" in v:
 
             type = v["type"].replace("[]", "")
-            print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ", file=sys.stderr)
+            print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ")
 
             input_counter = 1
-            stagein_params = {}
+
             for input in job_input_json["inputs"]:
                 if input['id'] == k:
                     stac_catalog_yaml = {"catalog": {}}
@@ -57,31 +54,25 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     stac_catalog_yaml_entry[k]["entries"] = [input['value']]
                     stac_catalog_yaml["catalog"]["collections"].append(stac_catalog_yaml_entry)
 
-                    stagein_params["volume_name_prefix"] = volume_name_prefix
-                    stagein_params["mountFolder"] = outputFolder
-                    stagein_params["outputFolder"] = path.join(outputFolder, f"input{str(input_counter)}")
-                    stagein_params["namespace"] = namespace
-                    stagein_params["timeout"] = 30000
-
-                    print("Running stac stage-in", file=sys.stderr)
-
+                    print("Running stac stage-in")
+                    mountFolder=outputFolder
+                    outputFolderForSingleInput = path.join(outputFolder, f"input{str(input_counter)}")
                     temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
-
-
                     yamlString = yaml.dump(stac_catalog_yaml)
-
                     temp.write(yamlString)
                     temp.seek(0)
-                    print(temp.name, file=sys.stderr)
-                    print(temp.read(), file=sys.stderr)
-                    stagein_params["input_stac_catalog"] = temp.name
+                    print(temp.name)
+                    print(temp.read())
                     os.chmod(temp.name, 0o777)
-                    stagein.stac_stagein_run(SimpleNamespace(**stagein_params))
+                    timeout = 30000
+                    stagein.stac_stagein_run(namespace=namespace, volume_name_prefix=volume_name_prefix,
+                                             input_yaml=temp.name, timeout=timeout, mountFolder=mountFolder,
+                                             outputFolder=outputFolderForSingleInput, state=state)
                     temp.close()
 
                     if k not in inputs:
                         inputs[k] = []
-                    inputs[k].append({"class": type, "path": stagein_params["outputFolder"]})
+                    inputs[k].append({"class": type, "path": outputFolderForSingleInput})
                     input_counter += 1
 
 
@@ -90,42 +81,32 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
             for input in job_input_json["inputs"]:
                 if input['id'] == k:
                     inputs[k] = input['value']
-            break
 
-    pprint(inputs, sys.stderr)
+
+    pprint(inputs)
     return inputs
 
 
-def run(args):
-    namespace = args.namespace
-    volume_name_prefix = args.volume_name_prefix
-    mount_folder = args.mount_folder
-
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
     tmpout_volume_name = volume_name_prefix + "-tmpout"
-
-    # workflow arguments
-    cwl_document = args.cwl_file
     workflow_id = helpers.getCwlWorkflowId(cwl_document)
-    workflow_name = args.workflowname
-
     package_directory = path.dirname(path.abspath(__file__))
-    job_input_json = args.input_json  # json.loads(path.join(package_directory, 'examples' , 'job_order_old.json'))
     cwl_input_json = process_inputs(cwl_document, job_input_json, volume_name_prefix,
-                                    path.join(mount_folder, "input-data"), namespace)
+                                    path.join(mount_folder, "input-data"), namespace, state=state)
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
-    print(f"Uploading cwl and input json to {targetFolder}", file=sys.stderr)
+    print(f"Uploading cwl and input json to {targetFolder}")
 
     tmppath = "/tmp/inputs.json"
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
     helpers.copy_files_to_volume(sources=[cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
-                                 persistentVolumeClaimName=input_volume_name, namespace=namespace)
+                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state)
 
     os.remove(tmppath)
 
@@ -133,13 +114,16 @@ def run(args):
     cwlDocumentFilename = ntpath.basename(cwl_document)
 
     # # Setup K8 configs
+    if state:
+        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
+    configuration.verify_ssl = False
     api_instance = client.BatchV1Api(client.ApiClient(configuration))
     yamlFileTemplate = "CalrissianJobTemplate.yaml"
 
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
-        print(f"Customizing stage-in job using the template {yamlFileTemplate} ", file=sys.stderr)
+        print(f"Customizing stage-in job using the template {yamlFileTemplate} ")
         # volume
         yaml_modified = f.read().replace("name: calrissianjob", f"name: {workflow_name}")
         yaml_modified = yaml_modified.replace("/calrissian/output-data", path.join(mount_folder, "output-data"))
@@ -149,13 +133,16 @@ def run(args):
         yaml_modified = yaml_modified.replace("revsort-array.cwl", f"{cwlDocumentFilename}#{workflow_id}")
         yaml_modified = yaml_modified.replace("revsort", workflow_id)
         yaml_modified = yaml_modified.replace("calrissian-", f"{volume_name_prefix}-")
+        yaml_modified = yaml_modified.replace("t2workflow123", f"{workflow_name}")
+        yaml_modified = yaml_modified.replace("slstr-tiling-output.json", f"{workflow_id}-output.json")
+
 
         body = yaml.safe_load(yaml_modified)
-        pprint(body, sys.stderr)
+        pprint(body)
 
         try:
             resp = api_instance.create_namespaced_job(body=body, namespace=namespace)
-            print("Job created. status='%s'" % str(resp.status), file=sys.stderr)
+            print("Job created. status='%s'" % str(resp.status))
         except ApiException as e:
             print("Exception when submitting job: %s\n" % e, file=sys.stderr)
             return 1

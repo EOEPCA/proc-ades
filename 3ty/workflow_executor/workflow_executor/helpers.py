@@ -14,22 +14,28 @@ from pprint import pprint
 import uuid
 
 
-def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None):
+def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None):
+
+    if state:
+        print(state.kubeconfig)
+        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
-    # configuration.proxy ="http://localhost:8001/"
-    api_instance = client.CoreV1Api(client.ApiClient(configuration))
+    configuration.verify_ssl = False
+    api_client = client.ApiClient(configuration)
+    api_instance = client.CoreV1Api(api_client)
 
     pod_name = f"copy-pod"
     resp = None
     try:
         resp = api_instance.read_namespaced_pod(name=pod_name, namespace=namespace)
+        pprint(resp)
     except ApiException as e:
         if e.status != 404:
             print("Unknown error: %s" % e, file=sys.stderr)
             exit(1)
 
     if not resp:
-        print("Creating temporary pod to copy files in volume", file=sys.stderr)
+        print("Creating temporary pod to copy files in volume")
         ## VolumeList
         volumeList = []
         v1PersistentVolumeClaim = client.V1PersistentVolumeClaimVolumeSource(claim_name=persistentVolumeClaimName)
@@ -61,9 +67,9 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
             timeout_start = time.time()
             while time.time() < timeout_start + timeout:
                 pod_status_response = api_instance.patch_namespaced_pod_status(pod_name, namespace, body, pretty=pretty)
-                # pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be created")
+                pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be created")
                 if pod_status_response.status.phase == "Running":
-                    # pprint(pod_status_response)
+                    pprint(pod_status_response)
                     break
                 # retry every 2 seconds
                 time.sleep(2)
@@ -78,9 +84,13 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
     for source in sources:
         resp = stream(api_instance.connect_get_namespaced_pod_exec, pod_name, namespace,
                       command=exec_command,
-                      stderr=True, stdin=True,
-                      stdout=True, tty=False,
+                      stderr=True,
+                      stdin=True,
+                      stdout=True,
+                      tty=False,
                       _preload_content=False)
+
+        pprint(resp)
 
         source_filename = ntpath.basename(source)
         destination_file = os.path.join(targetFolder, source_filename)
@@ -95,12 +105,12 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
             while resp.is_open():
                 resp.update(timeout=1)
                 if resp.peek_stdout():
-                    print(f"STDOUT: file copied in {destination_file}", file=sys.stderr)
+                    print(f"STDOUT: file copied in {destination_file}")
                 if resp.peek_stderr():
-                    print("STDERR: %s" % resp.read_stderr(), file=sys.stderr)
+                    print("STDERR: %s" % resp.read_stderr())
                 if commands:
                     c = commands.pop(0)
-                    # print("Running command... %s\n" % c.decode())
+                    print("Running command... %s\n" % c.decode())
                     resp.write_stdin(c)
                 else:
                     break
@@ -130,17 +140,17 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
     while time.time() < timeout_start + timeout:
         try:
             pod_status_response = api_instance.patch_namespaced_pod_status(pod_name, namespace, body, pretty=pretty)
-            # pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be deleted")
+            pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be deleted")
             # retry every 2 seconds
             time.sleep(2)
         except ApiException as e:
             if "\"reason\": \"NotFound\"" in str(e):
-                print(f"{pod_name} Successfully deleted", file=sys.stderr)
+                print(f"{pod_name} Successfully deleted")
             break
 
 
 def getCwlWorkflowId(cwl_document):
-    print("parsing cwl", file=sys.stderr)
+    print("parsing cwl")
     with open(cwl_document, 'r') as stream:
         try:
             graph = yaml.load(stream, Loader=yaml.FullLoader)["$graph"]

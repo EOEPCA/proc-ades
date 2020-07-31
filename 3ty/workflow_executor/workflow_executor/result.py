@@ -7,15 +7,8 @@ from kubernetes.stream import stream
 from workflow_executor import helpers
 import sys
 
-def run(args):
+def run(namespace, jobname, mount_folder, volume_name_prefix, workflowname, cwl_document):
     try:
-        namespace = args.namespace
-        jobname = args.workflowname
-        mount_folder = args.mount_folder
-        volume_name_prefix = args.volume_name_prefix
-
-        workflowname = args.workflowname
-        cwl_document = args.cwl_file
         workflow_id = helpers.getCwlWorkflowId(cwl_document)
         outputJson = path.join(mount_folder, f"{workflow_id}-output.json")
 
