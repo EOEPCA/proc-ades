@@ -350,11 +350,22 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   map *applicationPackageZooMap =
       getMapFromMaps(inputs, "applicationPackage", "value");
 
-  if (!applicationPackageZooMap) {
+  map *applicationPackageZooMapHref =
+      getMapFromMaps(inputs, "applicationPackage", "xlink:href");
+
+
+  if (!applicationPackageZooMap && !applicationPackageZooMapHref) {
     return setZooError(conf, "applicationPackage empty()", "NoApplicableCode");
   }
 
-  std::string owsOri(applicationPackageZooMap->value);
+  std::string owsOri{""};
+
+  if (applicationPackageZooMap)
+    owsOri=applicationPackageZooMap->value;
+
+  if (applicationPackageZooMapHref)
+    owsOri=applicationPackageZooMapHref->value;
+
 
   try {
 
