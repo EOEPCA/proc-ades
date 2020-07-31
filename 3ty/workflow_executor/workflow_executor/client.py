@@ -1,189 +1,182 @@
-import argparse
 import uuid
-from kubernetes import client, config
-import sys
-from workflow_executor import prepare
-from workflow_executor import stagein
-from workflow_executor import execute
+
+import workflow_executor
+from workflow_executor import execute, prepare
 from workflow_executor import result
 from workflow_executor import status
-
 from workflow_executor import helpers
-
-__version__ = '1.0.0'
-__author__ = 'Blasco Brauzzi'
+import click
 
 
-def get_parser():
+################################
+### COMMON OPTIONS
+
+class State(object):
+
+    def __init__(self):
+        self.verbosity = 0
+        self.debug = False
+        self.kubeconfig = "~/.kube/config"
+
+
+pass_state = click.make_pass_decorator(State, ensure=True)
+
+
+def verbosity_option(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(State)
+        state.verbosity = value
+        return value
+
+    return click.option('-v', '--verbose', count=True,
+                        expose_value=False,
+                        help='Enables verbosity.',
+                        callback=callback)(f)
+
+
+def debug_option(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(State)
+        state.debug = value
+        return value
+
+    return click.option('--debug/--no-debug',
+                        expose_value=False,
+                        help='Enables or disables debug mode.',
+                        callback=callback)(f)
+
+
+def kubeconfig_option(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(State)
+        state.kubeconfig = value
+        return value
+
+    return click.option('--kubeconfig',
+                        expose_value=False,
+                        help='Sets kube config path.',
+                        callback=callback, type=click.Path(exists=True))(f)
+
+
+def common_options(f):
+    f = verbosity_option(f)
+    f = debug_option(f)
+    f = kubeconfig_option(f)
+    return f
+
+
+#####################
+## PREPARE
+@click.group()
+def prepare_cli():
+    pass
+
+
+@prepare_cli.command()
+@click.argument('namespace')
+@click.argument('volume_size', default=1, type=int)
+@click.argument('volume_name', default="eoepca-volume-" + str(uuid.uuid4()))
+@common_options
+@pass_state
+def prepare(state, namespace, volume_size, volume_name):
+    """Prepares the workflow namespace in a kubernetes environment
+
+    \b
+    NAMESPACE   is the name of the namespace that Kubernetes will create.
+    VOLUME_SIZE is the size that kubernetes will allocate to the volumes.
+    VOLUME_NAME is the prefix of the volumes that Kubernetes will create.
     """
-    Creates a new argument parser.
+    click.echo('Verbosity: %s' % state.verbosity)
+    click.echo('Debug: %s' % state.debug)
+    click.echo('Kube config: %s' % state.kubeconfig)
+    click.echo('namespace: %s' % namespace)
+    click.echo('volume_size: %d' % volume_size)
+    click.echo('volume_name: %s' % volume_name)
+
+    resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volume_size, volumeName=volume_name,
+                                                state=state)
+    click.echo(resp_status)
+
+
+#######################
+## EXECUTE
+@click.group()
+def execute_cli():
+    pass
+
+
+@execute_cli.command()
+@common_options
+@pass_state
+@click.argument('input_json', required=True, type=click.Path(exists=True))
+@click.argument('cwl_file', required=True, type=click.Path(exists=True))
+@click.argument('volume_name_prefix', required=True)
+@click.argument('namespace', required=True)
+@click.argument('workflow_name', required=True)
+@click.argument('mount_folder', required=True)
+def execute(state, input_json, cwl_file, volume_name_prefix, namespace, workflow_name, mount_folder):
+    """Executes the cwl workflow
+
+    \b
+    INPUT_JSON          is the path to the input json file.
+    CWL_FILE            is the path to the cwl file.
+    VOLUME_NAME_PREFIX  is the volume name prefix. eg. <volume_name_prefix>-input-data.
+    NAMESPACE           is the name of the namespace.
+    WORKFLOW_NAME       is the id of the workflow to execute.
+    MOUNT_FOLDER        is the folder path where the kubernetes will store the application's files.
+
     """
-    parser = argparse.ArgumentParser('workflow_executor')
-    version = '%(prog)s ' + __version__
-    parser.add_argument('--version', '-v', action='version', version=version)
-    parser.add_argument(
-        '--config',
-        help='Path to kube configuration file'
-    )
+    click.echo('Verbosity: %s' % state.verbosity)
+    click.echo('Debug: %s' % state.debug)
+    click.echo('Kubeconfig: %s' % state.kubeconfig)
 
-    parser.set_defaults(
-        func=prepare.run
-    )
-
-    subparsers = parser.add_subparsers(
-        help='sub-command help'
-    )
-
-    ### PREPARE
-    prepare_parser = subparsers.add_parser(
-        'prepare',
-        help='Prepares workflow workspace'
-    )
-
-    prepare_parser.add_argument(
-        'namespace_name',
-        help='Name of the namespace to create'
-    )
+    resp_status = workflow_executor.execute.run(state=state, cwl_document=cwl_file, job_input_json=input_json,
+                                                volume_name_prefix=volume_name_prefix, mount_folder=mount_folder,
+                                                namespace=namespace,workflow_name=workflow_name)
+    click.echo(resp_status)
 
 
-
-    prepare_parser.add_argument(
-        'volumeSize',
-        nargs='?',
-        default=1,
-        help='Optionally specify a volume size in Gibabytes'
-    )
-    prepare_parser.add_argument(
-        'volumeName',
-        nargs='?',
-        default="eoepca-volume-" + str(uuid.uuid4()),
-        help='Optionally specify a volume name'
-    )
-    prepare_parser.set_defaults(
-        func=prepare.run
-    )
-
-    ####
-    execute_parser = subparsers.add_parser(
-        'execute',
-        help='Executes cwl workflow'
-    )
-    execute_parser.add_argument(
-        '-i', '--input_json',
-        help='The path to the input json'
-    )
-
-    execute_parser.add_argument(
-        '-c', '--cwl-file',
-        help='The path to the cwl file'
-    )
-
-    execute_parser.add_argument(
-        '-v', '--volume_name_prefix',
-        help='The volume name prefix. Volume name: <prefix>-input-data',
-        required=True
-    )
-
-    execute_parser.add_argument(
-        '-n', '--namespace',
-        default=None,
-        help='The name of the namespace where to execute the cwl'
-    )
-
-    execute_parser.add_argument(
-        '-w', '--workflowname',
-        default=None,
-        help='The id of the workflow to execute'
-    )
-
-    execute_parser.add_argument(
-        '-m', '--mount_folder',
-        default="/application",
-        help='Folder where to save application\'s file'
-    )
-
-    execute_parser.set_defaults(
-        func=execute.run
-    )
-    ###
-    getstatus_parser = subparsers.add_parser(
-        'getstatus',
-        help='Get workflow status'
-    )
-    getstatus_parser.add_argument(
-        '-w', '--workflowname',
-        default=None,
-        help='The id of the workflow to execute'
-    )
-    getstatus_parser.add_argument(
-        '-n', '--namespace',
-        default=None,
-        help='The name of the namespace where to execute the cwl'
-    )
-    getstatus_parser.set_defaults(
-        func=status.run
-    )
+#######################
+## GETSTATUS
+@click.group()
+def status_cli():
+    pass
 
 
+@status_cli.command()
+@common_options
+@pass_state
+@click.argument('workflow_name', required=True)
+@click.argument('namespace', required=True)
+def status(state, ):
+    """Gets the workflow status
 
-    ###
-    getresult_parser = subparsers.add_parser(
-        'getresult',
-        help='Get workflow result'
-    )
-    getresult_parser.add_argument(
-        '-c', '--cwl-file',
-        help='The path to the cwl file'
-    )
-
-    getresult_parser.add_argument(
-        '-v', '--volume_name_prefix',
-        help='The volume name prefix. Volume name: <prefix>-input-data',
-        required=True
-    )
-
-    getresult_parser.add_argument(
-        '-n', '--namespace',
-        default=None,
-        help='The name of the namespace where to execute the cwl'
-    )
-
-    getresult_parser.add_argument(
-        '-w', '--workflowname',
-        default=None,
-        help='The id of the workflow to execute'
-    )
-
-    getresult_parser.add_argument(
-        '-m', '--mount_folder',
-        default="/application",
-        help='Folder where to save application\'s file'
-    )
-    getresult_parser.set_defaults(
-        func=result.run
-    )
-
-    return parser
-
-
-
-def main(args=None):
+    \b
+    WORKFLOW_NAME       is the id of the workflow.
+    NAMESPACE           is the name of the namespace.
     """
-    Main entry point for your project.
-    """
-    parser = get_parser()
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    args = parser.parse_args(args)
-
-    if args.config:
-        config.load_kube_config(args.config)
-    else:
-        config.load_kube_config()
-
-    args.func(args)
+    click.echo('Verbosity: %s' % state.verbosity)
+    click.echo('Debug: %s' % state.debug)
 
 
+#######################
+## GETRESULT
+@click.group()
+def result_cli():
+    pass
+
+
+@result_cli.command()
+@common_options
+@pass_state
+@click.option('--workflow_name', help='The id of the workflow to execute.', required=True)
+@click.option('--namespace_name', help='The name of the namespace where to execute the cwl.', required=True)
+def result(state, ):
+    """Command on result"""
+    click.echo('Verbosity: %s' % state.verbosity)
+    click.echo('Debug: %s' % state.debug)
+
+
+cli = click.CommandCollection(sources=[prepare_cli, execute_cli, status_cli, result_cli])
 if __name__ == '__main__':
-    main()
+    cli()

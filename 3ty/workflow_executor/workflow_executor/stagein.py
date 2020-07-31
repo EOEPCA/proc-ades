@@ -15,17 +15,10 @@ package_directory = path.dirname(path.abspath(__file__))
 __stagein_input_data_job_template = path.join(package_directory, 'StageInputDataJobTemplate.yaml')
 
 
-def stac_stagein_run(args):
-    pprint(args)
+def stac_stagein_run(namespace, volume_name_prefix, input_yaml, timeout, mountFolder, outputFolder, state=None):
 
-    namespace = args.namespace
-    volume_name_prefix = args.volume_name_prefix
     volume_name = volume_name_prefix + "-input-data"
-    input_yaml = args.input_stac_catalog
-    timeout = args.timeout
     input_yaml_filename = ntpath.basename(input_yaml)
-    mountFolder = args.mountFolder
-    outputFolder = args.outputFolder
     yamlFileTemplate = __stagein_input_data_job_template
 
     # giving a unique name to stage in job
@@ -34,14 +27,17 @@ def stac_stagein_run(args):
     # copying input_yaml in volume -input-data
     helpers.copy_files_to_volume(sources=[input_yaml], mountFolder=mountFolder, targetFolder=outputFolder,
                                  persistentVolumeClaimName=volume_name,
-                                 namespace=namespace)
+                                 namespace=namespace,state=state)
     # Setup K8 configs
+    if state:
+        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
+    configuration.verify_ssl=False
     api_instance_batch_v1_api = client.BatchV1Api(client.ApiClient(configuration))
 
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
-        print(f"Creating stage-in job using the template {yamlFileTemplate} ", file=sys.stderr)
+        print(f"Creating stage-in job using the template {yamlFileTemplate} ")
         # volume
         yaml_modified = f.read().replace("calrissian-input-data", volume_name)
         yaml_modified = yaml_modified.replace("stage-in.yaml", path.join(outputFolder, input_yaml_filename))
@@ -50,7 +46,7 @@ def stac_stagein_run(args):
         yaml_modified = yaml_modified.replace("mountPath: /tmp", f"mountPath: {mountFolder}")
 
         body = yaml.safe_load(yaml_modified)
-        pprint(body, sys.stderr)
+        pprint(body)
 
         try:
             resp = api_instance_batch_v1_api.create_namespaced_job(body=body, namespace=namespace)
@@ -75,7 +71,7 @@ def stac_stagein_run(args):
                 elif job_status_response.status.failed:
                     print("Stage-in job failed", file=sys.stderr)
 
-                api_instance_core_v1_api = client.CoreV1Api()
+                api_instance_core_v1_api = client.CoreV1Api(client.ApiClient(configuration))
                 podlist = api_instance_core_v1_api.list_namespaced_pod(namespace=namespace,
                                                                        label_selector=f'job-name={job_name}',
                                                                        watch=False)
@@ -86,7 +82,7 @@ def stac_stagein_run(args):
                     if not pod.status.phase == "Pending":
                         api_response = api_instance_core_v1_api.read_namespaced_pod_log(name=pod.metadata.name,
                                                                                         namespace=namespace)
-                        pprint(api_response,sys.stderr)
+                        pprint(api_response)
                         return
                 break
             # retry every 2 seconds

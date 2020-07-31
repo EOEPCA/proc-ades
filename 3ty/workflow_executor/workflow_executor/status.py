@@ -3,10 +3,7 @@ from kubernetes.client.rest import ApiException
 from kubernetes import client
 
 
-def run(args):
-    namespace = args.namespace
-    jobname = args.workflowname
-
+def run(namespace, jobname):
     # create an instance of the API class
     configuration = client.Configuration()
     api_instance = kubernetes.client.BatchV1Api(kubernetes.client.ApiClient(configuration))

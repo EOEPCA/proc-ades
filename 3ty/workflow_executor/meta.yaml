@@ -13,6 +13,7 @@ requirements:
   run:
     - python
     - python-kubernetes
+    - fastapi
 
 test:
   imports:

@@ -11,7 +11,7 @@ spec:
         fsGroup: 2000
       containers:
       - name: stage-input-data
-        image: blasco/stac_stagein:1.0
+        image: terradue/stage-in:1.0
         imagePullPolicy: IfNotPresent
         command: ["stage-in"]
         args:
