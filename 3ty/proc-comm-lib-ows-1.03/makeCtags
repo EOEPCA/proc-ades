@@ -1,4 +1,0 @@
-
-#docker run --rm --name nginx -p 80:80 -d -v $PWD:/usr/share/nginx/html:ro   nginx
-
-ctags -R --c++-kinds=+p --exclude=.git --fields=+iaS --extras=+q .
