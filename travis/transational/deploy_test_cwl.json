@@ -7,7 +7,7 @@
           "mimeType": "application/cwl"
         },
         "value": {
-          "inlineValue": "https://catalog.terradue.com/eoepca-services/search?uid=test_entites"
+          "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/travis/transational/test.cwl"
         }
       }
     }
