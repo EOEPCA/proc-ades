@@ -1,31 +1,22 @@
-
-
 #include "workflow_executor.hpp"
-
 #include <utility>
-
 #include <cstdio>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <string>
-#include <array>
-#include <sstream>
 #include <regex>
 #include "exec.hpp"
 #include <unistd.h>
 
-int exec(const std::string& cmd,std::string&err,std::string& out,std::string base) {
-    std::string err_{"/tmp/"+base+".err" };
-    std::string out_{"/tmp/"+base+".out" };
-    std::string cmd_{cmd + " 1>" + out_ + " 2>" +err_};
-    auto ret=system(cmd_.c_str());
+int exec(const std::string &cmd, std::string &err, std::string &out, std::string base) {
+    std::string err_{"/tmp/" + base + ".err"};
+    std::string out_{"/tmp/" + base + ".out"};
+    std::string cmd_{cmd + " 1>" + out_ + " 2>" + err_};
+    auto ret = system(cmd_.c_str());
     std::ifstream ifsERR(err_);
     std::ifstream ifsOUT(out_);
-    err.assign( (std::istreambuf_iterator<char>(ifsERR) ),
-                (std::istreambuf_iterator<char>() ) );
-    out.assign( (std::istreambuf_iterator<char>(ifsOUT) ),
-                (std::istreambuf_iterator<char>()    ) );
+    err.assign((std::istreambuf_iterator<char>(ifsERR)), (std::istreambuf_iterator<char>()));
+    out.assign((std::istreambuf_iterator<char>(ifsOUT)), (std::istreambuf_iterator<char>()));
     ifsERR.close();
     ifsOUT.close();
     if (std::remove(err_.c_str()) != 0) {
@@ -44,24 +35,27 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
 
     // generating a workflow id
     std::time_t result = std::time(nullptr);
-    serviceID = "wf-"                                                               +runId;
+    serviceID = "wf-" + runId;
     serviceID = std::regex_replace(serviceID, std::regex("_"), "-");
     std::stringstream preparecommand;
-    preparecommand << "workflow_executor --config /opt/t2config/kubeconfig  prepare " << serviceID << " 2  " << serviceID << "-volume";
-    std::string response;
-    std::string err{""},out{""},base{serviceID+"_1"};
-    exec(preparecommand.str(),err,out, base);
-    auto haserror=err.find("error");
-    auto hasstacktrace=err.find("Traceback");
 
-    std::cerr <<  "err-------------------------------\n";
-    std::cerr <<   err << "\n";
-    std::cerr <<  "out-------------------------------\n";
-    std::cerr <<   out << "\n";
-    std::cerr <<  "-------------------------------\n";
-    if (haserror!=std::string::npos || hasstacktrace!=std::string::npos ){
+    //prepare --kubeconfig /var/snap/microk8s/current/credentials/kubelet.config t2demo 1 t2demo-volume
+
+    preparecommand << "workflow_executor prepare --kubeconfig /opt/t2config/kubeconfig   " << serviceID << " 2  " << serviceID << "-volume";
+    std::string response;
+    std::string err{""}, out{""}, base{serviceID + "_1"};
+    exec(preparecommand.str(), err, out, base);
+    auto haserror = err.find("error");
+    auto hasstacktrace = err.find("Traceback");
+
+    std::cerr << "err-------------------------------\n";
+    std::cerr << err << "\n";
+    std::cerr << "out-------------------------------\n";
+    std::cerr << out << "\n";
+    std::cerr << "-------------------------------\n";
+    if (haserror != std::string::npos || hasstacktrace != std::string::npos) {
         std::cerr << err << std::endl;
-        serviceID=err;
+        serviceID = err;
         return 1;
     }
 
@@ -77,18 +71,31 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
     file.close();
     sleep(1);
     std::stringstream executecommand;
-    executecommand << "workflow_executor --config /opt/t2config/kubeconfig execute -i "<< job_inputs_file <<" -c "<< cwlFile << " -v "<< serviceID <<"-volume -n "<< serviceID <<" -m \"/workflow\" -w "<< serviceID;
-    exec(executecommand.str(),err,out, base);
-    haserror=err.find("error");
-    hasstacktrace=err.find("Traceback");
-    std::cerr <<  "err-------------------------------\n";
-    std::cerr <<   err << "\n";
-    std::cerr <<  "out-------------------------------\n";
-    std::cerr <<   out << "\n";
-    std::cerr <<  "-------------------------------\n";
-    if (haserror!=std::string::npos || hasstacktrace!=std::string::npos ){
+    // execute --kubeconfig /var/snap/microk8s/current/credentials/kubelet.config
+    // /home/bla/dev/EOEPCA_dev/cwl-executor/workflow_executor/examples/job_order2.json
+    // /home/bla/dev/EOEPCA_dev/cwl-executor/workflow_executor/examples/vegetation-index.cwl
+    // t2demo-volume
+    // t2demo
+    // t2workflow123
+    // /t2application
+    executecommand << "workflow_executor execute --config /opt/t2config/kubeconfig ";
+    executecommand << job_inputs_file << " ";           // input.json
+    executecommand << cwlFile << " ";                   // cwl file
+    executecommand << serviceID << "-volume ";          // volume
+    executecommand << serviceID << " ";                 // namespace
+    executecommand << "wf-" << serviceID << " ";        // workflowname, must be unique
+    executecommand << "/workflow";                      // mount path in pod, not important
+    exec(executecommand.str(), err, out, base);
+    haserror = err.find("error");
+    hasstacktrace = err.find("Traceback");
+    std::cerr << "err-------------------------------\n";
+    std::cerr << err << "\n";
+    std::cerr << "out-------------------------------\n";
+    std::cerr << out << "\n";
+    std::cerr << "-------------------------------\n";
+    if (haserror != std::string::npos || hasstacktrace != std::string::npos) {
         std::cerr << err << std::endl;
-        serviceID=err;
+        serviceID = err;
         return 1;
     }
     return 0;
@@ -102,19 +109,19 @@ extern "C" int getStatus(const std::string &configFile, const std::string &servi
     // executing getStatus command
 
     std::stringstream getstatuscommand;
-    getstatuscommand << "workflow_executor --config /opt/t2config/kubeconfig getstatus -n t2demo -n "<< serviceID <<" -w "<< serviceID;
+    getstatuscommand << "workflow_executor --config /opt/t2config/kubeconfig getstatus -n t2demo -n " << serviceID << " -w " << serviceID;
     std::string status;
-    std::string err{""},out{""},base{serviceID+"_1"};
-    auto exitcode = exec(getstatuscommand.str(), err , out, base);
-    if(exitcode != 0 ) {
+    std::string err{""}, out{""}, base{serviceID + "_1"};
+    auto exitcode = exec(getstatuscommand.str(), err, out, base);
+    if (exitcode != 0) {
         std::cerr << exitcode << std::endl;
         throw std::runtime_error(status);
     }
 
-    message=status;
-    if(status == "Running"){
+    message = status;
+    if (status == "Running") {
         return 1;
-    } else if (status == "Failed" || status == "Success"){
+    } else if (status == "Failed" || status == "Success") {
         return 0;
     }
     return 0;
