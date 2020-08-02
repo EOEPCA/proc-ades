@@ -258,6 +258,8 @@ class User{
 
 int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
+  std::string theMimeType{"application/atom+xml"};
+
   std::map<std::string, std::string> confEoepca;
   getT2ConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
   std::string buildPath=confEoepca["buildPath"];
@@ -349,10 +351,13 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
   map *applicationPackageZooMap =
       getMapFromMaps(inputs, "applicationPackage", "value");
-
   map *applicationPackageZooMapHref =
       getMapFromMaps(inputs, "applicationPackage", "xlink:href");
 
+  map *applicationPackageZooMimeTypeMap = getMapFromMaps(inputs, "applicationPackage", "mimeType");
+  if (applicationPackageZooMimeTypeMap){
+      theMimeType=applicationPackageZooMimeTypeMap->value;
+  }
 
   if (!applicationPackageZooMap && !applicationPackageZooMapHref) {
     return setZooError(conf, "applicationPackage empty()", "NoApplicableCode");
@@ -413,10 +418,19 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     std::list<std::pair<std::string, std::string>> metadata;
     metadata.emplace_back("owsOrigin", std::string(owsOri));
 
+    std::string applicationFile=bufferOWSFile;
+    if (theMimeType=="application/cwl"){
+        std::string head=R"(<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><owc:offering xmlns:owc="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/eoc/applicationContext/cwl"><owc:content type="application/cwl"><![CDATA[)";
+        std::string tail=R"(]]></owc:content></owc:offering></entry></feed>)";
+        applicationFile=head;
+        applicationFile.append(bufferOWSFile);
+        applicationFile.append(tail);
+    }
+
     std::unique_ptr<EOEPCA::OWS::OWSContext,
                     std::function<void(EOEPCA::OWS::OWSContext *)>>
         ptrContext(
-            lib->parseFromMemory(bufferOWSFile.c_str(), bufferOWSFile.size()),
+            lib->parseFromMemory(applicationFile.c_str(), applicationFile.size()),
             lib->releaseParameter);
 
     if (ptrContext) {

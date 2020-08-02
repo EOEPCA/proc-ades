@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "id": "applicationPackage",
+      "input": {
+        "format": {
+          "mimeType": "application/cwl"
+        },
+        "value": {
+          "inlineValue": "https://catalog.terradue.com/eoepca-services/search?uid=test_entites"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "deployResult",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "async",
+  "response": "raw"
+}
