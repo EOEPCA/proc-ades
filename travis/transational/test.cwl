@@ -40,6 +40,13 @@
       type: integer
       default: 100
 
+
+    int_parameter_optional:
+      label: Title of int_parameter
+      doc: Abstract describing int_parameter
+      type: integer?
+      default: 100
+
     boolean_parameter:
       label: Title of boolean_parameter
       doc: Abstract describing boolean_parameter
