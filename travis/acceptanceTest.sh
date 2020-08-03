@@ -79,7 +79,7 @@ if [ "${TRAVIS}" == "true" ]; then
   mSum=$(./travis/transational/01_getProcessRdirienzo.sh "test_entites_"  | md5sum)
 
   echo "md5sum: $mSum"
-  echo "$mSum" | grep "106186cfc8bd7af8b831f889f7e7428d"
+  echo "$mSum" | grep "3f317eb9e0da77f5c3b217482250e55b"
   if [ $? -eq 0 ]
   then
     echo "OK"
