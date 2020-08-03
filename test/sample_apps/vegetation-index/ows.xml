@@ -22,6 +22,6 @@
             <owc:content type="application/cwl" href="https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/vegetation-index/vegetation-index.cwl" />
         </owc:offering>
 
-        <identifier xmlns="http://purl.org/dc/elements/1.1/">application_s3_slstr_tiling</identifier>
+        <identifier xmlns="http://purl.org/dc/elements/1.1/">application_vegetation_index</identifier>
     </entry>
 </feed>
