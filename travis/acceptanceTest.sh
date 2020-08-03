@@ -74,7 +74,22 @@ if [ "${TRAVIS}" == "true" ]; then
   echo "new test service"
   ./travis/transational/01_getProcessRdirienzo.sh "test_entites_" 
 
+  sleep 10
+  echo "md5sum..."
+  ./travis/transational/01_getProcessRdirienzo.sh "test_entites_"  | md5sum  | grep 106186cfc8bd7af8b831f889f7e7428d
+  if [ $? -eq 0 ]
+  then
+    echo "OK"
+  else
+    echo "MD5SUM failed"
+    exit 1
+  fi
 
+
+
+
+
+//8f904b607bbf49b3763b8bcab9215d47
 fi
 
 
