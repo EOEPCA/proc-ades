@@ -6,11 +6,12 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from workflow_executor import helpers
 import sys
+from pprint import pprint
 
 def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
     try:
 
-        outputJson = path.join(mount_folder,"output-data",f"{workflowname}-stac-output.out")
+        outputJson = path.join(mount_folder,f"{workflowname}-stac-output.out")
 
         # create an instance of the API class
         if state:
@@ -57,6 +58,8 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
                     }]
                 }
             }
+
+
             resp = api_instance.create_namespaced_pod(body=pod_manifest, namespace=namespace)
             while True:
                 resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
