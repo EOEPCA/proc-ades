@@ -1,19 +1,22 @@
 import json
 import time
 from os import path
-from kubernetes import client
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from workflow_executor import helpers
 import sys
 
-def run(namespace, jobname, mount_folder, volume_name_prefix, workflowname, cwl_document):
+def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
     try:
-        workflow_id = helpers.getCwlWorkflowId(cwl_document)
-        outputJson = path.join(mount_folder, f"{workflow_id}-output.json")
+
+        outputJson = path.join(mount_folder,"output-data",f"{workflowname}-stac-output.out")
 
         # create an instance of the API class
+        if state:
+            config.load_kube_config(state.kubeconfig)
         configuration = client.Configuration()
+        configuration.verify_ssl = False
         api_instance = client.CoreV1Api(client.ApiClient(configuration))
 
         name = 'busybox-pod'

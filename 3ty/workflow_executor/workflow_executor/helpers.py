@@ -69,7 +69,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
                 pod_status_response = api_instance.patch_namespaced_pod_status(pod_name, namespace, body, pretty=pretty)
                 pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be created")
                 if pod_status_response.status.phase == "Running":
-                    pprint(pod_status_response)
+                    #pprint(pod_status_response)
                     break
                 # retry every 2 seconds
                 time.sleep(2)
@@ -110,7 +110,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
                     print("STDERR: %s" % resp.read_stderr())
                 if commands:
                     c = commands.pop(0)
-                    print("Running command... %s\n" % c.decode())
+                   # print("Running command... %s\n" % c.decode())
                     resp.write_stdin(c)
                 else:
                     break

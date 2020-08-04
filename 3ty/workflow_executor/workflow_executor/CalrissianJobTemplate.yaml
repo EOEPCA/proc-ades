@@ -50,25 +50,27 @@ spec:
               fieldPath: metadata.name
       containers:
         - name: stage-out
-          image: terradue/c7-stage-out:latest
-          command:
-            - "stage-out"
+          image: terradue/c7-stage-out:1.1
+          command: ["stage-out"]
+          args:
             - "--source"
-            - "/calrissian/output-data/slstr-tiling-output.json"
+            - "/calrissian/output-data/revsort-output.json"
             - "--endpoint"
             - "https://catalog.terradue.com/bbrauzzi"
             - "--username"
             - "bbrauzzi"
             - "--apikey"
-            - "************"
+            - "*******"
             - "--store-host"
             - "https://nx10438.your-storageshare.de/"
             - "--store-username"
             - "eoepca-demo-storage"
             - "--store-apikey"
-            - "***********"
+            - "********"
             - "--job"
             - "t2workflow123"
+            - "--outputfile"
+            - "/calrissian/output-data/stac-output.out"
           volumeMounts:
             - mountPath: /calrissian/input-data
               name: calrissian-input-data

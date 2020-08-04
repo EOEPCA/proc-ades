@@ -85,7 +85,7 @@ def stac_stagein_run(namespace, volume_name_prefix, input_yaml, timeout, mountFo
                         pprint(api_response)
                         return
                 break
-            # retry every 2 seconds
+            # retry every 4 seconds
             time.sleep(4)
 
         except ApiException as e:

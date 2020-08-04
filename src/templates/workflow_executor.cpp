@@ -78,7 +78,7 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
     // t2demo
     // t2workflow123
     // /t2application
-    executecommand << "workflow_executor execute --config /opt/t2config/kubeconfig ";
+    executecommand << "workflow_executor execute --kubeconfig /opt/t2config/kubeconfig ";
     executecommand << job_inputs_file << " ";           // input.json
     executecommand << cwlFile << " ";                   // cwl file
     executecommand << serviceID << "-volume ";          // volume
@@ -103,33 +103,58 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
 
 extern "C" int getStatus(const std::string &configFile, const std::string &serviceID, int &percent, std::string &message) {
 
-    return 0;
-
     /////////
     // executing getStatus command
 
     std::stringstream getstatuscommand;
-    getstatuscommand << "workflow_executor --config /opt/t2config/kubeconfig getstatus -n t2demo -n " << serviceID << " -w " << serviceID;
+    getstatuscommand << "workflow_executor status --kubeconfig /opt/t2config/kubeconfig " << serviceID << " wf-" << serviceID;
+    std::cerr << getstatuscommand.str() << std::endl;
     std::string status;
     std::string err{""}, out{""}, base{serviceID + "_1"};
     auto exitcode = exec(getstatuscommand.str(), err, out, base);
-    if (exitcode != 0) {
-        std::cerr << exitcode << std::endl;
-        throw std::runtime_error(status);
+    std::cerr << "ERR:" << err << std::endl;
+    std::cerr << "OUT:" << out << std::endl;
+    std::cerr << "EXIT CODE:" << exitcode << std::endl;
+//    if (exitcode != 0) {
+//        std::cerr << exitcode << std::endl;
+//        throw std::runtime_error(err);
+//    }
+
+
+
+
+    message = out;
+    if (message.find("Running") != std::string::npos) {
+        return 1;
+    } else if (message.find("Failed") != std::string::npos) {
+        throw std::runtime_error(out);
+    } else if (message.find("Success") != std::string::npos) {
+        return 0;
+    } else {
+        return 1;
     }
 
-    message = status;
-    if (status == "Running") {
-        return 1;
-    } else if (status == "Failed" || status == "Success") {
-        return 0;
-    }
-    return 0;
 }
 
 extern "C" int getResults(const std::string &configFile, const std::string &serviceID, std::list<std::pair<std::string, std::string>> &outPutList) {
 
-    outPutList.push_back(std::make_pair<std::string, std::string>("results", "https://catalog....."));
+    std::stringstream getresultcommand;
+    getresultcommand << "workflow_executor result --kubeconfig /opt/t2config/kubeconfig " << serviceID << " /t2application " << serviceID << "-volume wf-" << serviceID;
+    std::cerr << getresultcommand.str() << std::endl;
+    std::string status;
+    std::string err{""}, out{""}, base{serviceID + "_1"};
+
+    auto exitcode = exec(getresultcommand.str(), err, out, base);
+//    if (exitcode != 0) {
+//        std::cerr << exitcode << std::endl;
+//        throw std::runtime_error(err);
+//    }
+
+    std::cerr << "ERR:" << err << std::endl;
+    std::cerr << "OUT:" << out << std::endl;
+    std::cerr << "EXIT CODE:" << exitcode << std::endl;
+    outPutList.push_back(std::make_pair<std::string, std::string>("wf_outputs", out.c_str()));
+
 
 
 

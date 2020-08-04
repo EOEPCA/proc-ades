@@ -1,5 +1,7 @@
 import uuid
 
+from pip._vendor.html5lib.treeadapters.sax import namespace
+
 import workflow_executor
 from workflow_executor import execute, prepare
 from workflow_executor import result
@@ -130,9 +132,10 @@ def execute(state, input_json, cwl_file, volume_name_prefix, namespace, workflow
     click.echo('Debug: %s' % state.debug)
     click.echo('Kubeconfig: %s' % state.kubeconfig)
 
-    resp_status = workflow_executor.execute.run(state=state, cwl_document=cwl_file, job_input_json=input_json,
-                                                volume_name_prefix=volume_name_prefix, mount_folder=mount_folder,
-                                                namespace=namespace,workflow_name=workflow_name)
+    resp_status = workflow_executor.execute.run(job_input_json=input_json, cwl_document=cwl_file,
+                                                volume_name_prefix=volume_name_prefix, namespace=namespace,
+                                                mount_folder=mount_folder,
+                                                workflow_name=workflow_name, state=state)
     click.echo(resp_status)
 
 
@@ -146,9 +149,9 @@ def status_cli():
 @status_cli.command()
 @common_options
 @pass_state
-@click.argument('workflow_name', required=True)
 @click.argument('namespace', required=True)
-def status(state, ):
+@click.argument('workflow_name', required=True)
+def status(state, namespace, workflow_name):
     """Gets the workflow status
 
     \b
@@ -157,6 +160,9 @@ def status(state, ):
     """
     click.echo('Verbosity: %s' % state.verbosity)
     click.echo('Debug: %s' % state.debug)
+
+    resp = workflow_executor.status.run(namespace, workflow_name, state)
+    return resp
 
 
 #######################
@@ -169,14 +175,26 @@ def result_cli():
 @result_cli.command()
 @common_options
 @pass_state
-@click.option('--workflow_name', help='The id of the workflow to execute.', required=True)
-@click.option('--namespace_name', help='The name of the namespace where to execute the cwl.', required=True)
-def result(state, ):
+@click.argument('namespace_name',  required=True)
+@click.argument('mount_folder',  required=True)
+@click.argument('volume_name_prefix', required=True)
+@click.argument('workflowname',  required=True)
+def result(state, namespace_name, mount_folder, volume_name_prefix, workflowname):
     """Command on result"""
     click.echo('Verbosity: %s' % state.verbosity)
     click.echo('Debug: %s' % state.debug)
 
+    resp = workflow_executor.result.run(namespace=namespace_name, mount_folder=mount_folder,
+                                        volume_name_prefix=volume_name_prefix, workflowname=workflowname, state=state)
+    return resp
+
 
 cli = click.CommandCollection(sources=[prepare_cli, execute_cli, status_cli, result_cli])
+
+
+def main(args=None):
+    cli()
+
+
 if __name__ == '__main__':
     cli()

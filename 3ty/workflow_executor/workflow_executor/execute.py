@@ -33,7 +33,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     for k, v in workflow['inputs'].items():
 
         # if input is of type stac:collection then a stage-in is required
-        if "stac:collection" in v:
+        if "stac:catalog" in v:
 
             type = v["type"].replace("[]", "")
             print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ")
@@ -134,7 +134,8 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
         yaml_modified = yaml_modified.replace("revsort", workflow_id)
         yaml_modified = yaml_modified.replace("calrissian-", f"{volume_name_prefix}-")
         yaml_modified = yaml_modified.replace("t2workflow123", f"{workflow_name}")
-        yaml_modified = yaml_modified.replace("slstr-tiling-output.json", f"{workflow_id}-output.json")
+        yaml_modified = yaml_modified.replace("calrissian-output.json", f"{workflow_id}-output.json")
+        yaml_modified = yaml_modified.replace("stac-output.out", f"{workflow_name}-stac-output.out")
 
 
         body = yaml.safe_load(yaml_modified)
