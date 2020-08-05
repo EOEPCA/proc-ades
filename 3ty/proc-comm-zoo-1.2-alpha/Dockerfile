@@ -3,7 +3,7 @@ USER root
 
 ARG addUserFeature
 ENV addUserFeature=$addUserFeature
-ENV HOME /root
+#ENV HOME /root
 
 #RUN ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
