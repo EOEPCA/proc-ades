@@ -3,6 +3,7 @@ USER root
 
 ARG addUserFeature
 ENV addUserFeature=$addUserFeature
+ENV HOME /root
 
 #RUN ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
@@ -10,8 +11,13 @@ RUN yum install -y epel-release
 RUN yum update -y
 RUN yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3
 
-COPY assets/libfcgi-2.4.0.orig.tar.gz /opt/libfcgi-2.4.0.orig.tar.gz
-RUN cd /opt/ && gzip -d libfcgi-2.4.0.orig.tar.gz && tar -xvf /opt/libfcgi-2.4.0.orig.tar
+
+RUN yum install -y     bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
+
+
+
+#COPY assets/libfcgi-2.4.0.orig.tar.gz /opt/libfcgi-2.4.0.orig.tar.gz
+#RUN cd /opt/ && gzip -d libfcgi-2.4.0.orig.tar.gz && tar -xvf /opt/libfcgi-2.4.0.orig.tar
 
 RUN yum install -y git
 
