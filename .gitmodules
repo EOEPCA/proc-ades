@@ -3,12 +3,12 @@
 	url = https://github.com/EOEPCA/proc-ades.wiki.git
 
 
-[submodule "terraform/NoR/inventory/cf2-kube"]
-    path = terraform/NoR/inventory/cf2-kube
-    url = https://github.com/EOEPCA/proc-ades.wiki.git
-    active = false
-
-[submodule "cf2-kube"]
-    path = terraform/NoR/inventory/cf2-kube
-    url = https://github.com/EOEPCA/proc-ades.wiki.git
-    active = false
+; [submodule "terraform/NoR/inventory/cf2-kube"]
+;     path = terraform/NoR/inventory/cf2-kube
+;     url = https://github.com/EOEPCA/proc-ades.wiki.git
+;     active = false
+;
+; [submodule "cf2-kube"]
+;     path = terraform/NoR/inventory/cf2-kube
+;     url = https://github.com/EOEPCA/proc-ades.wiki.git
+;     active = false
