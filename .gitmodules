@@ -5,4 +5,4 @@
 
 [submodule "cf2-kube"]
     path = terraform/NoR/inventory/cf2-kube
-    url =
+    url = https://github.com/EOEPCA/proc-ades.wiki.git
