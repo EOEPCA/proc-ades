@@ -17,6 +17,51 @@ size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size,
   return newLength;
 }
 
+
+
+long postputToWeb(std::string &buffer,const std::string& content, const char *path,const char* method/*POST/PUT*/ ){
+
+
+  long response_code;
+  CURL *curl;
+  CURLcode res;
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+  curl = curl_easy_init();
+
+  response_code = 0;
+  if (curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, path);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);  // only for https
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);  // only for https
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
+                     CurlWrite_CallbackFunc_StdString);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, content.c_str());
+
+
+    res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+    } else {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    }
+
+    curl_easy_cleanup(curl);
+  }
+
+  return response_code;
+
+
+
+
+}
+
+
+
+
+
 long getFromWeb(std::string &buffer, const char *path) {
   long response_code;
   CURL *curl;

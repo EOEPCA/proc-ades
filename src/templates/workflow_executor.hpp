@@ -62,6 +62,24 @@ private:
 
 class WorkflowExecutor : protected mods::IModInterface {
 
+
+
+public:
+  struct WorkflowExecutorWebParameters{
+
+    WorkflowExecutorWebParameters()=default;
+
+    std::string serviceID;
+    std::string runID;
+    std::string prepareID;
+    std::string jobID;
+    std::string cwl;
+    std::string inputs;
+    ~WorkflowExecutorWebParameters()=default;
+
+  };
+
+
 public:
   WorkflowExecutor() = delete;
   explicit WorkflowExecutor(const std::string &path)
@@ -119,8 +137,7 @@ public:
 
     if (isValid()) {
       webPrepare =
-          (long (*)(const std::string &serviceID, const std::string &runID,
-                    std::string &prepareID))dlsym(handle, "webPrepare");
+          (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(handle, "webPrepare");
       if (!clear) {
         std::cerr << "can't load 'webPrepare' function\n";
         setValid(false);
@@ -130,7 +147,7 @@ public:
     }
 
     if (isValid()) {
-      webGetPrepare = (long (*)(const std::string &prepareID))dlsym(
+      webGetPrepare = (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(
           handle, "webGetPrepare");
       if (!clear) {
         std::cerr << "can't load 'webPrepare' function\n";
@@ -142,10 +159,7 @@ public:
 
     if (isValid()) {
       webExecute =
-          (long (*)(const std::string &serviceID, const std::string &runID,
-                    const std::string &prepareID, const std::string &cwl,
-                    const std::string &inputs,
-                    std::string &jobID))dlsym(handle, "webExecute");
+          (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(handle, "webExecute");
       if (!clear) {
         std::cerr << "can't load 'webExecute' function\n";
         setValid(false);
@@ -156,9 +170,7 @@ public:
 
 
     if (isValid()) {
-      webGetStatus = (long (*)(const std::string &serviceID, const std::string &runID,
-                               const std::string &prepareID,
-                               const std::string &jobID))dlsym(
+      webGetStatus = (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(
           handle, "webGetStatus");
       if (!clear) {
         std::cerr << "can't load 'webGetStatus' function\n";
@@ -170,9 +182,7 @@ public:
 
 
     if (isValid()) {
-      webGetResults = (long (*)(const std::string &serviceID, const std::string &runID,
-                               const std::string &prepareID,
-                               const std::string &jobID,std::list<std::pair<std::string, std::string>> &outPutList))dlsym(
+      webGetResults = (long (*)(WorkflowExecutorWebParameters& wfpm,std::list<std::pair<std::string, std::string>> &outPutList))dlsym(
           handle, "webGetResults");
       if (!clear) {
         std::cerr << "can't load 'webGetResults' function\n";
@@ -224,20 +234,13 @@ public:
   void (*clear)(const std::string &configFile,
                 const std::string &serviceID){nullptr};
 
-  long (*webPrepare)(const std::string &serviceID, const std::string &runID,
-                     std::string &prepareID){nullptr};
-  long (*webGetPrepare)(const std::string &prepareID){nullptr};
-  long (*webExecute)(const std::string &serviceID, const std::string &runID,
-                     const std::string &prepareID, const std::string &cwl,
-                     const std::string &inputs, std::string &jobID){nullptr};
+  long (*webPrepare)(WorkflowExecutorWebParameters& wfpm){nullptr};
+  long (*webGetPrepare)(WorkflowExecutorWebParameters& wfpm){nullptr};
+  long (*webExecute)(WorkflowExecutorWebParameters& wfpm){nullptr};
 
-  long (*webGetStatus)(const std::string &serviceID, const std::string &runID,
-                       const std::string &prepareID,
-                       const std::string &jobID){nullptr};
+  long (*webGetStatus)(WorkflowExecutorWebParameters& wfpm){nullptr};
 
-  long (*webGetResults)(const std::string &serviceID, const std::string &runID,
-                        const std::string &prepareID,
-                        const std::string &jobID,
+  long (*webGetResults)(WorkflowExecutorWebParameters& wfpm,
                         std::list<std::pair<std::string, std::string>> &outPutList
                         ){nullptr};
 };

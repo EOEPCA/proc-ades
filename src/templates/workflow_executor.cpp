@@ -1,6 +1,7 @@
 
 #include "nlohmann/json.hpp"
 #include "workflow_executor.hpp"
+#include "../deployundeploy/zoo/httpfuntions.hpp"
 #include <utility>
 #include <cstdio>
 #include <iostream>
@@ -171,60 +172,66 @@ extern "C" void clear(const std::string &configFile, const std::string &serviceI
 
 };
 
-extern "C" long webPrepare(const std::string &serviceID,
-                           const std::string &runID, std::string &prepareID) {
+extern "C" long webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
+
+
+  std::string buffer;
+  std::string content=R"({"runID": "string","serviceID": "string"})";
+  auto ret=postputToWeb(buffer,content,"http://web-wf-exe/prepare","POST");
+
 
   std::cerr << "**************************************webPrepare\n";
-  std::cerr << "webPrepare " << serviceID << runID << prepareID << "\n";
+  std::cerr << "webPrepare: " << ret << " " <<  buffer <<"\n";
+//  std::cerr << "webPrepare " << wfpm.serviceID << wfpm.runID << wfpm.prepareID << "\n";
 
   return 0;
 };
 
-extern "C" long webGetPrepare(const std::string &prepareID) {
+extern "C" long webGetPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
 
-  std::cerr << "**************************************webGetPrepare\n";
-  std::cerr << "webGetPrepare " << prepareID << "\n";
-
-  return 0;
-};
-
-extern "C" long webExecute(const std::string &serviceID,
-                           const std::string &runID,
-                           const std::string &prepareID, const std::string &cwl,
-                           const std::string &inputs, std::string &jobID) {
-
-  std::cerr << "**************************************webExecute\n";
-  std::cerr << "webExecute " << serviceID << " " << runID << " " << prepareID
-            << "\n";
-  std::cerr << "webExecute " << cwl << "\n";
-  std::cerr << "webExecute " << inputs << "\n";
+//  std::cerr << "**************************************webGetPrepare\n";
+//  std::cerr << "webGetPrepare " << wfpm.prepareID << "\n";
 
   return 0;
 };
 
-extern "C" long webGetStatus(const std::string &serviceID,
-                             const std::string &runID,
-                             const std::string &prepareID,
-                             const std::string &jobID) {
+extern "C" long webExecute(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
 
-  std::cerr << "**************************************webGetStatus\n";
-  std::cerr << "webGetStatus " << serviceID << " " << runID << " " << prepareID
-            << " " << jobID << "\n";
+//  std::cerr << "**************************************webExecute\n";
+//  std::cerr << "webExecute " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
+//            << "\n";
+//  std::cerr << "webExecute " << wfpm.cwl << "\n";
+//  std::cerr << "webExecute " << wfpm.inputs << "\n";
+
+  return 0;
+};
+
+extern "C" long webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
+
+//  std::cerr << "**************************************webGetStatus\n";
+//  std::cerr << "webGetStatus " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
+//            << " " << wfpm.jobID << "\n";
 
   return 0;
 };
 
 extern "C" long
-webGetResults(const std::string &serviceID, const std::string &runID,
-              const std::string &prepareID, const std::string &jobID,
+webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm,
               std::list<std::pair<std::string, std::string>> &outPutList) {
 
-  std::cerr << "**************************************webGetResults\n";
-  std::cerr << "webGetResults " << serviceID << " " << runID << " " << prepareID
-            << " " << jobID << "\n";
+//  std::cerr << "**************************************webGetResults\n";
+//  std::cerr << "webGetResults " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
+//            << " " << wfpm.jobID << "\n";
 
   return 0;
 };
+
+/*
+
+docker cp workflow_executor.cpp   zoo:/project/src/templates/ && docker cp workflow_executor.hpp   zoo:/project/src/templates/ && docker cp interface.cpp   zoo:/project/src/templates/ && docker cp  ../deployundeploy/zoo/httpfuntions.hpp  zoo:/project/src/deployundeploy/zoo/httpfuntions.hpp
+
+ * */
+
 
 /*
 cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so && \

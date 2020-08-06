@@ -423,25 +423,28 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
     }else if (!confEoepca["WorkflowExecutorHost"].empty()){
 
+      auto wfpm=std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
+
+      wfpm->serviceID=lenv["Identifier"];
+      wfpm->runID = lenv["uusid"];
+      wfpm->cwl=cwlBuffer.str();
+      wfpm->inputs=jParams;
+
       std::string prepareID;
-      auto retWeb=workflowExecutor->webPrepare(lenv["Identifier"], lenv["uusid"],prepareID);
+      auto retWeb=workflowExecutor->webPrepare(*wfpm);
 
 
-      while (workflowExecutor->webGetPrepare(prepareID) ){
+      while (workflowExecutor->webGetPrepare(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
         sleep(20);
       }
 
-      std::string jobID{""};
-      retWeb=workflowExecutor->webExecute(
-            lenv["Identifier"], lenv["uusid"],prepareID,
-            cwlBuffer.str(),jParams,jobID
 
-          );
+      retWeb=workflowExecutor->webExecute(*wfpm);
 
       counter=1;
-      while (workflowExecutor->webGetStatus(lenv["Identifier"], lenv["uusid"],prepareID,jobID ) ){
+      while (workflowExecutor->webGetStatus(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
         sleep(60);
