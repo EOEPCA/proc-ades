@@ -1,0 +1,1 @@
+rsync -av --exclude "cmake-*" --exclude "terraform" --exclude ".git" . rdirienzo@gavi.terradue.com:/home/rdirienzo/tests/proc-ades/
