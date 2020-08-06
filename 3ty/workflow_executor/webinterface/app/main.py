@@ -37,6 +37,9 @@ class PrepareContent(BaseModel):
 
 class ExecuteContent(PrepareContent):
     prepareID: str
+    cwl: str
+    inputs: str
+
 
 
 @app.get("/")
