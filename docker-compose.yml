@@ -1,0 +1,54 @@
+version: '3.5'
+
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up -d
+#sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml stop
+#sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml down
+services:
+
+  proc-comm-zoo:
+    build:
+      context: 3ty/proc-comm-zoo-1.2-alpha
+      dockerfile: Dockerfile
+      args:
+        addUserFeature: "TRUE"
+    image: proc-comm-zoo:1.0
+
+  web-wf-exe:
+    build:
+      context: 3ty/workflow_executor/webinterface
+      dockerfile: Dockerfile
+    image: web-wf-exe:1.0
+    hostname: webwf.org
+    container_name: web-wf-exe
+    networks:
+      - eoepca_network
+
+  proc-ades:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: proc-ades:1.0
+    container_name: zoo
+    networks:
+      - eoepca_network
+    depends_on:
+      - proc-comm-zoo
+      - web-wf-exe
+    ports:
+      - "7777:80"
+    links:
+      - web-wf-exe
+
+
+networks:
+        eoepca_network:
+                driver: bridge
+                name: eoepcanetwork
+
+
+#docker rmi t2cm:0.1 t2sm:0.1 t2sd:0.1
+#  docker-compose rm -f
+# docker-compose up -d 
+# docker-compose stop
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up  
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml rm 

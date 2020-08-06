@@ -8,8 +8,8 @@
 #include <string>
 
 #include <list>
-#include <utility>
 #include <memory>
+#include <utility>
 
 namespace mods {
 #ifndef T2CWL_IMOD_HPP
@@ -69,9 +69,10 @@ public:
 
     setValid(true);
 
-    start=(int (*)(
-        const std::string& configFile,const std::string &cwlFile,const std::string& inputsFile,
-        const std::string &wpsServiceID,const std::string &runId,std::string &serviceID))dlsym(handle, "start");
+    start = (int (*)(const std::string &configFile, const std::string &cwlFile,
+                     const std::string &inputsFile,
+                     const std::string &wpsServiceID, const std::string &runId,
+                     std::string &serviceID))dlsym(handle, "start");
     if (!start) {
       std::cerr << "can't load 'start' function\n";
       setValid(false);
@@ -79,9 +80,10 @@ public:
       return;
     }
 
-    if (isValid()){
-      getStatus=(int (*)(const std::string& configFile,
-                       const std::string &serviceID, int &percent,std::string &message) )dlsym(handle, "getStatus");
+    if (isValid()) {
+      getStatus = (int (*)(const std::string &configFile,
+                           const std::string &serviceID, int &percent,
+                           std::string &message))dlsym(handle, "getStatus");
       if (!getStatus) {
         std::cerr << "can't load 'getStatus' function\n";
         setValid(false);
@@ -105,8 +107,8 @@ public:
     }
 
     if (isValid()) {
-      clear=(void (*)(const std::string &configFile,
-                    const std::string &serviceID))  dlsym(handle, "clear");
+      clear = (void (*)(const std::string &configFile,
+                        const std::string &serviceID))dlsym(handle, "clear");
       if (!clear) {
         std::cerr << "can't load 'clear' function\n";
         setValid(false);
@@ -114,6 +116,73 @@ public:
         return;
       }
     }
+
+    if (isValid()) {
+      webPrepare =
+          (long (*)(const std::string &serviceID, const std::string &runID,
+                    std::string &prepareID))dlsym(handle, "webPrepare");
+      if (!clear) {
+        std::cerr << "can't load 'webPrepare' function\n";
+        setValid(false);
+        setLastError("can't load 'webPrepare' function");
+        return;
+      }
+    }
+
+    if (isValid()) {
+      webGetPrepare = (long (*)(const std::string &prepareID))dlsym(
+          handle, "webGetPrepare");
+      if (!clear) {
+        std::cerr << "can't load 'webPrepare' function\n";
+        setValid(false);
+        setLastError("can't load 'webPrepare' function");
+        return;
+      }
+    }
+
+    if (isValid()) {
+      webExecute =
+          (long (*)(const std::string &serviceID, const std::string &runID,
+                    const std::string &prepareID, const std::string &cwl,
+                    const std::string &inputs,
+                    std::string &jobID))dlsym(handle, "webExecute");
+      if (!clear) {
+        std::cerr << "can't load 'webExecute' function\n";
+        setValid(false);
+        setLastError("can't load 'webExecute' function");
+        return;
+      }
+    }
+
+
+    if (isValid()) {
+      webGetStatus = (long (*)(const std::string &serviceID, const std::string &runID,
+                               const std::string &prepareID,
+                               const std::string &jobID))dlsym(
+          handle, "webGetStatus");
+      if (!clear) {
+        std::cerr << "can't load 'webGetStatus' function\n";
+        setValid(false);
+        setLastError("can't load 'webGetStatus' function");
+        return;
+      }
+    }
+
+
+    if (isValid()) {
+      webGetResults = (long (*)(const std::string &serviceID, const std::string &runID,
+                               const std::string &prepareID,
+                               const std::string &jobID,std::list<std::pair<std::string, std::string>> &outPutList))dlsym(
+          handle, "webGetResults");
+      if (!clear) {
+        std::cerr << "can't load 'webGetResults' function\n";
+        setValid(false);
+        setLastError("can't load 'webGetResults' function");
+        return;
+      }
+    }
+
+
 
   }
 
@@ -133,9 +202,9 @@ public:
    * @param serviceID: fill with libId
    * @return 0 OK
    */
-  int (*start)(
-      const std::string& configFile,const std::string &cwlFile,const std::string& inputsFile,
-      const std::string &wpsServiceID,const std::string &runId,std::string &serviceID){nullptr};
+  int (*start)(const std::string &configFile, const std::string &cwlFile,
+               const std::string &inputsFile, const std::string &wpsServiceID,
+               const std::string &runId, std::string &serviceID){nullptr};
 
   /***
    *
@@ -145,16 +214,32 @@ public:
    * @param message
    * @return 0 exit >0 continue
    */
-  int (*getStatus)(const std::string& configFile,
-                   const std::string &serviceID, int &percent,std::string &message){nullptr};
+  int (*getStatus)(const std::string &configFile, const std::string &serviceID,
+                   int &percent, std::string &message){nullptr};
 
-  int (*getResults)(const std::string& configFile,
-                    const std::string &serviceID,
-                    std::list<std::pair<std::string, std::string>> &outPutList){ nullptr};
+  int (*getResults)(const std::string &configFile, const std::string &serviceID,
+                    std::list<std::pair<std::string, std::string>> &outPutList){
+      nullptr};
 
-  void (*clear)(const std::string& configFile,
-                const std::string &serviceID){ nullptr};
+  void (*clear)(const std::string &configFile,
+                const std::string &serviceID){nullptr};
 
+  long (*webPrepare)(const std::string &serviceID, const std::string &runID,
+                     std::string &prepareID){nullptr};
+  long (*webGetPrepare)(const std::string &prepareID){nullptr};
+  long (*webExecute)(const std::string &serviceID, const std::string &runID,
+                     const std::string &prepareID, const std::string &cwl,
+                     const std::string &inputs, std::string &jobID){nullptr};
+
+  long (*webGetStatus)(const std::string &serviceID, const std::string &runID,
+                       const std::string &prepareID,
+                       const std::string &jobID){nullptr};
+
+  long (*webGetResults)(const std::string &serviceID, const std::string &runID,
+                        const std::string &prepareID,
+                        const std::string &jobID,
+                        std::list<std::pair<std::string, std::string>> &outPutList
+                        ){nullptr};
 };
 
 } // namespace mods

@@ -1,3 +1,5 @@
+
+#include "nlohmann/json.hpp"
 #include "workflow_executor.hpp"
 #include <utility>
 #include <cstdio>
@@ -169,8 +171,67 @@ extern "C" void clear(const std::string &configFile, const std::string &serviceI
 
 };
 
+extern "C" long webPrepare(const std::string &serviceID,
+                           const std::string &runID, std::string &prepareID) {
+
+  std::cerr << "**************************************webPrepare\n";
+  std::cerr << "webPrepare " << serviceID << runID << prepareID << "\n";
+
+  return 0;
+};
+
+extern "C" long webGetPrepare(const std::string &prepareID) {
+
+  std::cerr << "**************************************webGetPrepare\n";
+  std::cerr << "webGetPrepare " << prepareID << "\n";
+
+  return 0;
+};
+
+extern "C" long webExecute(const std::string &serviceID,
+                           const std::string &runID,
+                           const std::string &prepareID, const std::string &cwl,
+                           const std::string &inputs, std::string &jobID) {
+
+  std::cerr << "**************************************webExecute\n";
+  std::cerr << "webExecute " << serviceID << " " << runID << " " << prepareID
+            << "\n";
+  std::cerr << "webExecute " << cwl << "\n";
+  std::cerr << "webExecute " << inputs << "\n";
+
+  return 0;
+};
+
+extern "C" long webGetStatus(const std::string &serviceID,
+                             const std::string &runID,
+                             const std::string &prepareID,
+                             const std::string &jobID) {
+
+  std::cerr << "**************************************webGetStatus\n";
+  std::cerr << "webGetStatus " << serviceID << " " << runID << " " << prepareID
+            << " " << jobID << "\n";
+
+  return 0;
+};
+
+extern "C" long
+webGetResults(const std::string &serviceID, const std::string &runID,
+              const std::string &prepareID, const std::string &jobID,
+              std::list<std::pair<std::string, std::string>> &outPutList) {
+
+  std::cerr << "**************************************webGetResults\n";
+  std::cerr << "webGetResults " << serviceID << " " << runID << " " << prepareID
+            << " " << jobID << "\n";
+
+  return 0;
+};
+
+/*
+cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so && \
+cp /project/src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/ && \
+cp /project/src/deployundeploy/zoo/build/libepcatransactional.zo /opt/zooservices_user/rdirienzo/libepcatransactional.zo && \
+cp /project/src/templates/libinterface.so /opt/t2libs/libinterface.so && \
+cp /project/src/templates/libinterface.so /opt/zooservices_user/rdirienzo/
 
 
-
-
-
+*/

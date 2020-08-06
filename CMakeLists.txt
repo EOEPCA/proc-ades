@@ -21,6 +21,7 @@ include_directories(${LIBXSLT_INCLUDE_DIR})
 
 add_subdirectory(3ty/yaml-cpp-0.6.3)
 include_directories(3ty/yaml-cpp-0.6.3/include)
+include_directories(3ty/nlohmann)
 
 
 

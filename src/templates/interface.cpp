@@ -244,6 +244,33 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     }
 
 
+    if (confEoepca["WorkflowExecutorHost"].empty()){
+
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+      std::cerr<<"****************************************\n";
+
+    }else{
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+      std::cerr<<"###################################################\n";
+    }
+
 
     if (confEoepca["WorkflowExecutorConfig"].empty()) {
       std::string err{"eoepca configuration WorkflowExecutorConfig empty" };
@@ -334,61 +361,107 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     setStatus(conf, "running", "the service is started");
     std::string argoWorkflowId("");
 
-    //=============================START
-    std::cerr << "start!\n" <<  std::endl;
-    std::string serviceID{""};
-    auto resStart=workflowExecutor->start(sConfigBuffer.str(),path/*cwlBuffer.str()*/,jParams,
-                            lenv["Identifier"], lenv["uusid"],serviceID);
-    if (resStart){
-      std::string err{"Start empty"};
-
-      setStatus(conf, "failed", serviceID.c_str());
-      updateStatus(conf, 100, serviceID.c_str());
-      return SERVICE_FAILED;
-    }
-    std::cerr << "serviceID: " << serviceID << "\n\n" << std::endl;
-    if (serviceID.empty()) {
-      std::string err{"serviceID empty"};
-
-      setStatus(conf, "failed", err.c_str());
-      updateStatus(conf, 100, err.c_str());
-      return SERVICE_FAILED;
-    }
-    std::cerr << "start finished" << std::endl;
-    //=============================START
-
-
-    //=============================STATUS
-    int counter=0;
+    int counter=1;
     int percent = 0;
     std::string message("");
-    std::cerr << "getStats start" << std::endl;
-    while(workflowExecutor->getStatus(sConfigBuffer.str(),serviceID,percent,message)){
-      std::cerr << "going to sleep counter: " << counter << std::endl;
-      sleep(10);
+    if (confEoepca["WorkflowExecutorHost"].empty()) {
+
+      //=============================START
+      std::cerr << "start!\n" <<  std::endl;
+      std::string serviceID{""};
+      auto resStart=workflowExecutor->start(sConfigBuffer.str(),path/*cwlBuffer.str()*/,jParams,
+                                            lenv["Identifier"], lenv["uusid"],serviceID);
+      if (resStart){
+        std::string err{"Start empty"};
+
+        setStatus(conf, "failed", serviceID.c_str());
+        updateStatus(conf, 100, serviceID.c_str());
+        return SERVICE_FAILED;
+      }
+      std::cerr << "serviceID: " << serviceID << "\n\n" << std::endl;
+      if (serviceID.empty()) {
+        std::string err{"serviceID empty"};
+
+        setStatus(conf, "failed", err.c_str());
+        updateStatus(conf, 100, err.c_str());
+        return SERVICE_FAILED;
+      }
+      std::cerr << "start finished" << std::endl;
+      //=============================START
+
+
+      //=============================STATUS
+
+      std::cerr << "getStats start" << std::endl;
+      while(workflowExecutor->getStatus(sConfigBuffer.str(),serviceID,percent,message)){
+        std::cerr << "going to sleep counter: " << counter << std::endl;
+        counter=counter+1;
+        sleep(60);
+      }
+
+      updateStatus(conf, 95, "waiting for logs");
+      sleep(40);
+      std::cerr << "status finished" << std::endl;
+      //=============================STATUS
+
+      //=============================GETRESULT
+      updateStatus(conf, 98, "Get Results");
+      std::list<std::pair<std::string, std::string>> outPutList{};
+      std::cerr << "getresult " << argoWorkflowId << std::endl;
+      workflowExecutor->getResults(sConfigBuffer.str(),serviceID,outPutList);
+      std::cerr << "getresults finished" << std::endl;
+      for (auto &[k, p] : outPutList) {
+        std::cerr << "output" << p << " " << k << std::endl;
+        setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+      }
+      std::cerr << "mapping results" << std::endl;
+      //=============================GETRESULT
+      //  - accepted
+      //  - running
+      //  - successful
+      //  - failed
+
+    }else if (!confEoepca["WorkflowExecutorHost"].empty()){
+
+      std::string prepareID;
+      auto retWeb=workflowExecutor->webPrepare(lenv["Identifier"], lenv["uusid"],prepareID);
+
+
+      while (workflowExecutor->webGetPrepare(prepareID) ){
+        std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
+        counter=counter+1;
+        sleep(20);
+      }
+
+      std::string jobID{""};
+      retWeb=workflowExecutor->webExecute(
+            lenv["Identifier"], lenv["uusid"],prepareID,
+            cwlBuffer.str(),jParams,jobID
+
+          );
+
+      counter=1;
+      while (workflowExecutor->webGetStatus(lenv["Identifier"], lenv["uusid"],prepareID,jobID ) ){
+        std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
+        counter=counter+1;
+        sleep(60);
+      }
+
+
+
+
+
+
+
+    }else{
+      //error
+
+
+
+
     }
 
-    updateStatus(conf, 95, "waiting for logs");
-    sleep(20);
-    std::cerr << "status finished" << std::endl;
-    //=============================STATUS
 
-    //=============================GETRESULT
-    updateStatus(conf, 98, "Get Results");
-    std::list<std::pair<std::string, std::string>> outPutList{};
-    std::cerr << "getresult " << argoWorkflowId << std::endl;
-    workflowExecutor->getResults(sConfigBuffer.str(),serviceID,outPutList);
-    std::cerr << "getresults finished" << std::endl;
-    for (auto &[k, p] : outPutList) {
-      std::cerr << "output" << p << " " << k << std::endl;
-      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
-    }
-    std::cerr << "mapping results" << std::endl;
-    //=============================GETRESULT
-    //  - accepted
-    //  - running
-    //  - successful
-    //  - failed
 
     updateStatus(conf, 100, "Done");
     setStatus(conf, "successful", "");
