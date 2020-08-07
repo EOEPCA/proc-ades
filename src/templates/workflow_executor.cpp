@@ -42,9 +42,19 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
     serviceID = std::regex_replace(serviceID, std::regex("_"), "-");
     std::stringstream preparecommand;
 
+
+    // creating stageoutConfigFile file
+    std::string stageout_config_file = "/tmp/stageoutConfigFile.json";
+    std::ofstream stageoutfile(stageout_config_file);
+    stageoutfile << configFile;
+    stageoutfile.flush();
+    stageoutfile.close();
+    sleep(1);
+
+
     //prepare --kubeconfig /var/snap/microk8s/current/credentials/kubelet.config t2demo 1 t2demo-volume
 
-    preparecommand << "workflow_executor prepare --kubeconfig /opt/t2config/kubeconfig   " << serviceID << " 2  " << serviceID << "-volume";
+    preparecommand << "workflow_executor prepare --kubeconfig /opt/t2config/kubeconfig   " << serviceID << " 2  " << serviceID << "-volume --stageout_config_file "<< stageout_config_file;
     std::string response;
     std::string err{""}, out{""}, base{serviceID + "_1"};
     exec(preparecommand.str(), err, out, base);
@@ -68,11 +78,12 @@ extern "C" int start(const std::string &configFile, const std::string &cwlFile, 
 
     // creating job_order.json file
     std::string job_inputs_file = "/tmp/job_order.json";
-    std::ofstream file(job_inputs_file);
-    file << inputsFile;
-    file.flush();
-    file.close();
+    std::ofstream inputfilestream(job_inputs_file);
+    inputfilestream << inputsFile;
+    inputfilestream.flush();
+    inputfilestream.close();
     sleep(1);
+
     std::stringstream executecommand;
     // execute --kubeconfig /var/snap/microk8s/current/credentials/kubelet.config
     // /home/bla/dev/EOEPCA_dev/cwl-executor/workflow_executor/examples/job_order2.json
