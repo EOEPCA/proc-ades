@@ -400,8 +400,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       wfpm->hostName=confEoepca["WorkflowExecutorHost"];
       wfpm->serviceID=lenv["Identifier"];
       wfpm->runID = lenv["uusid"];
-      wfpm->cwl=cwlBuffer.str();
-      wfpm->inputs=jParams;
+
 
       std::string prepareID;
       auto retWeb=workflowExecutor->webPrepare(*wfpm);
@@ -413,7 +412,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         sleep(20);
       }
 
-
+      wfpm->cwl=cwlBuffer.str();
+      wfpm->inputs=jParams;
       retWeb=workflowExecutor->webExecute(*wfpm);
 
       counter=1;

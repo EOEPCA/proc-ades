@@ -209,6 +209,19 @@ struct workflowExecutorWebError {
 };
 
 
+struct statusWebJob {
+  int64_t percent;
+  std::string msg;
+
+   void dump()const{
+    std::cerr << "dump:\n";
+     std::cerr << "\tpercent:" << percent <<"\n";
+     std::cerr << "\tmsg:" << msg <<"\n";
+  }
+
+};
+
+
 } // namespace wfexe
 
 namespace nlohmann {
@@ -219,16 +232,24 @@ bool exists_key(const json &j, const std::string &key) {
 
 
 void from_json(const json & j, wfexe::error & x);
-void to_json(json & j, const wfexe::error & x);
 
 void from_json(const json & j, wfexe::error & x);
 void from_json(const json & j, wfexe::workflowExecutorWebError & x);
-
-
+void from_json(const json & j, wfexe::statusWebJob & x);
 void from_json(const json &j,
                mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
 void to_json(json &j,
              const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+
+inline void from_json(const json & j, wfexe::statusWebJob& x) {
+
+  if (exists_key(j, "percent"))
+    x.percent = j.at("percent").get<int64_t>();
+
+  if (exists_key(j, "msg"))
+    x.msg = j.at("msg").get<std::string>();
+}
+
 
 
 inline void from_json(const json & j, wfexe::error& x) {
@@ -275,6 +296,18 @@ from_json(const json &j,
   }
 }
 
+inline void
+to_json(json &j,
+        const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
+  j = json::object();
+  j["runID"] = x.runID;
+  j["serviceID"] = x.serviceID;
+  j["prepareID"] = x.prepareID;
+  j["jobID"] = x.runID;
+  j["cwl"] = x.cwl;
+  j["inputs"] = x.inputs;
+}
+
 } // namespace nlohmann
 
 
@@ -305,8 +338,11 @@ webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
   std::string request{wfpm.hostName};
   request.append("/prepare");
 
-  std::string content = R"({"runID": "string","serviceID": "string"})";
-  auto ret = postputToWeb(buffer, content, request.c_str(), "POST");
+  nlohmann::json json;
+  nlohmann::to_json(json,wfpm);
+//  std::string content = R"({"runID": "string","serviceID": "string"})";
+
+  auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
   std::cerr << "webPrepare:\treturn: " << ret << " json:" << buffer <<"\n";
 
   if (ret==201){
@@ -336,7 +372,7 @@ webGetPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
   std::string bufffer;
   auto ret=getFromWeb(bufffer,request.c_str());
-  if(ret==201){
+  if(ret==200){
     ret=0;
   }else if (ret!=100){
     parseError(buffer);
@@ -350,21 +386,61 @@ extern "C" long
 webExecute(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
   std::cerr << "**************************************webExecute\n";
+//  wfpm.dump();
+
+  std::string buffer;
+  std::string request{wfpm.hostName};
+  request.append("/execute");
+  nlohmann::json json;
+  nlohmann::to_json(json,wfpm);
+
+  auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
+  if (ret==201){
+    mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
+        nlohmann::json::parse(buffer);
+    data.dump();
+    wfpm.jobID=data.jobID;
+  }else{
+    parseError(buffer);
+  }
+
   wfpm.dump();
-
-
   return 0;
 };
 
 extern "C" long
 webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-  //  std::cerr << "**************************************webGetStatus\n";
-  //  std::cerr << "webGetStatus " << wfpm.serviceID << " " << wfpm.runID << " "
-  //  << wfpm.prepareID
-  //            << " " << wfpm.jobID << "\n";
+  std::cerr << "**************************************webGetStatus\n";
+  std::string buffer;
+//  std::string request{wfpm.hostName};
+//  request.append("/status/").append
+//      ;
 
-  return 0;
+  std::stringstream request;
+  request<< wfpm.hostName << "/status/"
+          <<wfpm.serviceID<<"/"
+          <<wfpm.runID<<"/"
+          << wfpm.prepareID
+          <<"/"<<wfpm.jobID;
+
+  auto ret=getFromWeb(buffer,request.str().c_str());
+  if(ret==200){
+
+    wfexe::statusWebJob msgWeb= nlohmann::json::parse(buffer);
+    std::cerr << "buffer: " << buffer<<"\n";
+    msgWeb.dump();
+
+    if (msgWeb.percent==100){
+      ret=0;
+    }
+
+  }else {
+    parseError(buffer);
+    ret=0;
+  }
+
+  return ret;
 };
 
 extern "C" long
