@@ -77,7 +77,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str):
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
-    return [{"wf_output": '{"catalog":"http:...."}'}]
+    return {"wf_output": '{"catalog":"http:...."}'}
 
 
 @app.get("/testerror")
