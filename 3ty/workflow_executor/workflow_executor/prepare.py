@@ -123,7 +123,7 @@ def run(namespace, volumeSize, volumeName, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        #,        storage_class_name="glusterfs-storage"
+        , storage_class_name="glusterfs-storage"
     )
     body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
 
@@ -133,7 +133,7 @@ def run(namespace, volumeSize, volumeName, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        #,        storage_class_name="glusterfs-storage"
+        , storage_class_name="glusterfs-storage"
     )
     body2 = client.V1PersistentVolumeClaim(metadata=metadata2, spec=spec2)
 
@@ -144,7 +144,7 @@ def run(namespace, volumeSize, volumeName, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        #,        storage_class_name="glusterfs-storage"
+        , storage_class_name="glusterfs-storage"
     )
     body3 = client.V1PersistentVolumeClaim(metadata=metadata3, spec=spec3)
 

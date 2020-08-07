@@ -72,9 +72,6 @@ async def executeCall(inputcwlfile: bytes = File(...),
         input_json.write('Some data')
         input_json.flush()
 
-
-
-
     resp_status = workflow_executor.execute.run(state=state, cwl_document=cwl_file, job_input_json=input_json,
                                                 volume_name_prefix=volume_name_prefix, mount_folder=mount_folder,
                                                 namespace=namespace, workflow_name=workflow_name)
