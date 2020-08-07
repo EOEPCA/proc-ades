@@ -244,34 +244,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     }
 
 
-    if (confEoepca["WorkflowExecutorHost"].empty()){
-
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-      std::cerr<<"****************************************\n";
-
-    }else{
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-      std::cerr<<"###################################################\n";
-    }
-
-
     if (confEoepca["WorkflowExecutorConfig"].empty()) {
       std::string err{"eoepca configuration WorkflowExecutorConfig empty" };
 
@@ -425,6 +397,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
       auto wfpm=std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
 
+      wfpm->hostName=confEoepca["WorkflowExecutorHost"];
       wfpm->serviceID=lenv["Identifier"];
       wfpm->runID = lenv["uusid"];
       wfpm->cwl=cwlBuffer.str();

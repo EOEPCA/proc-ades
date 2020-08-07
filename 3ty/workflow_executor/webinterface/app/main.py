@@ -57,7 +57,7 @@ def read_prepare(content: PrepareContent):
 def read_read(prepare_id: str):
     print(prepare_id)
     return {}
-    # 201 done
+    # 200 done
     # 100 ripassa dopo
     # 500 error
 

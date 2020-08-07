@@ -172,56 +172,209 @@ extern "C" void clear(const std::string &configFile, const std::string &serviceI
 
 };
 
-extern "C" long webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
+namespace wfexe {
+using nlohmann::json;
+
+inline json get_untyped(const json &j, const char *property) {
+  if (j.find(property) != j.end()) {
+    return j.at(property).get<json>();
+  }
+  return json();
+}
+
+inline json get_untyped(const json &j, std::string property) {
+  return get_untyped(j, property.data());
+}
+
+struct error {
+  int64_t code;
+  std::string message;
+
+  void dump()const{
+    std::cerr << "\tcode:" << code <<"\n";
+    std::cerr << "\tmessage:" << message <<"\n";
+  }
 
 
-  std::string buffer;
-  std::string content=R"({"runID": "string","serviceID": "string"})";
-  auto ret=postputToWeb(buffer,content,"http://web-wf-exe/prepare","POST");
+};
 
+struct workflowExecutorWebError {
+  struct error error;
+
+  void dump()const{
+    std::cerr << "error:\n";
+    error.dump();
+  }
+
+};
+
+
+} // namespace wfexe
+
+namespace nlohmann {
+
+bool exists_key(const json &j, const std::string &key) {
+  return j.find(key) != j.end();
+}
+
+
+void from_json(const json & j, wfexe::error & x);
+void to_json(json & j, const wfexe::error & x);
+
+void from_json(const json & j, wfexe::error & x);
+void from_json(const json & j, wfexe::workflowExecutorWebError & x);
+
+
+void from_json(const json &j,
+               mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+void to_json(json &j,
+             const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+
+
+inline void from_json(const json & j, wfexe::error& x) {
+
+  if (exists_key(j, "code")) {
+    x.code = j.at("code").get<int64_t>();
+  }else{
+    x.code=-199;
+  }
+
+  if (exists_key(j, "message")) {
+    x.message = j.at("message").get<std::string>();
+  }
+}
+
+inline void from_json(const json & j, wfexe::workflowExecutorWebError& x) {
+  if (exists_key(j, "error")) {
+    x.error = j.at("error").get<wfexe::error>();
+  }else{
+    x.error.code=-199;
+  }
+}
+
+
+
+inline void
+from_json(const json &j,
+          mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
+
+  if (exists_key(j, "prepareID")) {
+    x.prepareID = j.at("prepareID").get<std::string>();
+  }
+
+  if (exists_key(j, "serviceID")) {
+    x.serviceID = j.at("serviceID").get<std::string>();
+  }
+
+  if (exists_key(j, "runID")) {
+    x.runID = j.at("runID").get<std::string>();
+  }
+
+  if (exists_key(j, "jobID")) {
+    x.jobID = j.at("jobID").get<std::string>();
+  }
+}
+
+} // namespace nlohmann
+
+
+void parseError(const std::string& buffer){
+
+  wfexe::workflowExecutorWebError data =
+      nlohmann::json::parse(buffer);
+  data.dump();
+
+  if(data.error.code==-199){
+
+    if (buffer.empty()){
+      throw std::runtime_error("unexpected error [webcall]");
+    }
+
+    throw std::runtime_error(buffer);
+  }else{
+    throw std::runtime_error(data.error.message);
+  }
+
+}
+
+extern "C" long
+webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
   std::cerr << "**************************************webPrepare\n";
-  std::cerr << "webPrepare: " << ret << " " <<  buffer <<"\n";
-//  std::cerr << "webPrepare " << wfpm.serviceID << wfpm.runID << wfpm.prepareID << "\n";
+  std::string buffer;
+  std::string request{wfpm.hostName};
+  request.append("/prepare");
 
-  return 0;
+  std::string content = R"({"runID": "string","serviceID": "string"})";
+  auto ret = postputToWeb(buffer, content, request.c_str(), "POST");
+  std::cerr << "webPrepare:\treturn: " << ret << " json:" << buffer <<"\n";
+
+  if (ret==201){
+    mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
+        nlohmann::json::parse(buffer);
+    data.dump();
+
+    wfpm.prepareID=data.prepareID;
+
+  }else{
+    parseError(buffer);
+  }
+
+  return ret;
 };
 
-extern "C" long webGetPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
+extern "C" long
+webGetPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-//  std::cerr << "**************************************webGetPrepare\n";
-//  std::cerr << "webGetPrepare " << wfpm.prepareID << "\n";
+  std::cerr << "**************************************webGetPrepare\n";
+  wfpm.dump();
 
-  return 0;
+  std::string buffer;
+  std::string request{wfpm.hostName};
+  request.append("/prepare/").append(wfpm.prepareID);
+  std::cerr  << "request: "<< request <<"\n";
+
+  std::string bufffer;
+  auto ret=getFromWeb(bufffer,request.c_str());
+  if(ret==201){
+    ret=0;
+  }else if (ret!=100){
+    parseError(buffer);
+  }
+
+
+  return ret;
 };
 
-extern "C" long webExecute(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
+extern "C" long
+webExecute(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-//  std::cerr << "**************************************webExecute\n";
-//  std::cerr << "webExecute " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
-//            << "\n";
-//  std::cerr << "webExecute " << wfpm.cwl << "\n";
-//  std::cerr << "webExecute " << wfpm.inputs << "\n";
+  std::cerr << "**************************************webExecute\n";
+  wfpm.dump();
 
-  return 0;
-};
-
-extern "C" long webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm) {
-
-//  std::cerr << "**************************************webGetStatus\n";
-//  std::cerr << "webGetStatus " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
-//            << " " << wfpm.jobID << "\n";
 
   return 0;
 };
 
 extern "C" long
-webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters& wfpm,
+webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
+
+  //  std::cerr << "**************************************webGetStatus\n";
+  //  std::cerr << "webGetStatus " << wfpm.serviceID << " " << wfpm.runID << " "
+  //  << wfpm.prepareID
+  //            << " " << wfpm.jobID << "\n";
+
+  return 0;
+};
+
+extern "C" long
+webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
               std::list<std::pair<std::string, std::string>> &outPutList) {
 
-//  std::cerr << "**************************************webGetResults\n";
-//  std::cerr << "webGetResults " << wfpm.serviceID << " " << wfpm.runID << " " << wfpm.prepareID
-//            << " " << wfpm.jobID << "\n";
+  //  std::cerr << "**************************************webGetResults\n";
+  //  std::cerr << "webGetResults " << wfpm.serviceID << " " << wfpm.runID << "
+  //  " << wfpm.prepareID
+  //            << " " << wfpm.jobID << "\n";
 
   return 0;
 };

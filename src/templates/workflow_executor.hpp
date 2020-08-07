@@ -75,7 +75,20 @@ public:
     std::string jobID;
     std::string cwl;
     std::string inputs;
+
+    std::string hostName;
     ~WorkflowExecutorWebParameters()=default;
+
+    void dump() const{
+      std::cerr<< "WorkflowExecutorWebParameters: \n";
+      std::cerr << "\thostName: " << hostName << "\n";
+      std::cerr << "\tserviceID: " << serviceID << "\n";
+      std::cerr << "\trunID: " << runID << "\n";
+      std::cerr << "\tprepareID: " << prepareID << "\n";
+      std::cerr << "\tjobID: " << jobID << "\n";
+      std::cerr << "\tcwl: " << cwl << "\n";
+      std::cerr << "\tinputs: " << inputs << "\n";
+    }
 
   };
 
