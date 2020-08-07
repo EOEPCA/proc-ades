@@ -1,7 +1,5 @@
 import uuid
 
-from pip._vendor.html5lib.treeadapters.sax import namespace
-
 import workflow_executor
 from workflow_executor import execute, prepare
 from workflow_executor import result

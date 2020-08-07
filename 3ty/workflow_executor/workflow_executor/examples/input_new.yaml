@@ -1,0 +1,6 @@
+tiling_level: 2
+input_reference:
+  - { class: Directory, path: /workspace/input_folder/input_reference/input1/S3B_SL_2_LST____20200624T090133_20200624T090433_20200624T105644_0180_040_221_2700_LN2_O_NR_004 }
+catalog_stac:
+  class: File
+  path: /workspace/input_folder/catalog.json

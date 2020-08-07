@@ -1,0 +1,12 @@
+catalog:
+    id: catid
+    title: cat title
+    description: this is the cat description
+    collections:
+        - input_reference:
+            title: Sentinel-3 SLSTR Level 2 (SL_2_LST____)
+            description: Sentinel-3 SLSTR Level 2 (SL_2_LST____) catalogue reference
+            entries:
+                - https://catalog.terradue.com/sentinel3/search?uid=S3B_SL_2_LST____20200613T070835_20200613T071135_20200613T085802_0179_040_063_2880_LN2_O_NR_004
+#                - https://catalog.terradue.com/sentinel3/search?uid=S3A_SL_2_LST____20200710T050205_20200710T050505_20200710T061124_0179_060_204_5040_LN2_O_NR_004
+#                - https://catalog.terradue.com/sentinel3/search?uid=S3A_SL_2_LST____20200710T052204_20200710T052504_20200710T061740_0179_060_205_0180_LN2_O_NR_004
