@@ -208,6 +208,9 @@ struct workflowExecutorWebError {
 
 };
 
+struct SingleResult{
+  std::string result;
+};
 
 struct statusWebJob {
   int64_t percent;
@@ -233,13 +236,19 @@ bool exists_key(const json &j, const std::string &key) {
 
 void from_json(const json & j, wfexe::error & x);
 
-void from_json(const json & j, wfexe::error & x);
+void from_json(const json & j, wfexe::SingleResult & x);
 void from_json(const json & j, wfexe::workflowExecutorWebError & x);
 void from_json(const json & j, wfexe::statusWebJob & x);
 void from_json(const json &j,
                mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
 void to_json(json &j,
              const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+
+
+inline void from_json(const json & j, wfexe::SingleResult& x) {
+  if (exists_key(j, "wf_output"))
+    x.result=j.at("wf_output").get<std::string>();
+}
 
 inline void from_json(const json & j, wfexe::statusWebJob& x) {
 
@@ -413,9 +422,6 @@ webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
   std::cerr << "**************************************webGetStatus\n";
   std::string buffer;
-//  std::string request{wfpm.hostName};
-//  request.append("/status/").append
-//      ;
 
   std::stringstream request;
   request<< wfpm.hostName << "/status/"
@@ -447,12 +453,32 @@ extern "C" long
 webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
               std::list<std::pair<std::string, std::string>> &outPutList) {
 
-  //  std::cerr << "**************************************webGetResults\n";
-  //  std::cerr << "webGetResults " << wfpm.serviceID << " " << wfpm.runID << "
-  //  " << wfpm.prepareID
-  //            << " " << wfpm.jobID << "\n";
+  std::cerr << "**************************************webGetResults\n";
+  std::string buffer;
 
-  return 0;
+  std::stringstream request;
+  request<< wfpm.hostName << "/result/"
+         <<wfpm.serviceID<<"/"
+         <<wfpm.runID<<"/"
+         << wfpm.prepareID
+         <<"/"<<wfpm.jobID;
+
+
+  auto ret=getFromWeb(buffer,request.str().c_str());
+  if(ret==200){
+
+    wfexe::SingleResult msgWeb= nlohmann::json::parse(buffer);
+    std::cerr << "buffer: " << buffer<<"\n";
+
+    outPutList.emplace_back("wf_output",msgWeb.result);
+
+  }else {
+    parseError(buffer);
+    ret=0;
+  }
+
+  return ret;
+
 };
 
 /*

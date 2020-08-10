@@ -401,31 +401,50 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       wfpm->serviceID=lenv["Identifier"];
       wfpm->runID = lenv["uusid"];
 
-
       std::string prepareID;
+      std::cerr << "workflowExecutor->webPrepare init\n";
       auto retWeb=workflowExecutor->webPrepare(*wfpm);
+      std::cerr << "workflowExecutor->webPrepare done\n";
 
 
+      std::cerr << "workflowExecutor->webGetPrepare init\n";
       while (workflowExecutor->webGetPrepare(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
         sleep(20);
       }
+      std::cerr << "workflowExecutor->webGetPrepare end\n";
 
       wfpm->cwl=cwlBuffer.str();
       wfpm->inputs=jParams;
+
+      std::cerr << "workflowExecutor->webExecute init\n";
       retWeb=workflowExecutor->webExecute(*wfpm);
+      std::cerr << "workflowExecutor->webExecute end\n";
 
       counter=1;
+      std::cerr << "workflowExecutor->webGetStatus init\n";
       while (workflowExecutor->webGetStatus(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
         sleep(60);
       }
+      std::cerr << "workflowExecutor->end init\n";
 
+      //waiting for results
+      sleep(60);
 
+      std::list<std::pair<std::string, std::string>> outPutList{};
+      std::cerr << "workflowExecutor->webGetResults init\n";
+      workflowExecutor->webGetResults(*wfpm,outPutList);
+      std::cerr << "workflowExecutor->webGetResults end\n";
 
-
+      std::cerr << "getresults finished" << std::endl;
+      for (auto &[k, p] : outPutList) {
+        std::cerr << "output" << p << " " << k << std::endl;
+        setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+      }
+      std::cerr << "mapping results" << std::endl;
 
 
 

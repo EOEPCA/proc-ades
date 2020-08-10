@@ -13,7 +13,7 @@ WORKDIR /
 RUN git clone 'https://github.com/EOEPCA/proc-ades.git' /project
 
 WORKDIR /project
-RUN  git checkout 'feature/EOEPCA-145' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
+RUN  git checkout 'develop' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
 
 WORKDIR /project/build/
 RUN make eoepcaows workflow_executor && mkdir -p /project/zooservice
