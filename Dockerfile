@@ -51,10 +51,5 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 COPY assets/config /opt/t2config/kubeconfig
 RUN chown 48:48 /opt/t2config/kubeconfig
 
-#sudo docker run --rm  -d --name zoo -p 7777:80    proc-ades:1.0
-#sudo docker run --rm  -d --name zoo -p 7777:80  -v $PWD:/project  proc-ades:1.0
-#alias ll='ls -ltr'
-# docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" zoo  bash
-
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
 
