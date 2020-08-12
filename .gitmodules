@@ -1,6 +1,6 @@
-[submodule "proc-ades.wiki"]
-	path = proc-ades.wiki
-	url = https://github.com/EOEPCA/proc-ades.wiki.git
+; [submodule "proc-ades.wiki"]
+; 	path = proc-ades.wiki
+; 	url = https://github.com/EOEPCA/proc-ades.wiki.git
 
 
 ; [submodule "terraform/NoR/inventory/cf2-kube"]
