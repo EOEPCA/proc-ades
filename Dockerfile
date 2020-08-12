@@ -10,10 +10,12 @@ RUN cd /usr/local/workflow_executor/ && python setup.py install
 
 WORKDIR /
 
-RUN git clone 'https://github.com/EOEPCA/proc-ades.git' /project
+#RUN git clone 'https://github.com/EOEPCA/proc-ades.git' /project
+COPY . /project
 
 WORKDIR /project
-RUN  git checkout 'develop' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
+#RUN  git checkout 'develop' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
+RUN  mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
 
 WORKDIR /project/build/
 RUN make eoepcaows workflow_executor && mkdir -p /project/zooservice
@@ -43,7 +45,8 @@ RUN cp /project/build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
 RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
 RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
-RUN chmod +x /opt/t2scripts/prepareUserSpace.sh
+COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
+RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
 COPY assets/config /opt/t2config/kubeconfig
 RUN chown 48:48 /opt/t2config/kubeconfig

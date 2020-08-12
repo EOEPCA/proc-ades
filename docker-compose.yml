@@ -37,7 +37,7 @@ services:
       - proc-comm-zoo
       - web-wf-exe
     ports:
-      - "7777:80"
+      - "8888:80"
     links:
       - web-wf-exe
 

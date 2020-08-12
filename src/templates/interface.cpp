@@ -383,7 +383,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       workflowExecutor->getResults(sConfigBuffer.str(),serviceID,outPutList);
       std::cerr << "getresults finished" << std::endl;
       for (auto &[k, p] : outPutList) {
-        std::cerr << "output" << p << " " << k << std::endl;
+        std::cerr << "output" << k   << " " << p << std::endl;
         setMapInMaps(outputs, k.c_str(), "value", p.c_str());
       }
       std::cerr << "mapping results" << std::endl;
@@ -432,7 +432,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       std::cerr << "workflowExecutor->end init\n";
 
       //waiting for results
-      sleep(60);
+//      sleep(60);
 
       std::list<std::pair<std::string, std::string>> outPutList{};
       std::cerr << "workflowExecutor->webGetResults init\n";
@@ -441,7 +441,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
       std::cerr << "getresults finished" << std::endl;
       for (auto &[k, p] : outPutList) {
-        std::cerr << "output" << p << " " << k << std::endl;
+        std::cerr << "output: " << k<< " " << p << std::endl;
         setMapInMaps(outputs, k.c_str(), "value", p.c_str());
       }
       std::cerr << "mapping results" << std::endl;

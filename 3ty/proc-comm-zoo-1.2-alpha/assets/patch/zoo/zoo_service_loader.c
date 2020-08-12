@@ -370,6 +370,72 @@ int createUserSpace(maps* conf,const char* User){
   return y;
 }
 
+
+int removeService(maps* conf,char* service=NULL){
+
+  char* username=NULL;
+  char* anonymousUser=NULL;
+  char* userServicePath=NULL;
+  char* deleteScript=NULL;
+
+  if (conf && service){
+    maps* eoepcaMap=getMaps(conf,"eoepca");
+    if (eoepcaMap){
+      map* defaultUser=getMap(eoepcaMap->content,"defaultUser");
+      if (defaultUser){
+        anonymousUser=zStrdup(defaultUser->value);
+      }
+
+
+      map* userServicePathMap=getMap(eoepcaMap->content,"userworkspace");
+      if (userServicePathMap){
+        userServicePath=zStrdup(userServicePathMap->value);
+      }
+
+
+      map* deleteScriptMap=getMap(eoepcaMap->content,"removeServiceScript");
+      if (deleteScriptMap){
+        deleteScript=zStrdup(deleteScriptMap->value);
+      }
+    }
+
+    maps* userMap=getMaps(conf,"eoepcaUser");
+    if (userMap){
+      map* theUser=getMap(userMap->content,"user");
+      if (theUser){
+        username=zStrdup(theUser->value);
+      }
+    }
+
+    if( strcmp(anonymousUser,username)!=0 && deleteScript!=NULL ) {
+      if(
+          deleteScript && strlen(deleteScript)>0
+          && username && strlen(username)>0
+          && userServicePath && strlen(userServicePath)>0
+          ){
+
+          char* script=(char*)malloc(1024*3);
+          memset(script,'\0',1024*3);
+          sprintf(script,"%s '%s' '%s' '%s' 1>/dev/null",deleteScript,userServicePath,username ,service );
+
+        fprintf(stderr,"%s\n",script);
+         int y=system(script);
+
+          free(script);
+      }
+    }
+  }
+
+  free(username);  username=NULL;
+  free(anonymousUser);anonymousUser=NULL;
+  free(userServicePath);userServicePath=NULL;
+  free(deleteScript);deleteScript=NULL;
+
+  return 0;
+}
+
+
+
 //rdr
 int
 addUserToMap(maps* conf){
@@ -2255,6 +2321,29 @@ runRequest (map ** inputs)
 
     json_object *res=json_object_new_object();
     setMapInMaps(m,"headers","Content-Type","application/json;charset=UTF-8");
+
+
+    if((
+            strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
+          strcasecmp(cgiRequestMethod,"post")==0
+        ){
+
+          cgiQueryString="/processes/eoepcaadesdeployprocess/jobs";
+    }
+
+//    if((
+//            strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
+//          strcasecmp(cgiRequestMethod,"delete")==0
+//        ){
+//
+//
+//
+//
+//          //cgiRequestMethod="post";
+//          cgiQueryString="/processes/eoepcaadesundeployprocess/jobs";
+//    }
+
+
     /* - Root url */
     if(cgiContentLength==1){
       map* tmpMap=getMapFromMaps(m,"main","serverAddress");
@@ -2294,6 +2383,28 @@ runRequest (map ** inputs)
     }else if(strcmp(cgiQueryString,"/api")==0){
       /* - /api url */
       produceApi(m,res);
+    }else if(  strstr(cgiQueryString,"/processes/")   &&  strcasecmp(cgiRequestMethod,"delete")==0 ){
+
+
+      fprintf(stderr,"%s\n",cgiQueryString);
+      char* p=strstr(cgiQueryString,"/processes/");
+      if (strlen(cgiQueryString)>11/*/processes/*/){
+
+        char *orig = zStrdup (p+11);
+        if(orig[strlen(orig)-1]=='/')
+            orig[strlen(orig)-1]=0;
+
+        char *theS=strchr(orig,'/');
+        if (theS){
+          *theS='\0';
+        }
+
+        fprintf(stderr,"%s\n",orig);
+        removeService(m,orig);
+        free (orig);
+
+      }
+
     }else if(strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0){
       /* - /processes */
       json_object *res3=json_object_new_array();

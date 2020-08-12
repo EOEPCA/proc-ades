@@ -375,6 +375,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   try {
 
     if (operation == Operation::UNDEPLOY) {
+      std::cerr << " Operation::UNDEPLOY----\n";
       auto found = owsOri.find("://");
       if (found == std::string::npos) {
         if (owsOri == "eoepcaadesundeployprocess" || owsOri == "GetStatus" ||
