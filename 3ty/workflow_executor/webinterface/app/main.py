@@ -49,13 +49,19 @@ def read_root():
 
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent):
+    print('\n'*2)
+    print("entry: /prepare")
     print(str(content))
+    print('return: {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}')
     return {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}
 
 
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_read(prepare_id: str):
+    print('\n'*2)
+    print("entry: /prepare/{prepare_id}")
     print(prepare_id)
+
     return {}
     # 200 done
     # 100 ripassa dopo
@@ -64,20 +70,29 @@ def read_read(prepare_id: str):
 
 @app.post("/execute", status_code=status.HTTP_201_CREATED)
 def read_execute(content: ExecuteContent):
+    print('\n'*2)
+    print("entry: /execute")
     print(str(content))
+    print('return: {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}')
     return {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}
 
 
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
+    print('\n'*2)
+    print("entry: status/{service_id}/{run_id}/{prepare_id}/{job_id}")
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
+    print('return: {"percent": 100, "msg": "done"}')
     return {"percent": 100, "msg": "done"}
 
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str):
+    print('\n'*2)
+    print('entry: /result/{service_id}/{run_id}/{prepare_id}/{job_id}')
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
-    return {"wf_output": '{"catalog":"http:...."}'}
+    print('return: {"wf_output": {"catalog":"http:catalog.terradue.com/........."}}')
+    return {"wf_output": '{"catalog":"http:catalog.terradue.com/........."}'}
 
 
 @app.get("/testerror")
