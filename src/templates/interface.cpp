@@ -231,6 +231,23 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     std::map<std::string, std::string> confEoepca;
     getConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
 
+
+    std::map<std::string, std::string> serviceConf;
+    getConfigurationFromZooMapConfig(conf, "serviceConf", serviceConf);
+
+
+    if(serviceConf["sleepGetStatus"].empty()){
+      serviceConf["sleepGetStatus"]="60";
+    }
+
+    if(serviceConf["sleepGetPrepare"].empty()){
+      serviceConf["sleepGetPrepare"]="60";
+    }
+
+    if(serviceConf["sleepBeforeRes"].empty()){
+      serviceConf["sleepBeforeRes"]="60";
+    }
+
     std::map<std::string, std::string> lenv;
     getConfigurationFromZooMapConfig(conf, "lenv", lenv);
 
@@ -365,14 +382,16 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       //=============================STATUS
 
       std::cerr << "getStats start" << std::endl;
+      int w8for=std::stoi(serviceConf["sleepGetStatus"]);
       while(workflowExecutor->getStatus(sConfigBuffer.str(),serviceID,percent,message)){
         std::cerr << "going to sleep counter: " << counter << std::endl;
         counter=counter+1;
-        sleep(60);
+        sleep(w8for);
       }
 
       updateStatus(conf, 95, "waiting for logs");
-      sleep(40);
+      w8for=std::stoi(serviceConf["sleepBeforeRes"]);
+      sleep(w8for);
       std::cerr << "status finished" << std::endl;
       //=============================STATUS
 
@@ -408,10 +427,11 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
 
       std::cerr << "workflowExecutor->webGetPrepare init\n";
+      int w8for=std::stoi(serviceConf["sleepGetPrepare"]);
       while (workflowExecutor->webGetPrepare(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
-        sleep(20);
+        sleep(w8for);
       }
       std::cerr << "workflowExecutor->webGetPrepare end\n";
 
@@ -423,16 +443,20 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       std::cerr << "workflowExecutor->webExecute end\n";
 
       counter=1;
+      w8for=std::stoi(serviceConf["sleepGetStatus"]);
       std::cerr << "workflowExecutor->webGetStatus init\n";
       while (workflowExecutor->webGetStatus(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
-        sleep(60);
+        sleep(w8for);
       }
       std::cerr << "workflowExecutor->end init\n";
 
       //waiting for results
-//      sleep(60);
+      w8for=std::stoi(serviceConf["sleepBeforeRes"]);
+      updateStatus(conf, 99, "waiting for results");
+      sleep(w8for);
+
 
       std::list<std::pair<std::string, std::string>> outPutList{};
       std::cerr << "workflowExecutor->webGetResults init\n";
