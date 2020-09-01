@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import uvicorn
 from fastapi import FastAPI, Form, File, status, Response
@@ -71,11 +72,26 @@ def read_prepare(content: PrepareContent, response: Response):
     print('volume_size: %d' % volumeSize)
     print('volume_name: %s' % volumeName)
 
-    stageout_config_file = "/opt/t2config/workflow-config.json"
+    default_value=""
+    workflow_config = {
+        "stageout": {
+            "catalog_endpoint": os.getenv('CATALOG_ENDPOINT', default_value),
+            "catalog_username": os.getenv('CATALOG_USERNAME', default_value),
+            "catalog_apikey":  os.getenv('CATALOG_APIKEY', default_value),
+            "storage_host":  os.getenv('STORAGE_HOST', default_value),
+            "storage_username": os.getenv('STORAGE_USERNAME', default_value),
+            "storage_apikey": os.getenv('STORAGE_APIKEY', default_value)
+        },
+        "storageclass": os.getenv('STORAGE_CLASS', default_value)
+    }
+
+
+
+
 
     try:
         resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volumeSize, volumeName=volumeName,
-                                                    state=state, stageout_config_file=stageout_config_file)
+                                                    state=state, workflow_config=workflow_config)
     except ApiException as e:
         response.status_code = e.status
 

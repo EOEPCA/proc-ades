@@ -10,8 +10,8 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-# def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
-def run(namespace, volumeSize, volumeName, stageout_config_file=None, state=None):
+
+def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
 
     if state:
@@ -35,19 +35,16 @@ def run(namespace, volumeSize, volumeName, stageout_config_file=None, state=None
 
     ### Configuring storage_class and creating kubernetes secrets for stageout
     storage_class_name = ""
-    if stageout_config_file != None:
+    if workflow_config != None:
         try:
-
-            with open(stageout_config_file, 'r') as f:
-                stageout_config_json = json.load(f)
 
             secret = client.V1Secret()
             secret.metadata = client.V1ObjectMeta(name="procades-secret")
             secret.type = "Opaque"
-            secret.data = stageout_config_json["stageout"]
+            secret.data = workflow_config["stageout"]
             v1.create_namespaced_secret(namespace, secret)
 
-            storage_class_name = stageout_config_json["storageclass"]
+            storage_class_name = workflow_config["storageclass"]
 
         except ApiException as e:
             # Status appears to be a string.
