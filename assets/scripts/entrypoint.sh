@@ -6,3 +6,5 @@ ldconfig
 
 /usr/sbin/httpd -DFOREGROUND
 #/usr/sbin/httpd -DBACKGROUND
+
+/opt/app-root/src/miniconda3/bin/python -m workflow_executor.fastapiserver

@@ -47,7 +47,7 @@ class ExecuteContent(PrepareContent):
     inputs: str
 
 
-kubeconfig = "/var/snap/microk8s/current/credentials/kubelet.config"
+kubeconfig = "/opt/t2config/kubeconfig"
 
 
 @app.get("/")
@@ -71,7 +71,7 @@ def read_prepare(content: PrepareContent, response: Response):
     print('volume_size: %d' % volumeSize)
     print('volume_name: %s' % volumeName)
 
-    stageout_config_file = "/home/bla/dev/EOEPCA_dev/proc-ades/3ty/workflow_executor/workflow_executor/examples/stageout-config.json"
+    stageout_config_file = "/opt/t2config/workflow-config.json"
 
     try:
         resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volumeSize, volumeName=volumeName,

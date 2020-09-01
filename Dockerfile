@@ -4,9 +4,8 @@ COPY 3ty/workflow_executor /usr/local/workflow_executor
 
 RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
 ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-RUN conda install -c conda-forge python-kubernetes click
+RUN conda install -c conda-forge python-kubernetes click fastapi uvicorn
 RUN cd /usr/local/workflow_executor/ && python setup.py install
-
 
 WORKDIR /
 
@@ -50,7 +49,9 @@ COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
 COPY assets/config /opt/t2config/kubeconfig
+COPY assets/kubernetes_resources/workflow-config.json /opt/t2config/workflow-config.json
 RUN chown 48:48 /opt/t2config/kubeconfig
+RUN chown 48:48 /opt/t2config/workflow-config.json
 
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
 
