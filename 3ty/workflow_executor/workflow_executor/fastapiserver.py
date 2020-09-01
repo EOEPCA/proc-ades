@@ -79,7 +79,7 @@ def read_prepare(content: PrepareContent, response: Response):
     except ApiException as e:
         response.status_code = e.status
 
-    return resp_status
+    return {"prepareID": namespace}
 
 
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
@@ -153,8 +153,8 @@ def read_execute(content: ExecuteContent, response: Response):
     return resp_status
 
 
-@app.get("/status/{service_id}/{run_id}", status_code=status.HTTP_200_OK)
-def read_getstatus(service_id: str, run_id: str, response: Response):
+@app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
+def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = service_id
     workflow_name = f"wf-{run_id}"
 
@@ -166,25 +166,29 @@ def read_getstatus(service_id: str, run_id: str, response: Response):
     print('Debug: %s' % state.debug)
 
     resp_status = None
+    status = {}
     try:
         resp_status = workflow_executor.status.run(namespace=namespace, workflow_name=workflow_name, state=state)
 
         if resp_status["status"] == "Running":
-            response.status_code = status.HTTP_100_CONTINUE
+            response.status_code = status.HTTP_200_OK
+            status = {"percent": 50, "msg": "running"}
         elif resp_status["status"] == "Success":
             response.status_code = status.HTTP_201_CREATED
+            status = {"percent": 100, "msg": "done"}
         elif resp_status["status"] == "Failed":
             response.status_code = status.HTTP_500_INTERNAL
+            status = {"percent": 0, "msg": "failed"}
 
     except ApiException as e:
         response.status_code = e.status
-        resp_status = {"status": "failed", "error": e.body}
+        status = {"status": "failed", "error": e.body}
 
-    return resp_status
+    return status
 
 
-@app.get("/result/{service_id}/{run_id}", status_code=status.HTTP_200_OK)
-def read_getresult(service_id: str, run_id: str, response: Response):
+@app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
+def read_getresult(service_id: str, run_id: str,  prepare_id: str, job_id: str, response: Response):
     namespace = service_id
     workflow_name = f"wf-{run_id}"
     volume_name_prefix = f"{namespace}-volume"
