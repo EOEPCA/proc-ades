@@ -49,9 +49,8 @@ COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
 COPY assets/config /opt/t2config/kubeconfig
-COPY assets/kubernetes_resources/workflow-config.json /opt/t2config/workflow-config.json
 RUN chown 48:48 /opt/t2config/kubeconfig
-RUN chown 48:48 /opt/t2config/workflow-config.json
+
 
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
 
