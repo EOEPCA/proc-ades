@@ -92,6 +92,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
     tmpout_volume_name = volume_name_prefix + "-tmpout"
+
     workflow_id = helpers.getCwlWorkflowId(cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(cwl_document, job_input_json, volume_name_prefix,
@@ -146,4 +147,4 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
             print("Job created. status='%s'" % str(resp.status))
         except ApiException as e:
             print("Exception when submitting job: %s\n" % e, file=sys.stderr)
-            return 1
+            return e

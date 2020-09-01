@@ -3,5 +3,5 @@
 curl -v \
   --request POST \
   --data '{"runID": "string","serviceID": "string"}' \
-  http://localhost:8080/prepare
+  http://127.0.0.1:8000/prepare
 

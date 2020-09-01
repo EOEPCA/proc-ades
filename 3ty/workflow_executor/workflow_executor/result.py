@@ -1,12 +1,13 @@
 import json
 import time
 from os import path
+from pprint import pprint
+
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
-from workflow_executor import helpers
 import sys
-from pprint import pprint
+
 
 def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
     try:
@@ -26,8 +27,8 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
             resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
         except ApiException as e:
             if e.status != 404:
-                print("Unknown error: %s" % e, file=sys.stderr)
-                exit(1)
+                print("Exception when reading byxybox-pod: %s\n" % e, file=sys.stderr)
+                raise e
 
         if not resp:
             print("Pod %s does not exist. Creating it..." % name)
@@ -68,6 +69,7 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
                 time.sleep(1)
             print("Done.", file=sys.stderr)
 
+
         # Calling exec and waiting for response
         exec_command = [
             '/bin/sh',
@@ -80,7 +82,9 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
                       stderr=True, stdin=False,
                       stdout=True, tty=False)
 
-        # this is correct to put it in stdout
-        print(resp, file=sys.stdout)
+        if "cat: can't open" in resp:
+            raise ApiException(status=404,reason=f"Result output for job {workflowname} was not found. {resp}")
+
+        return eval(resp)
     finally:
         resp = api_instance.delete_namespaced_pod(name=name, namespace=namespace)

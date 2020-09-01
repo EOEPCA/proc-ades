@@ -33,21 +33,21 @@ def run(namespace, workflow_name, state=None):
     #     elif i.status.phase == "Failed":
     #         error_pod_name = i.metadata.name
     try:
-        api_response = api_instance.read_namespaced_job_status(workflow_name, namespace, pretty=pretty)
+        api_response = api_instance.read_namespaced_job_status(name=workflow_name,namespace= namespace, pretty=pretty)
 
         if api_response.status.active:
             status = {"status": "Running", "error": ""}
             pprint(status)
-            return 0
+            return status
         elif api_response.status.succeeded:
             status = {"status": "Success", "error": ""}
             pprint(status)
-            return 0
+            return status
         elif api_response.status.failed:
             status = {"status": "Failed", "error": "Failed job"}
             pprint(status)
-            return 1
+            return status
 
     except ApiException as e:
         print("Exception when calling get status: %s\n" % e)
-        return 0
+        raise e
