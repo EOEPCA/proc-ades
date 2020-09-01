@@ -51,6 +51,10 @@ class ExecuteContent(PrepareContent):
 kubeconfig = "/opt/t2config/kubeconfig"
 
 
+def sanitize_k8_parameters(value: str):
+    return value.replace("_", "-").lower()
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -64,7 +68,7 @@ def read_prepare(content: PrepareContent, response: Response):
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
-    namespace = content.serviceID
+    namespace = sanitize_k8_parameters(content.serviceID)
     volumeSize = 2
     volumeName = f"{namespace}-volume"
 
@@ -85,10 +89,6 @@ def read_prepare(content: PrepareContent, response: Response):
         "storageclass": os.getenv('STORAGE_CLASS', default_value)
     }
 
-
-
-
-
     try:
         resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volumeSize, volumeName=volumeName,
                                                     state=state, workflow_config=workflow_config)
@@ -100,7 +100,8 @@ def read_prepare(content: PrepareContent, response: Response):
 
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
-    print(prepare_id)
+
+    namespace=sanitize_k8_parameters(prepare_id)
 
     state = client.State()
     state.kubeconfig = kubeconfig
@@ -109,7 +110,7 @@ def read_prepare(prepare_id: str, response: Response):
     print('Debug: %s' % state.debug)
 
     try:
-        resp_status = workflow_executor.prepare.get(namespace=prepare_id, state=state)
+        resp_status = workflow_executor.prepare.get(namespace=namespace, state=state)
     except ApiException as e:
         response.status_code = e.status
 
@@ -133,11 +134,11 @@ def read_execute(content: ExecuteContent, response: Response):
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
-    namespace = content.serviceID
+    namespace=sanitize_k8_parameters(content.serviceID)
     cwl_content = content.cwl
     inputs_content = content.inputs
     volume_name_prefix = f"{namespace}-volume"
-    workflow_name = f"wf-{content.runID}"
+    workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
     # inputcwlfile is input_json + cwl_file
@@ -171,8 +172,8 @@ def read_execute(content: ExecuteContent, response: Response):
 
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
-    namespace = service_id
-    workflow_name = f"wf-{run_id}"
+    namespace = sanitize_k8_parameters(service_id)
+    workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     state = client.State()
     state.kubeconfig = kubeconfig
@@ -205,8 +206,8 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str,  prepare_id: str, job_id: str, response: Response):
-    namespace = service_id
-    workflow_name = f"wf-{run_id}"
+    namespace = sanitize_k8_parameters(service_id)
+    workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = f"{namespace}-volume"
     mount_folder = "/workflow"
 
