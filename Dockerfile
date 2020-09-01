@@ -32,6 +32,7 @@ COPY assets/oas.cfg /opt/t2service/oas.cfg
 
 #COPY src/zoo /tmp/zoo
 #RUN cd /tmp/zoo && make && make install && rm -fvR /tmp/zoo && chmod +x /opt/t2scripts/entrypoint.sh
+COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
 RUN chmod +x /opt/t2scripts/entrypoint.sh
 
 COPY assets/workflowwxecutorconfig.json /opt/t2config/workflowwxecutorconfig.json
