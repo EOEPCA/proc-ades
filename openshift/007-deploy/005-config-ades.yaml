@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ades-internal-config
+  labels:
+    app: ades-internal
+data:
+  CATALOG_ENDPOINT: xxxxx
+  CATALOG_USERNAME: xxxxxxx
+  CATALOG_APIKEY: xxxxx
+  STORAGE_HOST: aHR0cHM6Ly9ueDEwNDM4LnlvdXItc3RvcmFnZXNoYXJlLmRlLw==
+  STORAGE_USERNAME: ZW9lcGNhLWRlbW8tc3RvcmFnZQ==
+  STORAGE_APIKEY: xxxxxxxxxxx
+  STORAGE_CLASS: glusterfs-storage
+
+
+
+#https://kubernetes.io/docs/concepts/configuration/secret/
+##kubectl create --namespace=eoepca -f xxxxxx.yaml

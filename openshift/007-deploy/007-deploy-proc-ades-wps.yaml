@@ -19,7 +19,10 @@ spec:
         nst2pc_wps: enabled
       containers:
       - name: proc-ades-wps
-        image: eoepca/proc-ades:travis_develop_101
+        envFrom:
+          - configMapRef:
+              name: ades-internal-config
+        image: eoepca/proc-ades:travis_develop_102
         imagePullPolicy: Always
 
 
