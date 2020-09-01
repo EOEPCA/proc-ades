@@ -55,7 +55,7 @@ def sanitize_k8_parameters(value: str):
     value = value.replace("_", "-").lower()
     while value.endswith("-"):
         value = value[:-1]
-
+    return value
 
 @app.get("/")
 def read_root():
