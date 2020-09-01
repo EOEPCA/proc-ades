@@ -62,7 +62,7 @@ spec:
             - "--apikey"
             - "$(CATALOG_APIKEY)"
             - "--store-host"
-            - "$(GREETING)"
+            - "$(STORAGE_HOST)"
             - "--store-username"
             - "$(STORAGE_USERNAME)"
             - "--store-apikey"

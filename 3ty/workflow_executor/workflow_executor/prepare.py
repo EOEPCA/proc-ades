@@ -10,7 +10,8 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
+# def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
+def run(namespace, volumeSize, volumeName, stageout_config_file=None, state=None):
     print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
 
     if state:
@@ -30,8 +31,30 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         print(str(namespace_json))
     except ApiException as e:
         print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating namespace", "error": e.body}
-        return error
+        raise e
+
+    ### Configuring storage_class and creating kubernetes secrets for stageout
+    storage_class_name = ""
+    if stageout_config_file != None:
+        try:
+
+            with open(stageout_config_file, 'r') as f:
+                stageout_config_json = json.load(f)
+
+            secret = client.V1Secret()
+            secret.metadata = client.V1ObjectMeta(name="procades-secret")
+            secret.type = "Opaque"
+            secret.data = stageout_config_json["stageout"]
+            v1.create_namespaced_secret(namespace, secret)
+
+            storage_class_name = stageout_config_json["storageclass"]
+
+        except ApiException as e:
+            # Status appears to be a string.
+            if e.status == 409:
+                print("procades-secret has already been installed")
+            else:
+                raise
 
     #### Creating pod manager role
     print("####################################")
@@ -49,8 +72,7 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         pprint(api_response)
     except ApiException as e:
         print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating pod-manager-role", "error": e.body}
-        return error
+        raise e
 
     #### Creating log-reader-role
     print("####################################")
@@ -69,8 +91,7 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         pprint(api_response)
     except ApiException as e:
         print("Exception when creating pod-manager-role: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating pod-manager-role", "error": e.body}
-        return error
+        raise e
 
     print("####################################")
     print("######### Creating pod-manager-default-binding")
@@ -89,8 +110,7 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         pprint(api_response)
     except ApiException as e:
         print("Exception when creating pod-manager-default-binding: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating pod-manager-default-binding", "error": e}
-        return error
+        raise e
 
     print("####################################")
     print("######### Creating log-reader-default-binding")
@@ -109,8 +129,7 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         pprint(api_response)
     except ApiException as e:
         print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating log-reader-default-binding", "error": e.body}
-        return error
+        raise e
 
     print("####################################")
     print("######### Creating Persistent Volume Claims")
@@ -123,8 +142,11 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        , storage_class_name="glusterfs-storage"
     )
+
+    if storage_class_name:
+        spec1.storage_class_name = storage_class_name
+
     body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
 
     metadata2 = client.V1ObjectMeta(name=f"{volumeName}-tmpout", namespace=namespace)
@@ -133,8 +155,10 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        , storage_class_name="glusterfs-storage"
     )
+    if storage_class_name:
+        spec2.storage_class_name = storage_class_name
+
     body2 = client.V1PersistentVolumeClaim(metadata=metadata2, spec=spec2)
 
     metadata3 = client.V1ObjectMeta(name=f"{volumeName}-output-data", namespace=namespace
@@ -144,8 +168,10 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         resources=client.V1ResourceRequirements(
             requests={"storage": f"{volumeSize}Gi"}
         )
-        , storage_class_name="glusterfs-storage"
     )
+    if storage_class_name:
+        spec3.storage_class_name = storage_class_name
+
     body3 = client.V1PersistentVolumeClaim(metadata=metadata3, spec=spec3)
 
     pretty = True
@@ -158,28 +184,56 @@ def run(namespace, volumeSize, volumeName, stageout_config_file, state=None):
         pprint(api_response3)
     except ApiException as e:
         print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
-        error = {"debug": "Exception when creating persistent_volume_claim", "error": e.body}
-        return error
+        raise e
+
+    return {"status": "success"}
 
 
+def get(namespace, state=None):
+    if state:
+        config.load_kube_config(state.kubeconfig)
+    configuration = client.Configuration()
+    configuration.verify_ssl = False
+    client.Configuration.set_default(configuration)
+    api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
+    v1 = client.CoreV1Api()
 
-    if stageout_config_file != None:
-        try:
+    # Things to check:
+    # namespace
+    # kubernetes volume claim
 
-            with open(stageout_config_file, 'r') as f:
-                stageout_config_json = json.load(f)
+    # NAMESPACE CHECK
+    pretty = True
+    try:
+        api_response = v1.read_namespace_status(namespace, pretty=pretty)
+        pprint(api_response)
 
-            secret = client.V1Secret()
-            secret.metadata = client.V1ObjectMeta(name="procades-secret")
-            secret.type = "Opaque"
-            secret.data = stageout_config_json["stageout"]
+    except ApiException as e:
+        print("Exception when calling CoreV1Api->read_namespace_status: %s\n" % e)
+        raise e
 
-            v1.create_namespaced_secret(namespace, secret)
-        except rest.ApiException as e:
-            # Status appears to be a string.
-            if e.status == 409:
-                logging.info("procades-secret has already been installed")
-            else:
-                raise
+    # VOLUME CLAIM CHECK
 
-    return {"status": 200}
+    volumeclaim1 = f"{namespace}-volume-input-data"
+    volumeclaim2 = f"{namespace}-volume-tmpout"
+    volumeclaim3 = f"{namespace}-volume-output-data"
+
+    try:
+        response1 = v1.read_namespaced_persistent_volume_claim(volumeclaim1, namespace, pretty=True)
+        if response1.status.phase == "Pending":
+            return {"status": "pending"}
+        response2 = v1.read_namespaced_persistent_volume_claim(volumeclaim2, namespace, pretty=True)
+        if response1.status.phase == "Pending":
+            return {"status": "pending"}
+        response3 = v1.read_namespaced_persistent_volume_claim(volumeclaim3, namespace, pretty=True)
+        if response1.status.phase == "Pending":
+            return {"status": "pending"}
+
+        pprint(response1)
+        pprint(response2)
+        pprint(response3)
+    except ApiException as e:
+        print("Exception when calling CoreV1Api->read_namespaced_persistent_volume_claim: %s\n" % e)
+        raise e
+
+    return {"status": "success"}
