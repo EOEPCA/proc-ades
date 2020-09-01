@@ -52,7 +52,9 @@ kubeconfig = "/opt/t2config/kubeconfig"
 
 
 def sanitize_k8_parameters(value: str):
-    return value.replace("_", "-").lower()
+    value = value.replace("_", "-").lower()
+    while value.endswith("-"):
+        value = value[:-1]
 
 
 @app.get("/")
@@ -76,13 +78,13 @@ def read_prepare(content: PrepareContent, response: Response):
     print('volume_size: %d' % volumeSize)
     print('volume_name: %s' % volumeName)
 
-    default_value=""
+    default_value = ""
     workflow_config = {
         "stageout": {
             "catalog_endpoint": os.getenv('CATALOG_ENDPOINT', default_value),
             "catalog_username": os.getenv('CATALOG_USERNAME', default_value),
-            "catalog_apikey":  os.getenv('CATALOG_APIKEY', default_value),
-            "storage_host":  os.getenv('STORAGE_HOST', default_value),
+            "catalog_apikey": os.getenv('CATALOG_APIKEY', default_value),
+            "storage_host": os.getenv('STORAGE_HOST', default_value),
             "storage_username": os.getenv('STORAGE_USERNAME', default_value),
             "storage_apikey": os.getenv('STORAGE_APIKEY', default_value)
         },
@@ -100,8 +102,7 @@ def read_prepare(content: PrepareContent, response: Response):
 
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
-
-    namespace=sanitize_k8_parameters(prepare_id)
+    namespace = sanitize_k8_parameters(prepare_id)
 
     state = client.State()
     state.kubeconfig = kubeconfig
@@ -134,7 +135,7 @@ def read_execute(content: ExecuteContent, response: Response):
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
-    namespace=sanitize_k8_parameters(content.serviceID)
+    namespace = sanitize_k8_parameters(content.serviceID)
     cwl_content = content.cwl
     inputs_content = content.inputs
     volume_name_prefix = f"{namespace}-volume"
@@ -205,7 +206,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
-def read_getresult(service_id: str, run_id: str,  prepare_id: str, job_id: str, response: Response):
+def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = sanitize_k8_parameters(service_id)
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = f"{namespace}-volume"
