@@ -75,8 +75,8 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
                 time.sleep(2)
 
         except ApiException as e:
-            print("Exception when creating copy-pod: %s\n" % e, file=sys.stderr)
-            exit(1)
+            print("Exception when creating copy-pod: %s\n" % e)
+            raise e
 
     print("Copying files in pod")
     exec_command = ['tar', 'xvf', '-', '-C', '/']

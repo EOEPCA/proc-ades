@@ -38,13 +38,15 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     if workflow_config != None:
         try:
 
+            storage_class_name = workflow_config["storageclass"]
+
             secret = client.V1Secret()
             secret.metadata = client.V1ObjectMeta(name="procades-secret")
             secret.type = "Opaque"
             secret.data = workflow_config["stageout"]
             v1.create_namespaced_secret(namespace, secret)
 
-            storage_class_name = workflow_config["storageclass"]
+
 
         except ApiException as e:
             # Status appears to be a string.
