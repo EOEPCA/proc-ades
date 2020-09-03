@@ -445,6 +445,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       counter=1;
       w8for=std::stoi(serviceConf["sleepGetStatus"]);
       std::cerr << "workflowExecutor->webGetStatus init\n";
+      sleep(w8for);
       while (workflowExecutor->webGetStatus(*wfpm) ){
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
