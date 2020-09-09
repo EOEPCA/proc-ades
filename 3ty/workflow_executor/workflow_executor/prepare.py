@@ -59,7 +59,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("####################################")
     print("######### Creating pod_manager_role")
     metadata = client.V1ObjectMeta(name='pod-manager-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     rules = []
     rules.append(rule)
@@ -77,7 +77,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("####################################")
     print("######### Creating log-reader-role")
     metadata = client.V1ObjectMeta(name='log-reader-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     # verbs=['get', 'list'])
     rules = []
