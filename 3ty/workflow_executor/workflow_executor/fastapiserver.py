@@ -71,7 +71,7 @@ def read_prepare(content: PrepareContent, response: Response):
     print('Debug: %s' % state.debug)
 
     namespace = sanitize_k8_parameters(content.serviceID)
-    volumeSize = 2
+    volumeSize = 4
     volumeName = f"{namespace}-volume"
 
     print('namespace: %s' % namespace)
@@ -88,7 +88,8 @@ def read_prepare(content: PrepareContent, response: Response):
             "storage_username": os.getenv('STORAGE_USERNAME', default_value),
             "storage_apikey": os.getenv('STORAGE_APIKEY', default_value)
         },
-        "storageclass": os.getenv('STORAGE_CLASS', default_value)
+        "storageclass": os.getenv('STORAGE_CLASS', default_value),
+        "volumesize": os.getenv('VOLUME_SIZE', volumeSize)
     }
 
     try:

@@ -45,6 +45,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
             secret.type = "Opaque"
             secret.data = workflow_config["stageout"]
             v1.create_namespaced_secret(namespace, secret)
+            volumeSize=workflow_config["volumesize"]
 
 
 
