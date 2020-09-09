@@ -55,7 +55,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
         v1VolumeMountList.append(v1VolumeMount)
         v1container = client.V1Container(name="volumeaccessor", image="terradue/volumeaccessor:1.0", volume_mounts=v1VolumeMountList)
         containers.append(v1container)
-        v1SecurityContext = client.V1SecurityContext(run_as_user=1000, run_as_group=3000, fsGroup=2000)
+        v1SecurityContext = client.V1SecurityContext(run_as_user=1000, run_as_group=3000)
         v1PodSpec = client.V1PodSpec(volumes=volumeList, containers=containers, security_context=v1SecurityContext ,  host_network=True)
         metadata = client.V1ObjectMeta(name=pod_name, namespace=namespace)
         body = client.V1Pod(metadata=metadata, spec=v1PodSpec, kind="Pod")  # V1Pod |
