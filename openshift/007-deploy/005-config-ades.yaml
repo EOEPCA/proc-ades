@@ -12,7 +12,7 @@ data:
   STORAGE_USERNAME: xxxxx
   STORAGE_APIKEY: xxxxxxxxxxx
   STORAGE_CLASS: glusterfs-storage
-
+  VOLUME_SIZE: 4
 
 
 #https://kubernetes.io/docs/concepts/configuration/secret/

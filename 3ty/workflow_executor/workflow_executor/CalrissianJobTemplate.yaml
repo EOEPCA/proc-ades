@@ -66,7 +66,7 @@ spec:
             - "--store-username"
             - "$(STORAGE_USERNAME)"
             - "--store-apikey"
-            - "$(STORAGE_PASSWORD)"
+            - "$(STORAGE_APIKEY)"
             - "--job"
             - "t2workflow123"
             - "--outputfile"
@@ -104,7 +104,7 @@ spec:
                 secretKeyRef:
                   name: procades-secret
                   key: storage_username
-            - name: STORAGE_PASSWORD
+            - name: STORAGE_APIKEY
               valueFrom:
                 secretKeyRef:
                   name: procades-secret
