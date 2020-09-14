@@ -251,6 +251,11 @@ The Amendment Record Sheet below records the history and issue status of this do
 <td class="tableblock halign-center valign-top"><p class="tableblock">06/07/2020</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Updated Design for ADES release 0.1. Added <a href="#capabilities">Functional Design</a> and <a href="#interfaces">External Interfaces</a> sections</p></td>
 </tr>
+<tr>
+<th class="tableblock halign-center valign-top"><p class="tableblock">0.2.0</p></th>
+<td class="tableblock halign-center valign-top"><p class="tableblock">14/09/2020</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Updated Design for ADES release 0.2  Updated <a href="#capabilities">Functional Design</a> section</p></td>
+</tr>
 </tbody>
 </table>
 </dd>
@@ -1193,7 +1198,7 @@ OGC 08-068r2,<br>
 <p>The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.</p>
 </div>
 <div class="paragraph">
-<p>When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named <a href="https://github.com/argoproj/argo">Argo Workflows</a>, to run the following steps:</p>
+<p>When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific tool interpreting CWL workflows <a href="https://github.com/Duke-GCB/calrissian">Calrissian</a>, to run the following steps:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1209,7 +1214,7 @@ OGC 08-068r2,<br>
 </ul>
 </div>
 <div class="paragraph">
-<p>Argo Workflows is responsible for the internal orchestration of the three steps above.<br>
+<p>Calrissian is responsible for the internal orchestration of the three steps above.<br>
 Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present.</p>
 </div>
 <div class="sect4">
@@ -1227,7 +1232,7 @@ Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or pr
 <p>Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.</p>
 </div>
 <div class="paragraph">
-<p>ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).</p>
+<p>ADES supports it by instructing the Kubernetes software, via Calrissian, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).</p>
 </div>
 </div>
 <div class="sect4">
@@ -1282,7 +1287,7 @@ Monitor</p>
 <p>The ADES is based on an Web API framework architecture. It offers primarly an OWS Server with WPS 1.0 &amp; 2.0 OGC services and it exposes a REST/JSON interface compliant with the OGC Processes API <a href="#OGC-API-PROC">[OGC-API-PROC]</a> compliant with the OpenAPI specification <a href="#OPENAPI">[OPENAPI]</a>.</p>
 </div>
 <div class="paragraph">
-<p><a href="#img_procAdesOverview">Figure 2</a> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Argo Workflows API.</p>
+<p><a href="#img_procAdesOverview">Figure 2</a> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Calrissian tool.</p>
 </div>
 <div id="img_procAdesOverview" class="imageblock text-center">
 <div class="content">
@@ -1293,7 +1298,7 @@ Monitor</p>
 <div class="paragraph">
 <p>The WPS Service provides the external interface of the ADES, available to the EMS only. It enables internal code and configuration for creating the Processing Services via the Deploy/Undeploy WPS operations.<br>
 Then, the WPS service triggers various function oif the Processing Services for the Execute, GetStatus, GetResult and Dismiss WPS operations.<br>
-Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it&#8217;s execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution.</p>
+Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it&#8217;s execution as per the Calrissian to submit, monitor, retrieve the results and dismiss a processing execution.</p>
 </div>
 <div class="paragraph">
 <p>Section <a href="#components">Components Design</a> contains a detailed description of the ADES components.</p>
@@ -1808,7 +1813,7 @@ This Service shall be composed of the <a href="#_cwl_parser">workflow</a> of the
 <div class="sect3">
 <h4 id="_data_6">3.5.4. Data</h4>
 <div class="paragraph">
-<p><strong>TODO</strong> : <em>Sample CWL data to be provided as a repo</em></p>
+<p><a href="https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps" class="bare">https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps</a></p>
 </div>
 </div>
 <div class="sect3">
@@ -2056,6 +2061,9 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <li>
 <p><a href="#ZOO">[ZOO]</a></p>
 </li>
+<li>
+<p><a href="#STAC">[STAC]</a></p>
+</li>
 </ul>
 </div>
 </div>
@@ -2063,7 +2071,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="sect2">
 <h3 id="_workflow_execution">4.4. Workflow Execution</h3>
 <div class="paragraph">
-<p><em>TBD</em></p>
+<p>Calrissian is the responsible for orchestrating and executing the CWL defining the application. It directly interacts with Kubernetes for submitting jobs on different pods.</p>
 </div>
 <div class="sect3">
 <h4 id="_overview_and_purpose_9">4.4.1. Overview and Purpose</h4>
@@ -2071,14 +2079,31 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 <div class="sect3">
 <h4 id="_data_inputoutput_4">4.4.2. Data Input/Output</h4>
-<div class="paragraph">
-<p><em>TBD</em></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Data Staged-in catalog</p>
+</li>
+<li>
+<p>Application CWL</p>
+</li>
+<li>
+<p>Data produced catalog</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_applicable_resources_8">4.4.3. Applicable Resources</h4>
-<div class="paragraph">
-<p><em>TBD</em></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#STAC">[STAC]</a></p>
+</li>
+<li>
+<p><a href="#CWL">[CWL]</a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -2454,7 +2479,7 @@ The 2 next sections describes</p>
 <div id="footer">
 <div id="footer-text">
 Version 2<br>
-Last updated 2020-09-10 06:14:01 UTC
+Last updated 2020-09-14 14:32:26 UTC
 </div>
 </div>
 <link rel="stylesheet" href="stylesheets/coderay-asciidoctor.css">
