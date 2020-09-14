@@ -64,7 +64,7 @@ The Processing & Chaining domain area provides an extensible repository of proce
 
 The ADES software uses [ZOO-Project](http://zoo-project.org/) as the main framework for exposing the OGC compliant web services. The [ZOO-kernel](http://zoo-project.org/docs/kernel/) powering the web services is included in the software package.
 
-The ADES functions are designed to perform the processing and chaining function on a [Kubernetes](https://kubernetes.io) cluster using the [ARGO workflow](https://argoproj.github.io/) extension. Argo is a robust workflow engine for Kubernetes that enables the implementation of each step in a workflow as a container. It provides simple, flexible mechanisms for specifying constraints between the steps in a workflow and artifact management for linking the output of any step as an input to subsequent steps.
+The ADES functions are designed to perform the processing and chaining function on a [Kubernetes](https://kubernetes.io) cluster using the [Calrissian Tool](https://github.com/Duke-GCB/calrissian). Calrissian uses CWL, that is a robust workflow engine, over Kubernetes that enables the implementation of each step in a workflow as a container. It provides simple, flexible mechanisms for specifying constraints between the steps in a workflow and artifact management for linking the output of any step as an input to subsequent steps.
 
 
 

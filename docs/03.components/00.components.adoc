@@ -162,7 +162,7 @@ Not applicable
 
 === Data
 
-*TODO* : _Sample CWL data to be provided as a repo_
+https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps
 
 === Applicable Resources
 

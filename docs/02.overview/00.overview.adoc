@@ -38,13 +38,13 @@ Those operations are internal sub-steps of the execution step.
 
 The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.
 
-When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific extension of the API named https://github.com/argoproj/argo[Argo Workflows], to run the following steps:
+When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific tool interpreting CWL workflows https://github.com/Duke-GCB/calrissian[Calrissian], to run the following steps:
 
 * Data Stage-In
 * Processing
 * Data Stage-Out
 
-Argo Workflows is responsible for the internal orchestration of the three steps above.
+Calrissian is responsible for the internal orchestration of the three steps above.
 Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present. 
 
 ==== Data Stage-In
@@ -57,7 +57,7 @@ ADES leverages an OpenSearch client when interacting with the EO Catalogue and s
 
 Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.
 
-ADES supports it by instructing the Kubernetes software, via its Argo extension, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).
+ADES supports it by instructing the Kubernetes software, via Calrissian, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).
 
 ==== Data Stage-Out
 
@@ -87,7 +87,7 @@ This section contains:
 
 The ADES is based on an Web API framework architecture. It offers primarly an OWS Server with WPS 1.0 & 2.0 OGC services and it exposes a REST/JSON interface compliant with the OGC Processes API <<OGC-API-PROC>> compliant with the OpenAPI specification <<OPENAPI>>.
 
-<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Argo Workflows API.
+<<img_procAdesOverview>> shows an overview of the ADES building block. It provides the framework for the WPS Server to manage and execute the processing services that interact with the external Kubernetes cluster via the Calrissian tool.
 
 [#img_procAdesOverview,reftext='{figure-caption} {counter:figure-num}']
 .ADES building block overview
@@ -95,7 +95,7 @@ image::processing-ADES-overview.png[width=95%,pdfwidth=95%,align="center"]
 
 The WPS Service provides the external interface of the ADES, available to the EMS only. It enables internal code and configuration for creating the Processing Services via the Deploy/Undeploy WPS operations.
 Then, the WPS service triggers various function oif the Processing Services for the Execute, GetStatus, GetResult and Dismiss WPS operations.
-Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it's execution as per the Argo Workflows API to submit, monitor, retrieve the results and dismiss a processing execution. 
+Internally, every Processing Service deployed on the ADES, uses the common library to perform properly it's execution as per the Calrissian to submit, monitor, retrieve the results and dismiss a processing execution. 
 
 Section <<Components Design>> contains a detailed description of the ADES components.
 

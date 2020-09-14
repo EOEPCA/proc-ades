@@ -97,26 +97,25 @@ include::../include/datastagein.wsd[]
 
 * <<CWL>>
 * <<ZOO>>
+* <<STAC>>
 
 == Workflow Execution
 
-_TBD_
+Calrissian is the responsible for orchestrating and executing the CWL defining the application. It directly interacts with Kubernetes for submitting jobs on different pods.
 
 === Overview and Purpose
 
-// .ADES Workflow Execution Activity Diagram
-// [plantuml, workflowexec, png] 
-// ....
-// include::../include/workflowexec.wsd[]
-// ....
 
 === Data Input/Output
 
-_TBD_
+* Data Staged-in catalog
+* Application CWL
+* Data produced catalog
 
 === Applicable Resources
 
-_TBD_
+* <<STAC>>
+* <<CWL>>
 
 == Data Stage-Out
 
