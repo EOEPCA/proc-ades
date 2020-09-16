@@ -22,6 +22,19 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
     v1 = client.CoreV1Api()
 
+    print("####################################")
+    print("######### Checking if namespace already exists")
+    try:
+        api_instance.read_namespace(namespace, pretty=True)
+        print("Namespace already exists")
+        return {"status": "success"}
+    except ApiException as e:
+        if e.status != 404:
+            print("Namespace does not exists and will be created")
+        else:
+            print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
+            raise e
+
     ### Creating namespace
     print("####################################")
     print("######### Creating namespace")

@@ -55,7 +55,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     stac_catalog_yaml["catalog"]["collections"].append(stac_catalog_yaml_entry)
 
                     print("Running stac stage-in")
-                    mountFolder=outputFolder
+                    mountFolder = outputFolder
                     outputFolderForSingleInput = path.join(outputFolder, f"input{str(input_counter)}")
                     temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
                     yamlString = yaml.dump(stac_catalog_yaml)
@@ -75,14 +75,21 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     inputs[k].append({"class": type, "path": outputFolderForSingleInput})
                     input_counter += 1
 
-
         else:
             inputs[k] = {}
             for input in job_input_json["inputs"]:
                 if input['id'] == k:
-                    inputs[k] = input['value']
+                    type = v["type"]
 
+                    if "[]" in type:
+                        if k not in inputs.keys():
+                            inputs[k] = []
+                        inputs[k] = input[k].append(input['value'])
 
+                    else:
+                        inputs[k] = input['value']
+
+    print("Input json to pass to the cwl runner: ")
     pprint(inputs)
     return inputs
 
@@ -137,7 +144,6 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
         yaml_modified = yaml_modified.replace("t2workflow123", f"{workflow_name}")
         yaml_modified = yaml_modified.replace("calrissian-output.json", f"{workflow_id}-output.json")
         yaml_modified = yaml_modified.replace("stac-output.out", f"{workflow_name}-stac-output.out")
-
 
         body = yaml.safe_load(yaml_modified)
         pprint(body)
