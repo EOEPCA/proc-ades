@@ -29,7 +29,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         print("Namespace already exists")
         return {"status": "success"}
     except ApiException as e:
-        if e.status != 404:
+        if e.status == 404:
             print("Namespace does not exists and will be created")
         else:
             print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
