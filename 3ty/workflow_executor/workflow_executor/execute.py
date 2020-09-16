@@ -84,7 +84,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     if "[]" in type:
                         if k not in inputs.keys():
                             inputs[k] = []
-                        input[k].append(input['value'])
+                        inputs[k].append(input['value'])
 
                     else:
                         inputs[k] = input['value']
