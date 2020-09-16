@@ -25,7 +25,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("####################################")
     print("######### Checking if namespace already exists")
     try:
-        api_instance.read_namespace(namespace, pretty=True)
+        v1.read_namespace(namespace, pretty=True)
         print("Namespace already exists")
         return {"status": "success"}
     except ApiException as e:
