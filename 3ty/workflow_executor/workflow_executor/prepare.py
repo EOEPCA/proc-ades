@@ -158,7 +158,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     body = client.V1ClusterRoleBinding(metadata=metadata, role_ref=role_ref, subjects=subjects)
     pretty = True
     try:
-        api_response = api_instance.create_namespaced_cluster_role_binding(namespace, body, pretty=pretty)
+        api_response = api_instance.create_cluster_role_binding(namespace, body, pretty=pretty)
         pprint(api_response)
     except ApiException as e:
         if e.status == 409:

@@ -22,7 +22,7 @@ spec:
         envFrom:
           - configMapRef:
               name: ades-internal-config
-        image: eoepca/proc-ades:travis_develop_126
+        image: eoepca/proc-ades:travis_develop_127
         imagePullPolicy: Always
 
 
