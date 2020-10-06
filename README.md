@@ -29,10 +29,10 @@
   <p align="center">
     Application Deployment and Execution Service (ADES) building block
     <br />
-    <a href="https://github.com/EOEPCA/proc-ades/wiki"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/EOEPCA/proc-ades/wiki"><strong>Get Started »</strong></a>
     <br />
-    <a href="https://github.com/EOEPCA/proc-ades">View Demo</a>
-    ·
+    <a href="https://eoepca.github.io/proc-ades/develop/">Open Design</a>
+    .
     <a href="https://github.com/EOEPCA/proc-ades/issues">Report Bug</a>
     ·
     <a href="https://github.com/EOEPCA/proc-ades/issues">Request Feature</a>
@@ -66,12 +66,10 @@ The ADES software uses [ZOO-Project](http://zoo-project.org/) as the main framew
 
 The ADES functions are designed to perform the processing and chaining function on a [Kubernetes](https://kubernetes.io) cluster using the [Calrissian Tool](https://github.com/Duke-GCB/calrissian). Calrissian uses CWL, that is a robust workflow engine, over Kubernetes that enables the implementation of each step in a workflow as a container. It provides simple, flexible mechanisms for specifying constraints between the steps in a workflow and artifact management for linking the output of any step as an input to subsequent steps.
 
-
-
 <!-- GETTING STARTED -->
 ## Getting Started & Usage
 
-The full getting started guide start in the [Wiki home page](https://github.com/EOEPCA/proc-ades/wiki)
+The full getting started guide starts in the [Wiki home page](https://github.com/EOEPCA/proc-ades/wiki)
 
 <!-- ROADMAP -->
 ## Roadmap
