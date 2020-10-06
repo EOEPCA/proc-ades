@@ -14,7 +14,7 @@ COPY . /project
 
 WORKDIR /project
 #RUN  git checkout 'develop' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
-RUN  mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
+RUN  mkdir -p build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
 
 WORKDIR /project/build/
 RUN make eoepcaows workflow_executor && mkdir -p /project/zooservice
@@ -51,6 +51,7 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 COPY assets/config /opt/t2config/kubeconfig
 RUN chown 48:48 /opt/t2config/kubeconfig
 
-
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
+
+EXPOSE 80
 

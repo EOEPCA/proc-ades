@@ -53,3 +53,4 @@ notes
 *.pyc
 **.venv
 *.idea/
+config/ades-config.env.sample

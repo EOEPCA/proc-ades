@@ -11,7 +11,7 @@ if [ -z "${CMAKERELEASE}" ]; then
 fi
 
 if [ -z "${LOCAL_IMAGE_NAME}" ]; then
-  LOCAL_IMAGE_NAME='proc-ades:1.0'
+  LOCAL_IMAGE_NAME='proc-ades:build'
 fi
 
 HERE=$PWD
@@ -32,4 +32,6 @@ if [ $? -ne 0 ]; then
   echo "docker build --rm -t ${LOCAL_IMAGE_NAME} failed"
   exit 2
 fi
+
+docker tag proc-ades:build eoepca/proc-ades:latest
 
