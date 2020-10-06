@@ -39,8 +39,6 @@
   </p>
 </p>
 
-
-
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
 
@@ -52,8 +50,6 @@
 - [License](#license)
 - [Contact](#contact)
 - [Acknowledgements](#acknowledgements)
-
-
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
