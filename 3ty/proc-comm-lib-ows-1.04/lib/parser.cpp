@@ -780,6 +780,10 @@ void parseOffering(xmlNode* offering_node,
 //        std::string content( (std::istreambuf_iterator<char>(ifs) ),
 //                             (std::istreambuf_iterator<char>()    ) );
 
+        if (!type){
+          throw std::runtime_error(R"(The "content" tag must have the "type" property set)");
+        }
+
         ptrOffering->addContentTag(
             std::string(CHAR_BAD_CAST type),
             std::string(CHAR_BAD_CAST xmlNodeGetContent(inner_cur_node))

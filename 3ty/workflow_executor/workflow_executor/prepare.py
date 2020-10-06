@@ -22,6 +22,19 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
     v1 = client.CoreV1Api()
 
+    print("####################################")
+    print("######### Checking if namespace already exists")
+    try:
+        v1.read_namespace(namespace, pretty=True)
+        print("Namespace already exists")
+        return {"status": "success"}
+    except ApiException as e:
+        if e.status == 404:
+            print("Namespace does not exists and will be created")
+        else:
+            print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
+            raise e
+
     ### Creating namespace
     print("####################################")
     print("######### Creating namespace")
@@ -130,6 +143,30 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     except ApiException as e:
         print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
         raise e
+
+
+    print("####################################")
+    print("######### Creating cluster-role-binding")
+    metadata = client.V1ObjectMeta(name=f"{namespace}-rbac", namespace=namespace)
+
+    role_ref = client.V1RoleRef(api_group='rbac.authorization.k8s.io', kind='ClusterRole', name='cluster-admin')
+
+    subject = client.models.V1Subject(api_group='', kind='ServiceAccount', name='default', namespace=namespace)
+    subjects = []
+    subjects.append(subject)
+
+    body = client.V1ClusterRoleBinding(metadata=metadata, role_ref=role_ref, subjects=subjects)
+    pretty = True
+    try:
+        api_response = api_instance.create_cluster_role_binding(body=body, pretty=pretty)
+        pprint(api_response)
+    except ApiException as e:
+        if e.status == 409:
+            print(f"cluster-role-binding {namespace}-rbac has already been installed")
+        else:
+            print("Exception when creating cluster-role-binding: %s\n" % e, file=sys.stderr)
+            raise e
+
 
     print("####################################")
     print("######### Creating Persistent Volume Claims")

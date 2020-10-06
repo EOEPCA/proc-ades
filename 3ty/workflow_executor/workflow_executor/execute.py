@@ -35,6 +35,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
         # if input is of type stac:collection then a stage-in is required
         if "stac:catalog" in v:
 
+            isarray = "[]" in v["type"]
             type = v["type"].replace("[]", "")
             print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ")
 
@@ -55,8 +56,8 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                     stac_catalog_yaml["catalog"]["collections"].append(stac_catalog_yaml_entry)
 
                     print("Running stac stage-in")
-                    mountFolder=outputFolder
-                    outputFolderForSingleInput = path.join(outputFolder, f"input{str(input_counter)}")
+                    mountFolder = outputFolder
+                    outputFolderForSingleInput = path.join(outputFolder, f"{k}_input{str(input_counter)}")
                     temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
                     yamlString = yaml.dump(stac_catalog_yaml)
                     temp.write(yamlString)
@@ -70,19 +71,28 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                                              outputFolder=outputFolderForSingleInput, state=state)
                     temp.close()
 
-                    if k not in inputs:
-                        inputs[k] = []
-                    inputs[k].append({"class": type, "path": outputFolderForSingleInput})
+                    if isarray:
+                        if k not in inputs:
+                            inputs[k] = []
+                        inputs[k].append({"class": type, "path": outputFolderForSingleInput})
+                    else:
+                        inputs[k] = {"class": type, "path": outputFolderForSingleInput}
                     input_counter += 1
 
-
         else:
-            inputs[k] = {}
             for input in job_input_json["inputs"]:
                 if input['id'] == k:
-                    inputs[k] = input['value']
+                    type = v["type"]
 
+                    if "[]" in type:
+                        if k not in inputs.keys():
+                            inputs[k] = []
+                        inputs[k].append(input['value'])
+                    else:
+                        inputs[k] = {}
+                        inputs[k] = input['value']
 
+    print("Input json to pass to the cwl runner: ")
     pprint(inputs)
     return inputs
 
@@ -137,7 +147,6 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
         yaml_modified = yaml_modified.replace("t2workflow123", f"{workflow_name}")
         yaml_modified = yaml_modified.replace("calrissian-output.json", f"{workflow_id}-output.json")
         yaml_modified = yaml_modified.replace("stac-output.out", f"{workflow_name}-stac-output.out")
-
 
         body = yaml.safe_load(yaml_modified)
         pprint(body)
