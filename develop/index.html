@@ -152,13 +152,20 @@
 <li><a href="#interfaces">5. External Interfaces</a>
 <ul class="sectlevel2">
 <li><a href="#_description">5.1. Description</a></li>
-<li><a href="#_web_processing_services">5.2. Web Processing Services</a></li>
-<li><a href="#_wps_1_0_0_2_0_0">5.3. WPS 1.0.0 &amp; 2.0.0</a>
+<li><a href="#_web_processing_services">5.2. Web Processing Services</a>
 <ul class="sectlevel3">
+<li><a href="#_wps_1_0_0_2_0_0">5.2.1. WPS 1.0.0 &amp; 2.0.0</a></li>
 <li><a href="#_ogc_web_service_common_port">OGC Web Service Common port</a></li>
+<li><a href="#_ogc_api_processes">5.2.2. OGC API Processes</a></li>
 </ul>
 </li>
-<li><a href="#_ogc_api_processes">5.4. OGC API Processes</a></li>
+<li><a href="#_application_package">5.3. Application Package</a>
+<ul class="sectlevel3">
+<li><a href="#_application_item">5.3.1. Application Item</a></li>
+<li><a href="#_application_workflow">5.3.2. Application Workflow</a></li>
+<li><a href="#_application_image">5.3.3. Application Image</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#traceabilityMatrix">6. Use Case Traceability</a></li>
@@ -1215,7 +1222,7 @@ Additionally, when instructing the processing cluster to execute the various ste
 <p>Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.</p>
 </div>
 <div class="paragraph">
-<p>ADES supports it by executing the <a href="#Application Workflow">[Application Workflow]</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> provided by the user when the <a href="#Application Package">[Application Package]</a> was &lt;&lt;<a href="#_deploy_processing_service">deployed</a>.</p>
+<p>ADES supports it by executing the <a href="#_application_workflow">Application Workflow</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> provided by the user when the <a href="#_application_package">Application Package</a> was &lt;&lt;<a href="#_deploy_processing_service">deployed</a>.</p>
 </div>
 </div>
 <div class="sect4">
@@ -1369,7 +1376,7 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 <p>The OGC Web Services Context Document (OWS Context) was created to allow a set of configured information resources (service set) to be passed between applications primarily as a collection of services.</p>
 </div>
 <div class="paragraph">
-<p>In the ADES, an OWS Context is used as the catalogue entry for referencing the <a href="#Application Package">[Application Package]</a></p>
+<p>In the ADES, an OWS Context is used as the catalogue entry for referencing the <a href="#_application_package">Application Package</a></p>
 </div>
 </div>
 <div class="sect4">
@@ -1613,7 +1620,7 @@ When a <a href="#procservice">Processing Service</a> is trigger by the <a href="
 <p>Execute the <a href="#_data_stage_in">Data Stage-In</a></p>
 </li>
 <li>
-<p>Execute the <a href="#Application Workflow">[Application Workflow]</a></p>
+<p>Execute the <a href="#_application_workflow">Application Workflow</a></p>
 </li>
 <li>
 <p>Execute the <a href="#_data_stage_out">Data Stage-Out</a></p>
@@ -1654,10 +1661,10 @@ When a <a href="#procservice">Processing Service</a> is trigger by the <a href="
 <p>Job inputs</p>
 </li>
 <li>
-<p><a href="#Application Workflow">[Application Workflow]</a></p>
+<p><a href="#_application_workflow">Application Workflow</a></p>
 </li>
 <li>
-<p><a href="#Application Image">[Application Image]</a></p>
+<p><a href="#_application_image">Application Image</a></p>
 </li>
 </ul>
 </div>
@@ -1678,20 +1685,20 @@ When a <a href="#procservice">Processing Service</a> is trigger by the <a href="
 <div class="sect3">
 <h4 id="_overview_and_purpose_4">3.4.1. Overview and Purpose</h4>
 <div class="paragraph">
-<p>Processing Services are the representation of the <a href="#Application Package">[Application Package]</a> deployed on the ADES.<br>
-Indeed, when a user <a href="#_deploy_processing_service">deploys</a> a service on the ADES, this latter creates a <strong>Processing Service</strong> from the <a href="#Application Package">[Application Package]</a>.<br>
+<p>Processing Services are the representation of the <a href="#_application_package">Application Package</a> deployed on the ADES.<br>
+Indeed, when a user <a href="#_deploy_processing_service">deploys</a> a service on the ADES, this latter creates a <strong>Processing Service</strong> from the <a href="#_application_package">Application Package</a>.<br>
 Internally, a Processing service represents 3 items</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>the <a href="#Application Workflow">[Application Workflow]</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
+<p>the <a href="#_application_workflow">Application Workflow</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 <li>
-<p>the WPS describeProcess generated from the <a href="#Application Workflow">[Application Workflow]</a> inputs, outputs and from the <a href="#OWS">OWS Context</a> description (title, description)</p>
+<p>the WPS describeProcess generated from the <a href="#_application_workflow">Application Workflow</a> inputs, outputs and from the <a href="#OWS">OWS Context</a> description (title, description)</p>
 </li>
 <li>
-<p>the <a href="#Application Image">[Application Image]</a> in <a href="#Docker">[Docker]</a></p>
+<p>the <a href="#_application_image">Application Image</a> in <a href="#Docker">[Docker]</a></p>
 </li>
 </ul>
 </div>
@@ -1806,8 +1813,8 @@ Internally, a Processing service represents 3 items</p>
 <div class="sect3">
 <h4 id="_overview_and_purpose_5">4.1.1. Overview and Purpose</h4>
 <div class="paragraph">
-<p>This is the main function in charge of building a <a href="#procservice">processing Service</a> from an Application Package.<br>
-Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <a href="#Common Workflow Language (CWL)">CWL Workflow</a>. With all the information in those documents, it builds a process describing</p>
+<p>This is the main function in charge of building a <a href="#procservice">Processing Service</a> from an <a href="#_application_package">Application Package</a>.<br>
+Concretely, this function read an <a href="#_application_item">Application Item</a> as an <a href="#OWS">OWS Context</a> referencing the <a href="#_application_workflow">Application Workflow</a>. With all the information in those documents, it builds a <a href="#procservice">Processing Service</a> describing</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1823,7 +1830,7 @@ Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <
 </ul>
 </div>
 <div class="paragraph">
-<p>Regardless of the deployment mechanism, the <a href="#Common Workflow Language (CWL)">CWL Workflow</a> is used to convey the information that describes the process inputs/outputs into WPS data model.</p>
+<p>Regardless of the deployment mechanism, the <a href="#_application_workflow">Application Workflow</a> is used to convey the information that describes the process inputs/outputs into <a href="#_wps_server">WPS Server</a> data model.</p>
 </div>
 <div class="paragraph">
 <p>The mapping between CWL and WPS follows the work performed in the OGC Testbed 16.</p>
@@ -1847,7 +1854,7 @@ Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#OWS">OWS Context</a> referencing a <a href="#Common Workflow Language (CWL)">CWL Workflow</a></p>
+<p><a href="#_application_item">Application Item</a> as an <a href="#OWS">OWS Context</a> describing the application referencing a <a href="#_application_workflow">Application Workflow</a></p>
 </li>
 </ul>
 </div>
@@ -1857,7 +1864,7 @@ Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#procservice">Service Component</a></p>
+<p><a href="#procservice">Processing Service</a></p>
 </li>
 </ul>
 </div>
@@ -2102,7 +2109,6 @@ Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="title">Work In Progress</div>
 <div class="paragraph">
 <p>This section focuses on the available functionality published over interfaces.</p>
 </div>
@@ -2183,9 +2189,8 @@ The 2 next sections describes</p>
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_wps_1_0_0_2_0_0">5.3. WPS 1.0.0 &amp; 2.0.0</h3>
+<div class="sect3">
+<h4 id="_wps_1_0_0_2_0_0">5.2.1. WPS 1.0.0 &amp; 2.0.0</h4>
 <div class="paragraph">
 <p>The <a href="https://www.ogc.org/standards/wps">OpenGIS® Web Processing Service (WPS)</a> Interface Standard provides rules for standardizing how inputs and outputs (requests and responses) for geospatial processing services, such as polygon overlay. The standard also defines how a client can request the execution of a process, and how the output from the process is handled. It defines an interface that facilitates the publishing of geospatial processes and clients’ discovery of and binding to those processes. The data required by the WPS can be delivered across a network or they can be available at the server.</p>
 </div>
@@ -2223,6 +2228,7 @@ The 2 next sections describes</p>
 </tr>
 </tbody>
 </table>
+</div>
 <div class="sect3">
 <h4 id="_ogc_web_service_common_port">OGC Web Service Common port</h4>
 <div class="paragraph">
@@ -2254,9 +2260,8 @@ The 2 next sections describes</p>
 </ul>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_ogc_api_processes">5.4. OGC API Processes</h3>
+<div class="sect3">
+<h4 id="_ogc_api_processes">5.2.2. OGC API Processes</h4>
 <div class="paragraph">
 <p>The OGC API - Processes enables the execution of computing processes and the retrieval of metadata describing their purpose and functionality. Typically, these processes combine raster, vector, and/or coverage data with well-defined algorithms to produce new raster, vector, and/or coverage information.</p>
 </div>
@@ -2361,7 +2366,22 @@ The 2 next sections describes</p>
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_application_package">5.3. Application Package</h3>
+<div class="sect3">
+<h4 id="_application_item">5.3.1. Application Item</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_application_workflow">5.3.2. Application Workflow</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_application_image">5.3.3. Application Image</h4>
 <div style="page-break-after: always;"></div>
+</div>
 </div>
 </div>
 </div>
@@ -2406,7 +2426,7 @@ The 2 next sections describes</p>
 <div id="footer">
 <div id="footer-text">
 Version 2<br>
-Last updated 2020-10-07 13:59:17 UTC
+Last updated 2020-10-07 14:38:31 UTC
 </div>
 </div>
 <link rel="stylesheet" href="stylesheets/coderay-asciidoctor.css">
