@@ -24,7 +24,7 @@ The ADES Core Framework is the main software container for all the components co
 
 === Software Reuse and Dependencies
 
-All software and their dependecies are described in the next sections
+All software and their dependencies are described in the next sections
 
 === Interfaces
 
@@ -82,8 +82,14 @@ Not Applicable.
 == Workflow Executor
 === Overview and Purpose
 
-The workflow executor is the component in charge of the scheduling ang tbe the management of the processing jobs.
-When a processing service is trigger by the <<WPS Server>> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly:
+The workflow executor is the component in charge of the scheduling ang the execution of the processing jobs.
+When a <<Processing Service>> is trigger by the <<WPS Server>> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly
+
+.ADES Workflow Executor Activity Diagram
+[plantuml, wf-exe-diagram-component, png] 
+....
+include::../include/wf-exe-diagram-component.wsd[]
+....
 
 * Prepare the workflow Execution
 ** On the **Processing Cluster**
@@ -98,17 +104,13 @@ When a processing service is trigger by the <<WPS Server>> via a job submission,
 * Execute the <<Data Stage-Out>>
 * Dispose the workflow execution cleaning the storage (e.g. delete the volume)
 
-.ADES Workflow Executor Component Diagram
-[plantuml, wf-exe-diagram-component, png] 
-....
-include::../include/wf-exe-diagram-component.wsd[]
-....
+
 
 === Software Reuse and Dependencies
 
 The following open-source software is reused:
 
-* <<CWL>>
+* FastAPI https://fastapi.tiangolo.com/
 * Calrissian https://github.com/Duke-GCB/calrissian
 * <<Data Stage-In>>
 * <<Data Stage-Out>>
@@ -116,12 +118,12 @@ The following open-source software is reused:
 === Data
 
 * Job inputs
-* CWL
+* <<Application Workflow>>
+* <<Application Image>>
 
 === Applicable Resources
 
 * <<CWL>>
-* <<ZOO>>
 
 [#procservice]
 == Processing Service
@@ -163,58 +165,3 @@ The following open-source software is reused:
 
 * <<CWL>>
 * <<ZOO>>
-
-
-
-== OWS Context Parser
-=== Overview and Purpose
-
-The aim of the software component is to provide a library for parsing an OWS document.
-
-=== Software Reuse and Dependencies
-
-Software developed in C++ language with no particular dependencies
-
-=== Interfaces
-
-Not Applicable
-
-=== Data
-
-The https://github.com/EOEPCA/proc-comm-lib-ows/blob/develop/tests/application/assetes/ows1.xml[OWS Context file] describes the elements necessary for the publication of an EOEPCA/ADES service.
-
-=== Applicable Resources
-
-* <<OGC-OWC>>
-* <<OGC-OWC-ATOM>>
-
-== CWL Parser
-=== Overview and Purpose
-
-The software component is a shared library to provides the means to parse a Common Workflow Language Specification document.
-
-The Common Workflow Language (CWL) targets data-intensive processing scenarios and to make these portable and scalable across platforms capable of interpreting and execute the processes by describing:
-* A runtime environment
-* A Workflow (DAG)
-* Command line tool(s)
-* Parameter of the process
-* Inputs/outputs
-
-=== Software Reuse and Dependencies
-
-Software developed in C++ language with no particular dependencies
-
-=== Interfaces
-
-Not applicable
-
-=== Data
-
-https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps
-
-=== Applicable Resources
-
-* <<CWL>>
-
-
-

@@ -32,47 +32,36 @@ In order to accomplish the execution and monitor steps above, it also need to be
 * Data Stage-In for the process inputs
 * Data Stage-Out for the process outputs
 
-Those operations are internal sub-steps of the execution step.
+Those operations are internal sub-steps of the <<Processing Service>> execution operation.
 
 === Execution
 
-The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.
+The ADES invokes a <<Processing Service>> when a processing job is submitted to the <<WPS Server>>.
 
-When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific tool interpreting CWL workflows https://github.com/Duke-GCB/calrissian[Calrissian], to run the following steps:
+A processing job execution can be summarized by the execution of the following major steps on the Processing CLuster:
 
 * Data Stage-In
 * Processing
 * Data Stage-Out
 
-Calrissian is responsible for the internal orchestration of the three steps above.
-Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present. 
+The <<Workflow Executor>> is responsible for the internal orchestration of the three steps above.
+Additionally, when instructing the processing cluster to execute the various steps (stage-in/out or processing), the ADES provides also the reference of the Docker image to use.
 
-==== Data Stage-In
+==== Data Stage-In phase
 
 Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.
 
-ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (https://curl.haxx.se/libcurl/[libcurl], https://github.com/s3tools/s3cmd[s3cmd]) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.
-
-==== Processing
+==== Application Processing phase
 
 Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.
 
-ADES supports it by instructing the Kubernetes software, via Calrissian, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).
+ADES supports it by executing the <<Application Workflow>> in <<CWL>> provided by the user when the <<Application Package>> was <<<<Deploy Processing Service,deployed>>.
 
-==== Data Stage-Out
+==== Data Stage-Out phase
 
-Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.
+Data Stage-Out is the process to store persistently the outputs of the processing and publish their results catalogs to the resource managers.
 
 ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output. 
-Monitor
-
-=== Monitor
-
-ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.
-
-=== Dismiss
-
-ADES can remove from the execution environment an alredy started processing job.
 
 == Static Architecture
 
@@ -168,44 +157,20 @@ This section contains:
 
 === Data
 
+[#OWS]
 ==== OWS Context
 
-==== Common Workflow Language (CWL)
+The OGC Web Services Context Document (OWS Context) was created to allow a set of configured information resources (service set) to be passed between applications primarily as a collection of services.
 
-Common Workflow Language (CWL) is used as the application package descriptor. It covers the following elements necessary to describe the application:
+In the ADES, an OWS Context is used as the catalogue entry for referencing the <<Application Package>>
+
+[#CWL]
+==== Common Workflow Language (<<CWL-spec>>)
+
+Common Workflow Language (<<CWL>>) is used as the application package descriptor. It covers the following elements necessary to describe the application:
 * cyclic graph orchestrating the steps in order mapping workflow input/output with steps input/output
 * Steps describing a command line with their input/output
 * CWL specification extensions that may be used to provide the additional information elements 
 
 The application package is thus composed of a CWL file with the role of the application descriptor.
 The container reference is included in the CWL as a requirement.
-
-
-=== Software 
-
-The following open-source software are required to support the implementation of the ADES:
-
-* HTTP(S), FTP(S), FILE, OPeNDAP Client
-** libcurl https://curl.haxx.se/libcurl/ 
-* OpenSearch Client
-** DotNetOpenSearchClient https://github.com/Terradue/DotNetOpenSearchClient 
-* Kubernetes Client
-** libcurl https://curl.haxx.se/libcurl/ 
-* S3 Client
-** s3cmd https://github.com/s3tools/s3cmd
-* WPS Server
-** ZOO-Kernel http://zoo-project.org/docs/kernel/
-
-== Design Standards, Conventions and Procedures
-
-[NOTE]
-.Content Description
-================================
-This section contains:
-
-* Explanations on the UML Design notation and necessary naming conventions used throughout the document
-
-================================
-
-=== UML Design
-=== Naming Conventions
