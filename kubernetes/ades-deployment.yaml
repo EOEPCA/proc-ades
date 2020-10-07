@@ -22,7 +22,6 @@ spec:
             - configMapRef:
                 name: ades-config
           image: eoepca/proc-ades:latest
-          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "2Gi"

@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: proc-ades:build
+    image: eoepca/proc-ades:build
     container_name: ades
     networks:
       - eoepca_network
