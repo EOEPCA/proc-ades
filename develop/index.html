@@ -40,13 +40,11 @@
 <ul class="sectlevel3">
 <li><a href="#_execution">2.1.1. Execution</a>
 <ul class="sectlevel4">
-<li><a href="#_data_stage_in">2.1.1.1. Data Stage-In</a></li>
-<li><a href="#_processing">2.1.1.2. Processing</a></li>
-<li><a href="#_data_stage_out">2.1.1.3. Data Stage-Out</a></li>
+<li><a href="#_data_stage_in_phase">2.1.1.1. Data Stage-In phase</a></li>
+<li><a href="#_application_processing_phase">2.1.1.2. Application Processing phase</a></li>
+<li><a href="#_data_stage_out_phase">2.1.1.3. Data Stage-Out phase</a></li>
 </ul>
 </li>
-<li><a href="#_monitor">2.1.2. Monitor</a></li>
-<li><a href="#_dismiss">2.1.3. Dismiss</a></li>
 </ul>
 </li>
 <li><a href="#_static_architecture">2.2. Static Architecture</a></li>
@@ -62,17 +60,10 @@
 <ul class="sectlevel3">
 <li><a href="#_data">2.4.1. Data</a>
 <ul class="sectlevel4">
-<li><a href="#_ows_context">2.4.1.1. OWS Context</a></li>
-<li><a href="#_common_workflow_language_cwl">2.4.1.2. Common Workflow Language (CWL)</a></li>
+<li><a href="#OWS">2.4.1.1. OWS Context</a></li>
+<li><a href="#CWL">2.4.1.2. Common Workflow Language ([CWL-spec])</a></li>
 </ul>
 </li>
-<li><a href="#_software">2.4.2. Software</a></li>
-</ul>
-</li>
-<li><a href="#_design_standards_conventions_and_procedures">2.5. Design Standards, Conventions and Procedures</a>
-<ul class="sectlevel3">
-<li><a href="#_uml_design">2.5.1. UML Design</a></li>
-<li><a href="#_naming_conventions">2.5.2. Naming Conventions</a></li>
 </ul>
 </li>
 </ul>
@@ -118,60 +109,42 @@
 <li><a href="#_applicable_resources_4">3.4.4. Applicable Resources</a></li>
 </ul>
 </li>
-<li><a href="#_ows_context_parser">3.5. OWS Context Parser</a>
-<ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_5">3.5.1. Overview and Purpose</a></li>
-<li><a href="#_software_reuse_and_dependencies_5">3.5.2. Software Reuse and Dependencies</a></li>
-<li><a href="#_interfaces_3">3.5.3. Interfaces</a></li>
-<li><a href="#_data_6">3.5.4. Data</a></li>
-<li><a href="#_applicable_resources_5">3.5.5. Applicable Resources</a></li>
-</ul>
-</li>
-<li><a href="#_cwl_parser">3.6. CWL Parser</a>
-<ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_6">3.6.1. Overview and Purpose</a></li>
-<li><a href="#_software_reuse_and_dependencies_6">3.6.2. Software Reuse and Dependencies</a></li>
-<li><a href="#_interfaces_4">3.6.3. Interfaces</a></li>
-<li><a href="#_data_7">3.6.4. Data</a></li>
-<li><a href="#_applicable_resources_6">3.6.5. Applicable Resources</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a href="#capabilities">4. Functional Design</a>
 <ul class="sectlevel2">
 <li><a href="#_application_deployment_to_web_processing_service">4.1. Application Deployment to Web Processing Service</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_7">4.1.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose_5">4.1.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput">4.1.2. Data Input/Output</a></li>
-<li><a href="#_applicable_resources_7">4.1.3. Applicable Resources</a></li>
+<li><a href="#_applicable_resources_5">4.1.3. Applicable Resources</a></li>
 </ul>
 </li>
 <li><a href="#_job_submision">4.2. Job Submision</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_8">4.2.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose_6">4.2.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput_2">4.2.2. Data Input/Output</a></li>
 </ul>
 </li>
-<li><a href="#_data_stage_in_2">4.3. Data Stage-In</a>
+<li><a href="#_data_stage_in">4.3. Data Stage-In</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_9">4.3.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose_7">4.3.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput_3">4.3.2. Data Input/Output</a></li>
-<li><a href="#_applicable_resources_8">4.3.3. Applicable Resources</a></li>
+<li><a href="#_applicable_resources_6">4.3.3. Applicable Resources</a></li>
 </ul>
 </li>
 <li><a href="#_workflow_execution">4.4. Workflow Execution</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_10">4.4.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose_8">4.4.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput_4">4.4.2. Data Input/Output</a></li>
-<li><a href="#_applicable_resources_9">4.4.3. Applicable Resources</a></li>
+<li><a href="#_applicable_resources_7">4.4.3. Applicable Resources</a></li>
 </ul>
 </li>
-<li><a href="#_data_stage_out_2">4.5. Data Stage-Out</a>
+<li><a href="#_data_stage_out">4.5. Data Stage-Out</a>
 <ul class="sectlevel3">
-<li><a href="#_overview_and_purpose_11">4.5.1. Overview and Purpose</a></li>
+<li><a href="#_overview_and_purpose_9">4.5.1. Overview and Purpose</a></li>
 <li><a href="#_data_inputoutput_5">4.5.2. Data Input/Output</a></li>
-<li><a href="#_applicable_resources_10">4.5.3. Applicable Resources</a></li>
+<li><a href="#_applicable_resources_8">4.5.3. Applicable Resources</a></li>
 </ul>
 </li>
 </ul>
@@ -263,6 +236,11 @@ The Amendment Record Sheet below records the history and issue status of this do
 <th class="tableblock halign-center valign-top"><p class="tableblock">0.2.0</p></th>
 <td class="tableblock halign-center valign-top"><p class="tableblock">14/09/2020</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Updated Design for ADES release 0.2  Updated <a href="#capabilities">Functional Design</a> section</p></td>
+</tr>
+<tr>
+<th class="tableblock halign-center valign-top"><p class="tableblock">0.2.1</p></th>
+<td class="tableblock halign-center valign-top"><p class="tableblock">07/10/2020</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Updated Design for ADES release 0.2  Updated <a href="#capabilities">Functional Design</a> and <a href="#components">Components Design</a> section</p></td>
 </tr>
 </tbody>
 </table>
@@ -437,7 +415,7 @@ OGC 12-084,<br>
 </div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="CWL"></a>[CWL]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="CWL-spec"></a>[CWL]</p></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>Common Workflow Language Specifications,<br>
 <a href="https://www.commonwl.org/v1.0/" class="bare">https://www.commonwl.org/v1.0/</a></p>
@@ -1198,15 +1176,15 @@ OGC 08-068r2,<br>
 </ul>
 </div>
 <div class="paragraph">
-<p>Those operations are internal sub-steps of the execution step.</p>
+<p>Those operations are internal sub-steps of the <a href="#procservice">Processing Service</a> execution operation.</p>
 </div>
 <div class="sect3">
 <h4 id="_execution">2.1.1. Execution</h4>
 <div class="paragraph">
-<p>The ADES performs an Execute operation upon a WPS ExecuteRequest, when instantiated by the EMS.</p>
+<p>The ADES invokes a <a href="#procservice">Processing Service</a> when a processing job is submitted to the <a href="#_wps_server">WPS Server</a>.</p>
 </div>
 <div class="paragraph">
-<p>When performing the Execute operation, the ADES inspects the ExecuteRequest document, and instructs the underlying Kubernetes software, via a specific tool interpreting CWL workflows <a href="https://github.com/Duke-GCB/calrissian">Calrissian</a>, to run the following steps:</p>
+<p>A processing job execution can be summarized by the execution of the following major steps on the Processing CLuster:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1222,48 +1200,32 @@ OGC 08-068r2,<br>
 </ul>
 </div>
 <div class="paragraph">
-<p>Calrissian is responsible for the internal orchestration of the three steps above.<br>
-Additionally, when instructing Kubernetes to launch the jobs (stage-in/out or processing), the ADES provides also the reference of the Docker image to use, which is automatically retrieved from the processing nodes if not already present.</p>
+<p>The <a href="#_workflow_executor">Workflow Executor</a> is responsible for the internal orchestration of the three steps above.<br>
+Additionally, when instructing the processing cluster to execute the various steps (stage-in/out or processing), the ADES provides also the reference of the Docker image to use.</p>
 </div>
 <div class="sect4">
-<h5 id="_data_stage_in">2.1.1.1. Data Stage-In</h5>
+<h5 id="_data_stage_in_phase">2.1.1.1. Data Stage-In phase</h5>
 <div class="paragraph">
 <p>Data Stage-In is the process to locally retrieve the inputs for the processing. Processing inputs are provided as EO Catalogue references and the ADES is responsible to translate those references into inputs available for the local processing.</p>
 </div>
-<div class="paragraph">
-<p>ADES leverages an OpenSearch client when interacting with the EO Catalogue and standard libraries and tools for the local product retrieval (<a href="https://curl.haxx.se/libcurl/">libcurl</a>, <a href="https://github.com/s3tools/s3cmd">s3cmd</a>) to support the HTTP(S), FTP(S), FILE, OPeNDAP, and S3 protocols.</p>
-</div>
 </div>
 <div class="sect4">
-<h5 id="_processing">2.1.1.2. Processing</h5>
+<h5 id="_application_processing_phase">2.1.1.2. Application Processing phase</h5>
 <div class="paragraph">
 <p>Processing is the core step of the Execute operation. During this step input data is transformed into outputs data.</p>
 </div>
 <div class="paragraph">
-<p>ADES supports it by instructing the Kubernetes software, via Calrissian, to download and use the configured Docker image, to provide the processing parameters and inputs, to execute the configured processing command(s).</p>
+<p>ADES supports it by executing the <a href="#Application Workflow">[Application Workflow]</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> provided by the user when the <a href="#Application Package">[Application Package]</a> was &lt;&lt;<a href="#_deploy_processing_service">deployed</a>.</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_data_stage_out">2.1.1.3. Data Stage-Out</h5>
+<h5 id="_data_stage_out_phase">2.1.1.3. Data Stage-Out phase</h5>
 <div class="paragraph">
-<p>Data Stage-Out is the process to upload remotely the outputs of the processing onto external system(s), and make them available for later usage.</p>
+<p>Data Stage-Out is the process to store persistently the outputs of the processing and publish their results catalogs to the resource managers.</p>
 </div>
 <div class="paragraph">
-<p>ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output.<br>
-Monitor</p>
+<p>ADES retrieves the processing outputs and automatically stores them onto an external persistent storage. Additionally, ADES publishes the metadata of the outputs onto a Catalogue, exposing the OpenSearch interface, and provides their references as an output.</p>
 </div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_monitor">2.1.2. Monitor</h4>
-<div class="paragraph">
-<p>ADES monitors a submitted execution at regular intervals and reports back the progress status via a GetStatus operation.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_dismiss">2.1.3. Dismiss</h4>
-<div class="paragraph">
-<p>ADES can remove from the execution environment an alredy started processing job.</p>
 </div>
 </div>
 </div>
@@ -1347,7 +1309,7 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 <div class="sect3">
 <h4 id="_deploy_processing_service">2.3.1. Deploy Processing Service</h4>
 <div class="paragraph">
-<p><em>As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <a href="#_ows_context">OWS Context</a> from a Resource Catalog referencing a <a href="#_common_workflow_language_cwl">Common Workflow Language (CWL)</a> so that I can make it available (or remove) for the Execution, on behalf of my User.</em></p>
+<p><em>As an EMS service, I want to deploy (and un-deploy) a processing service, using a reference posting a <a href="#OWS">OWS Context</a> from a Resource Catalog referencing a <a href="#Common Workflow Language (CWL)">[Common Workflow Language (CWL)]</a> so that I can make it available (or remove) for the Execution, on behalf of my User.</em></p>
 </div>
 </div>
 <div class="sect3">
@@ -1402,13 +1364,18 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 <div class="sect3">
 <h4 id="_data">2.4.1. Data</h4>
 <div class="sect4">
-<h5 id="_ows_context">2.4.1.1. OWS Context</h5>
-
+<h5 id="OWS">2.4.1.1. OWS Context</h5>
+<div class="paragraph">
+<p>The OGC Web Services Context Document (OWS Context) was created to allow a set of configured information resources (service set) to be passed between applications primarily as a collection of services.</p>
+</div>
+<div class="paragraph">
+<p>In the ADES, an OWS Context is used as the catalogue entry for referencing the <a href="#Application Package">[Application Package]</a></p>
+</div>
 </div>
 <div class="sect4">
-<h5 id="_common_workflow_language_cwl">2.4.1.2. Common Workflow Language (CWL)</h5>
+<h5 id="CWL">2.4.1.2. Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</h5>
 <div class="paragraph">
-<p>Common Workflow Language (CWL) is used as the application package descriptor. It covers the following elements necessary to describe the application:<br>
+<p>Common Workflow Language (<a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a>) is used as the application package descriptor. It covers the following elements necessary to describe the application:<br>
 * cyclic graph orchestrating the steps in order mapping workflow input/output with steps input/output<br>
 * Steps describing a command line with their input/output<br>
 * CWL specification extensions that may be used to provide the additional information elements</p>
@@ -1417,100 +1384,8 @@ Internally, every Processing Service deployed on the ADES, uses the common libra
 <p>The application package is thus composed of a CWL file with the role of the application descriptor.<br>
 The container reference is included in the CWL as a requirement.</p>
 </div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_software">2.4.2. Software</h4>
-<div class="paragraph">
-<p>The following open-source software are required to support the implementation of the ADES:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>HTTP(S), FTP(S), FILE, OPeNDAP Client</p>
-<div class="ulist">
-<ul>
-<li>
-<p>libcurl <a href="https://curl.haxx.se/libcurl/" class="bare">https://curl.haxx.se/libcurl/</a></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>OpenSearch Client</p>
-<div class="ulist">
-<ul>
-<li>
-<p>DotNetOpenSearchClient <a href="https://github.com/Terradue/DotNetOpenSearchClient" class="bare">https://github.com/Terradue/DotNetOpenSearchClient</a></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>Kubernetes Client</p>
-<div class="ulist">
-<ul>
-<li>
-<p>libcurl <a href="https://curl.haxx.se/libcurl/" class="bare">https://curl.haxx.se/libcurl/</a></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>S3 Client</p>
-<div class="ulist">
-<ul>
-<li>
-<p>s3cmd <a href="https://github.com/s3tools/s3cmd" class="bare">https://github.com/s3tools/s3cmd</a></p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>WPS Server</p>
-<div class="ulist">
-<ul>
-<li>
-<p>ZOO-Kernel <a href="http://zoo-project.org/docs/kernel/" class="bare">http://zoo-project.org/docs/kernel/</a></p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_design_standards_conventions_and_procedures">2.5. Design Standards, Conventions and Procedures</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="title">Content Description</div>
-<div class="paragraph">
-<p>This section contains:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Explanations on the UML Design notation and necessary naming conventions used throughout the document</p>
-</li>
-</ul>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_uml_design">2.5.1. UML Design</h4>
-
-</div>
-<div class="sect3">
-<h4 id="_naming_conventions">2.5.2. Naming Conventions</h4>
 <div style="page-break-after: always;"></div>
+</div>
 </div>
 </div>
 </div>
@@ -1573,7 +1448,7 @@ The container reference is included in the CWL as a requirement.</p>
 <div class="sect3">
 <h4 id="_software_reuse_and_dependencies">3.1.2. Software Reuse and Dependencies</h4>
 <div class="paragraph">
-<p>All software and their dependecies are described in the next sections</p>
+<p>All software and their dependencies are described in the next sections</p>
 </div>
 </div>
 <div class="sect3">
@@ -1687,8 +1562,14 @@ More details in the <a href="#interfaces">External Interfaces</a> section.</p>
 <div class="sect3">
 <h4 id="_overview_and_purpose_3">3.3.1. Overview and Purpose</h4>
 <div class="paragraph">
-<p>The workflow executor is the component in charge of the scheduling ang tbe the management of the processing jobs.<br>
-When a processing service is trigger by the <a href="#_wps_server">WPS Server</a> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly:</p>
+<p>The workflow executor is the component in charge of the scheduling ang the execution of the processing jobs.<br>
+When a <a href="#procservice">Processing Service</a> is trigger by the <a href="#_wps_server">WPS Server</a> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/wf-exe-diagram-component.png" alt="wf exe diagram component" width="417" height="538">
+</div>
+<div class="title">Figure 3. ADES Workflow Executor Activity Diagram</div>
 </div>
 <div class="ulist">
 <ul>
@@ -1742,12 +1623,6 @@ When a processing service is trigger by the <a href="#_wps_server">WPS Server</a
 </li>
 </ul>
 </div>
-<div class="imageblock">
-<div class="content">
-<img src="./images/wf-exe-diagram-component.png" alt="wf exe diagram component" width="417" height="538">
-</div>
-<div class="title">Figure 3. ADES Workflow Executor Component Diagram</div>
-</div>
 </div>
 <div class="sect3">
 <h4 id="_software_reuse_and_dependencies_3">3.3.2. Software Reuse and Dependencies</h4>
@@ -1757,7 +1632,7 @@ When a processing service is trigger by the <a href="#_wps_server">WPS Server</a
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
+<p>FastAPI <a href="https://fastapi.tiangolo.com/" class="bare">https://fastapi.tiangolo.com/</a></p>
 </li>
 <li>
 <p>Calrissian <a href="https://github.com/Duke-GCB/calrissian" class="bare">https://github.com/Duke-GCB/calrissian</a></p>
@@ -1779,7 +1654,10 @@ When a processing service is trigger by the <a href="#_wps_server">WPS Server</a
 <p>Job inputs</p>
 </li>
 <li>
-<p>CWL</p>
+<p><a href="#Application Workflow">[Application Workflow]</a></p>
+</li>
+<li>
+<p><a href="#Application Image">[Application Image]</a></p>
 </li>
 </ul>
 </div>
@@ -1789,10 +1667,7 @@ When a processing service is trigger by the <a href="#_wps_server">WPS Server</a
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
-</li>
-<li>
-<p><a href="#ZOO">[ZOO]</a></p>
+<p><a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 </ul>
 </div>
@@ -1810,10 +1685,10 @@ Internally, a Processing service represents 3 items</p>
 <div class="ulist">
 <ul>
 <li>
-<p>the <a href="#Application Workflow">[Application Workflow]</a> in <a href="#CWL">[CWL]</a></p>
+<p>the <a href="#Application Workflow">[Application Workflow]</a> in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 <li>
-<p>the WPS describeProcess generated from the <a href="#Application Workflow">[Application Workflow]</a> inputs, outputs and from the <a href="#OWS">[OWS]</a> description (title, description)</p>
+<p>the WPS describeProcess generated from the <a href="#Application Workflow">[Application Workflow]</a> inputs, outputs and from the <a href="#OWS">OWS Context</a> description (title, description)</p>
 </li>
 <li>
 <p>the <a href="#Application Image">[Application Image]</a> in <a href="#Docker">[Docker]</a></p>
@@ -1841,7 +1716,7 @@ Internally, a Processing service represents 3 items</p>
 <div class="ulist">
 <ul>
 <li>
-<p>CWL Tool <a href="#CWL">[CWL]</a></p>
+<p>CWL Tool <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 <li>
 <p>Calrissian <a href="https://github.com/Duke-GCB/calrissian" class="bare">https://github.com/Duke-GCB/calrissian</a></p>
@@ -1870,95 +1745,10 @@ Internally, a Processing service represents 3 items</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
+<p><a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 <li>
 <p><a href="#ZOO">[ZOO]</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_ows_context_parser">3.5. OWS Context Parser</h3>
-<div class="sect3">
-<h4 id="_overview_and_purpose_5">3.5.1. Overview and Purpose</h4>
-<div class="paragraph">
-<p>The aim of the software component is to provide a library for parsing an OWS document.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_software_reuse_and_dependencies_5">3.5.2. Software Reuse and Dependencies</h4>
-<div class="paragraph">
-<p>Software developed in C++ language with no particular dependencies</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_interfaces_3">3.5.3. Interfaces</h4>
-<div class="paragraph">
-<p>Not Applicable</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_data_6">3.5.4. Data</h4>
-<div class="paragraph">
-<p>The <a href="https://github.com/EOEPCA/proc-comm-lib-ows/blob/develop/tests/application/assetes/ows1.xml">OWS Context file</a> describes the elements necessary for the publication of an EOEPCA/ADES service.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_applicable_resources_5">3.5.5. Applicable Resources</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#OGC-OWC">[OGC-OWC]</a></p>
-</li>
-<li>
-<p><a href="#OGC-OWC-ATOM">[OGC-OWC-ATOM]</a></p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_cwl_parser">3.6. CWL Parser</h3>
-<div class="sect3">
-<h4 id="_overview_and_purpose_6">3.6.1. Overview and Purpose</h4>
-<div class="paragraph">
-<p>The software component is a shared library to provides the means to parse a Common Workflow Language Specification document.</p>
-</div>
-<div class="paragraph">
-<p>The Common Workflow Language (CWL) targets data-intensive processing scenarios and to make these portable and scalable across platforms capable of interpreting and execute the processes by describing:<br>
-* A runtime environment<br>
-* A Workflow (DAG)<br>
-* Command line tool(s)<br>
-* Parameter of the process<br>
-* Inputs/outputs</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_software_reuse_and_dependencies_6">3.6.2. Software Reuse and Dependencies</h4>
-<div class="paragraph">
-<p>Software developed in C++ language with no particular dependencies</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_interfaces_4">3.6.3. Interfaces</h4>
-<div class="paragraph">
-<p>Not applicable</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_data_7">3.6.4. Data</h4>
-<div class="paragraph">
-<p><a href="https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps" class="bare">https://github.com/EOEPCA/proc-ades/tree/develop/test/sample_apps</a></p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_applicable_resources_6">3.6.5. Applicable Resources</h4>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="#CWL">[CWL]</a></p>
 </li>
 </ul>
 </div>
@@ -2014,10 +1804,10 @@ Internally, a Processing service represents 3 items</p>
 <div class="sect2">
 <h3 id="_application_deployment_to_web_processing_service">4.1. Application Deployment to Web Processing Service</h3>
 <div class="sect3">
-<h4 id="_overview_and_purpose_7">4.1.1. Overview and Purpose</h4>
+<h4 id="_overview_and_purpose_5">4.1.1. Overview and Purpose</h4>
 <div class="paragraph">
 <p>This is the main function in charge of building a <a href="#procservice">processing Service</a> from an Application Package.<br>
-Concretely, this function read an <a href="#_ows_context">OWS Context</a> referencing a <a href="#_common_workflow_language_cwl">CWL Workflow</a>. With all the information in those documents, it builds a process describing</p>
+Concretely, this function read an <a href="#OWS">OWS Context</a> referencing a <a href="#Common Workflow Language (CWL)">CWL Workflow</a>. With all the information in those documents, it builds a process describing</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2033,7 +1823,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </ul>
 </div>
 <div class="paragraph">
-<p>Regardless of the deployment mechanism, the <a href="#_common_workflow_language_cwl">CWL Workflow</a> is used to convey the information that describes the process inputs/outputs into WPS data model.</p>
+<p>Regardless of the deployment mechanism, the <a href="#Common Workflow Language (CWL)">CWL Workflow</a> is used to convey the information that describes the process inputs/outputs into WPS data model.</p>
 </div>
 <div class="paragraph">
 <p>The mapping between CWL and WPS follows the work performed in the OGC Testbed 16.</p>
@@ -2057,7 +1847,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#_ows_context">OWS Context</a> referencing a <a href="#_common_workflow_language_cwl">CWL Workflow</a></p>
+<p><a href="#OWS">OWS Context</a> referencing a <a href="#Common Workflow Language (CWL)">CWL Workflow</a></p>
 </li>
 </ul>
 </div>
@@ -2076,7 +1866,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect3">
-<h4 id="_applicable_resources_7">4.1.3. Applicable Resources</h4>
+<h4 id="_applicable_resources_5">4.1.3. Applicable Resources</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -2092,7 +1882,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <div class="sect2">
 <h3 id="_job_submision">4.2. Job Submision</h3>
 <div class="sect3">
-<h4 id="_overview_and_purpose_8">4.2.1. Overview and Purpose</h4>
+<h4 id="_overview_and_purpose_6">4.2.1. Overview and Purpose</h4>
 <div class="paragraph">
 <p>The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <a href="#procservice">Service Component</a> built during the <a href="#_application_deployment_to_web_processing_service">application deployment</a>.</p>
 </div>
@@ -2142,12 +1932,12 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect2">
-<h3 id="_data_stage_in_2">4.3. Data Stage-In</h3>
+<h3 id="_data_stage_in">4.3. Data Stage-In</h3>
 <div class="paragraph">
 <p>This is a pre-processing step that provision all the data needed for the workflow execution and referenced in the job execute request.</p>
 </div>
 <div class="sect3">
-<h4 id="_overview_and_purpose_9">4.3.1. Overview and Purpose</h4>
+<h4 id="_overview_and_purpose_7">4.3.1. Overview and Purpose</h4>
 <div class="imageblock">
 <div class="content">
 <img src="./images/datastagein.png" alt="datastagein" width="500" height="1019">
@@ -2189,11 +1979,11 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect3">
-<h4 id="_applicable_resources_8">4.3.3. Applicable Resources</h4>
+<h4 id="_applicable_resources_6">4.3.3. Applicable Resources</h4>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
+<p><a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 <li>
 <p><a href="#ZOO">[ZOO]</a></p>
@@ -2211,7 +2001,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 <p>Calrissian is the responsible for orchestrating and executing the CWL defining the application. It directly interacts with Kubernetes for submitting jobs on different pods.</p>
 </div>
 <div class="sect3">
-<h4 id="_overview_and_purpose_10">4.4.1. Overview and Purpose</h4>
+<h4 id="_overview_and_purpose_8">4.4.1. Overview and Purpose</h4>
 
 </div>
 <div class="sect3">
@@ -2231,26 +2021,26 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect3">
-<h4 id="_applicable_resources_9">4.4.3. Applicable Resources</h4>
+<h4 id="_applicable_resources_7">4.4.3. Applicable Resources</h4>
 <div class="ulist">
 <ul>
 <li>
 <p><a href="#STAC">[STAC]</a></p>
 </li>
 <li>
-<p><a href="#CWL">[CWL]</a></p>
+<p><a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_data_stage_out_2">4.5. Data Stage-Out</h3>
+<h3 id="_data_stage_out">4.5. Data Stage-Out</h3>
 <div class="paragraph">
 <p>This is a post-processing step that retrieve all the results produced the workflow execution, copy and publish them in a resource manager.</p>
 </div>
 <div class="sect3">
-<h4 id="_overview_and_purpose_11">4.5.1. Overview and Purpose</h4>
+<h4 id="_overview_and_purpose_9">4.5.1. Overview and Purpose</h4>
 <div class="imageblock">
 <div class="content">
 <img src="./images/datastageout.png" alt="datastageout" width="512" height="598">
@@ -2289,7 +2079,7 @@ Concretely, this function read an <a href="#_ows_context">OWS Context</a> refere
 </div>
 </div>
 <div class="sect3">
-<h4 id="_applicable_resources_10">4.5.3. Applicable Resources</h4>
+<h4 id="_applicable_resources_8">4.5.3. Applicable Resources</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -2616,7 +2406,7 @@ The 2 next sections describes</p>
 <div id="footer">
 <div id="footer-text">
 Version 2<br>
-Last updated 2020-10-07 13:25:18 UTC
+Last updated 2020-10-07 13:59:17 UTC
 </div>
 </div>
 <link rel="stylesheet" href="stylesheets/coderay-asciidoctor.css">
