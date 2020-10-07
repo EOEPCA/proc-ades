@@ -19,14 +19,14 @@ When a breakdown is necessary, a general overview of the function can be given. 
 == Application Deployment to Web Processing Service
 === Overview and Purpose
 
-This is the main function in charge of building a <<procservice,processing Service>> from an Application Package.
-Concretely, this function read an <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>. With all the information in those documents, it builds a process describing 
+This is the main function in charge of building a <<Processing Service>> from an <<Application Package>>.
+Concretely, this function read an <<Application Item>> as an <<OWS Context>> referencing the <<Application Workflow>>. With all the information in those documents, it builds a <<Processing Service>> describing 
 
 * General information about the service: identifier, title, abstract
 * Input parameters definition: identifiers, types, options, default values,...
 * Ouput results options: identifiers, types, format
 
-Regardless of the deployment mechanism, the <<Common Workflow Language (CWL),CWL Workflow>> is used to convey the information that describes the process inputs/outputs into WPS data model.
+Regardless of the deployment mechanism, the <<Application Workflow>> is used to convey the information that describes the process inputs/outputs into <<WPS Server>> data model.
 
 The mapping between CWL and WPS follows the work performed in the OGC Testbed 16.
 
@@ -41,10 +41,10 @@ All software and their dependecies are described in the nextr sections
 === Data Input/Output
 
 * Input
-** <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>
+** <<Application Item>> as an <<OWS Context>> describing the application referencing a <<Application Workflow>>
 
 * Output
-** <<procservice,Service Component>>
+** <<Processing Service>>
 
 === Applicable Resources
 
