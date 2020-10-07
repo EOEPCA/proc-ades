@@ -19,7 +19,7 @@ When a breakdown is necessary, a general overview of the function can be given. 
 == Application Deployment to Web Processing Service
 === Overview and Purpose
 
-This is the main function in charge of building a <<appservice,Service>> component from an Application Package.
+This is the main function in charge of building a <<procservice,processing Service>> from an Application Package.
 Concretely, this function read an <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>. With all the information in those documents, it builds a process describing 
 
 * General information about the service: identifier, title, abstract
@@ -44,7 +44,7 @@ All software and their dependecies are described in the nextr sections
 ** <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>
 
 * Output
-** <<appservice,Service Component>>
+** <<procservice,Service Component>>
 
 === Applicable Resources
 
@@ -55,7 +55,7 @@ All software and their dependecies are described in the nextr sections
 
 === Overview and Purpose
 
-The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<appservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
+The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<procservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
 
 This function triggers 3 main operations sequantially
 

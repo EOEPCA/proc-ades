@@ -83,7 +83,20 @@ Not Applicable.
 === Overview and Purpose
 
 The workflow executor is the component in charge of the scheduling ang tbe the management of the processing jobs.
-When a processing service is trigger by the <<WPS Server>> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly
+When a processing service is trigger by the <<WPS Server>> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly:
+
+* Prepare the workflow Execution
+** On the **Processing Cluster**
+*** Create the application namespace is not present
+*** Provision Storage for the job
+** Create the main **CWL** by integrating
+*** job inputs
+*** stage-in/out
+*** application workflow
+* Execute the <<Data Stage-In>>
+* Execute the <<Application Workflow>>
+* Execute the <<Data Stage-Out>>
+* Dispose the workflow execution cleaning the storage (e.g. delete the volume)
 
 .ADES Workflow Executor Component Diagram
 [plantuml, wf-exe-diagram-component, png] 
@@ -91,19 +104,18 @@ When a processing service is trigger by the <<WPS Server>> via a job submission,
 include::../include/wf-exe-diagram-component.wsd[]
 ....
 
-The Service component is in charge of orchestrating the application execution when the service in invoked by a <<Job Submision,job submission>> from the Web Processing Service layer.
-
 === Software Reuse and Dependencies
 
 The following open-source software is reused:
 
-* CWL Tool <<CWL>>
+* <<CWL>>
 * Calrissian https://github.com/Duke-GCB/calrissian
-* ZOO-Services http://zoo-project.org/docs/services/index.html
+* <<Data Stage-In>>
+* <<Data Stage-Out>>
 
 === Data
 
-* OWS Context
+* Job inputs
 * CWL
 
 === Applicable Resources
@@ -111,16 +123,20 @@ The following open-source software is reused:
 * <<CWL>>
 * <<ZOO>>
 
-[#appservice]
-== Services
-
-Services are the core elements performing the jobs submission by the users
-Indeed, when a user <<Deploy Processing Service,deploys>> a service on the ADES, this latter prepares a service from the Application Package.
-This Service shall be composed of the <<CWL Parser,workflow>> of the pplication of the user and enhanced with <<Data Staging>> as pre and post processing steps of the workflow.
+[#procservice]
+== Processing Service
 
 === Overview and Purpose
 
-The following diagram shows the component used by the Service component to enable the deployed application. 
+Processing Services are the representation of the <<Application Package>> deployed on the ADES.
+Indeed, when a user <<Deploy Processing Service,deploys>> a service on the ADES, this latter creates a **Processing Service** from the <<Application Package>>.
+Internally, a Processing service represents 3 items
+
+    * the <<Application Workflow>> in <<CWL>>
+    * the WPS describeProcess generated from the <<Application Workflow>> inputs, outputs and from the <<OWS>> description (title, description)
+    * the <<Application Image>> in <<Docker>>
+
+The following diagram shows the Processing Service's items as components in the ADES once <<Deploy Processing Service,deployed>> and the relationships with the other components
 
 .ADES Service Components Diagram
 [plantuml, diagram-component, png] 
@@ -128,7 +144,7 @@ The following diagram shows the component used by the Service component to enabl
 include::../include/servicesoverview.wsd[]
 ....
 
-The Service component is in charge of orchestrating the application execution when the service in invoked by a <<Job Submision,job submission>> from the Web Processing Service layer.
+The Processing Service component will be invoked by the <<Workflow Executor>> when a processing job is submitted to the <<WPS Server>>.
 
 === Software Reuse and Dependencies
 

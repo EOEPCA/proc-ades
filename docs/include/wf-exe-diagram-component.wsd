@@ -5,10 +5,17 @@ start
 :Prepare the\nWorkflow Execution;
 note right
     **Processing Cluster**
-    ====
+    ----
     - Create the application\n
       namespace is not present
     - Provision Storage for the job
+    ====
+    **CWL**
+    ----
+    - Integrate global CWL
+        - job inputs
+        - stage-in/out
+        - application workflow
 end note
 
 partition "CWL execution by Calrissian" {
@@ -18,13 +25,7 @@ partition "CWL execution by Calrissian" {
         See specific component
     end note
 
-    :Application Execution;
-    note right
-        **Processing Cluster**
-        ====
-        - Create the namespace
-        - Provision Storage
-    end note
+    :**Application Execution**;
 
     :Data Stage-Out;
     note right
@@ -32,7 +33,7 @@ partition "CWL execution by Calrissian" {
     end note
 }
 
-:Prepare the\nWorkflow Execution;
+:Dispose the\nWorkflow Execution;
 note right
     **Processing Cluster**
     ====
