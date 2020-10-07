@@ -55,3 +55,4 @@ notes
 *.idea/
 config/ades-config.env.sample
 config/kubeconfig
+config/ades-config.env

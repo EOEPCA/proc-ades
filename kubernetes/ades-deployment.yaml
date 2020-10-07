@@ -34,4 +34,12 @@ spec:
               ephemeral-storage: "5Gi"
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: ades-config
+              mountPath: /var/etc/ades
+      volumes:
+        - name: ades-config
+          persistentVolumeClaim:
+            claimName: ades-config-pv-claim
       restartPolicy: Always
+
