@@ -14,8 +14,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
 
-    if state:
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl = False
     client.Configuration.set_default(configuration)
@@ -227,8 +225,6 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
 
 
 def get(namespace, state=None):
-    if state:
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl = False
     client.Configuration.set_default(configuration)

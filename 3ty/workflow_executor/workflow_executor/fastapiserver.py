@@ -19,6 +19,7 @@ app = FastAPI(
 )
 
 
+
 class Error:
 
     def __init__(self):
@@ -48,7 +49,8 @@ class ExecuteContent(PrepareContent):
     inputs: str
 
 
-kubeconfig = "/opt/t2config/kubeconfig"
+
+
 
 
 def sanitize_k8_parameters(value: str):
@@ -65,8 +67,6 @@ def read_root():
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent, response: Response):
     state = client.State()
-    state.kubeconfig = kubeconfig
-    print('Kube config: %s' % kubeconfig)
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
@@ -106,8 +106,6 @@ def read_prepare(prepare_id: str, response: Response):
     namespace = sanitize_k8_parameters(prepare_id)
 
     state = client.State()
-    state.kubeconfig = kubeconfig
-    print('Kube config: %s' % kubeconfig)
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
@@ -130,9 +128,6 @@ def read_execute(content: ExecuteContent, response: Response):
     # {"runID": "runID-123","serviceID": "service-id-123", "prepareID":"uuid" ,"cwl":".......","inputs":".........."}
 
     state = client.State()
-    state.kubeconfig = kubeconfig
-    state.kubeconfig = kubeconfig
-    print('Kube config: %s' % kubeconfig)
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
@@ -178,9 +173,6 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     state = client.State()
-    state.kubeconfig = kubeconfig
-    state.kubeconfig = kubeconfig
-    print('Kube config: %s' % kubeconfig)
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 
@@ -214,9 +206,6 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     mount_folder = "/workflow"
 
     state = client.State()
-    state.kubeconfig = kubeconfig
-    state.kubeconfig = kubeconfig
-    print('Kube config: %s' % kubeconfig)
     print('Verbosity: %s' % state.verbosity)
     print('Debug: %s' % state.debug)
 

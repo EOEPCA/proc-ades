@@ -125,8 +125,6 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     cwlDocumentFilename = ntpath.basename(cwl_document)
 
     # # Setup K8 configs
-    if state:
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl = False
     api_instance = client.BatchV1Api(client.ApiClient(configuration))

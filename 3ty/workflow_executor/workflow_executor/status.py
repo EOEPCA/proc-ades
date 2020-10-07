@@ -7,8 +7,6 @@ from kubernetes import client, config
 
 def run(namespace, workflow_name, state=None):
     # # Setup K8 configs
-    if state:
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl = False
 

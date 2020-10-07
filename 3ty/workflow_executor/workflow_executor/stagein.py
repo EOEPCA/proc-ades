@@ -29,8 +29,6 @@ def stac_stagein_run(namespace, volume_name_prefix, input_yaml, timeout, mountFo
                                  persistentVolumeClaimName=volume_name,
                                  namespace=namespace,state=state)
     # Setup K8 configs
-    if state:
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl=False
     api_instance_batch_v1_api = client.BatchV1Api(client.ApiClient(configuration))
