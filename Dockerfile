@@ -48,9 +48,6 @@ COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
-COPY assets/config /opt/t2config/kubeconfig
-RUN chown 48:48 /opt/t2config/kubeconfig
-
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
 
 EXPOSE 80

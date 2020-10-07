@@ -24,7 +24,7 @@ The ADES Core Framework is the main software container for all the components co
 
 === Software Reuse and Dependencies
 
-All software and their dependecies are described in the nextr sections
+All software and their dependecies are described in the next sections
 
 === Interfaces
 
@@ -78,6 +78,38 @@ Not Applicable.
 * <<OGC-WPS2>>
 * <<OGC-API-PROC>>
 * <<OGC-API-HACK2019>>
+
+== Workflow Executor
+=== Overview and Purpose
+
+The workflow executor is the component in charge of the scheduling ang tbe the management of the processing jobs.
+When a processing service is trigger by the <<WPS Server>> via a job submission, this latter invokes the workflow executor to perform the steps necessary for the application to execute properly
+
+.ADES Workflow Executor Component Diagram
+[plantuml, wf-exe-diagram-component, png] 
+....
+include::../include/wf-exe-diagram-component.wsd[]
+....
+
+The Service component is in charge of orchestrating the application execution when the service in invoked by a <<Job Submision,job submission>> from the Web Processing Service layer.
+
+=== Software Reuse and Dependencies
+
+The following open-source software is reused:
+
+* CWL Tool <<CWL>>
+* Calrissian https://github.com/Duke-GCB/calrissian
+* ZOO-Services http://zoo-project.org/docs/services/index.html
+
+=== Data
+
+* OWS Context
+* CWL
+
+=== Applicable Resources
+
+* <<CWL>>
+* <<ZOO>>
 
 [#appservice]
 == Services
