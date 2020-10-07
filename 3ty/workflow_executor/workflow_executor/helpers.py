@@ -16,9 +16,6 @@ import uuid
 
 def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None):
 
-    if state:
-        print(state.kubeconfig)
-        config.load_kube_config(state.kubeconfig)
     configuration = client.Configuration()
     configuration.verify_ssl = False
     api_client = client.ApiClient(configuration)
