@@ -68,7 +68,7 @@ def stac_stagein_run(namespace, volume_name_prefix, input_yaml, timeout, mountFo
                 elif job_status_response.status.failed:
                     print("Stage-in job failed", file=sys.stderr)
 
-                api_instance_core_v1_api = client.CoreV1Api(client.ApiClient(configuration))
+                api_instance_core_v1_api = client.CoreV1Api(client.ApiClient())
                 podlist = api_instance_core_v1_api.list_namespaced_pod(namespace=namespace,
                                                                        label_selector=f'job-name={job_name}',
                                                                        watch=False)
