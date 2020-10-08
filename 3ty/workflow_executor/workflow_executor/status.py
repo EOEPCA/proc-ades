@@ -7,11 +7,10 @@ from kubernetes import client, config
 
 def run(namespace, workflow_name, state=None):
     # # Setup K8 configs
-    configuration = client.Configuration()
-    configuration.verify_ssl = False
+    config.load_kube_config()
 
     # create an instance of the API class
-    api_client = kubernetes.client.ApiClient(configuration)
+    api_client = kubernetes.client.ApiClient()
     api_instance = kubernetes.client.BatchV1Api(api_client)
     pretty = True
 

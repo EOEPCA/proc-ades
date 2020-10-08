@@ -14,10 +14,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
 
-    configuration = client.Configuration()
-    configuration.verify_ssl = False
-    client.Configuration.set_default(configuration)
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
+    config.load_kube_config()
+    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
     v1 = client.CoreV1Api()
 
     print("####################################")
@@ -225,10 +223,8 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
 
 
 def get(namespace, state=None):
-    configuration = client.Configuration()
-    configuration.verify_ssl = False
-    client.Configuration.set_default(configuration)
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient(configuration))
+    config.load_kube_config()
+    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
     v1 = client.CoreV1Api()
 
     # Things to check:

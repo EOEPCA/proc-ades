@@ -15,9 +15,8 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
         outputJson = path.join(mount_folder,f"{workflowname}-stac-output.out")
 
         # create an instance of the API class
-        configuration = client.Configuration()
-        configuration.verify_ssl = False
-        api_instance = client.CoreV1Api(client.ApiClient(configuration))
+        config.load_kube_config()
+        api_instance = client.CoreV1Api(client.ApiClient())
 
         name = 'busybox-pod'
         resp = None

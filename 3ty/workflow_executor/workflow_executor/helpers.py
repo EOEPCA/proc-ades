@@ -16,9 +16,8 @@ import uuid
 
 def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None):
 
-    configuration = client.Configuration()
-    configuration.verify_ssl = False
-    api_client = client.ApiClient(configuration)
+    config.load_kube_config()
+    api_client = client.ApiClient()
     api_instance = client.CoreV1Api(api_client)
 
     pod_name = f"copy-pod"
