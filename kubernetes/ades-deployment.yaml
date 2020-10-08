@@ -36,9 +36,19 @@ spec:
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
+            - name: ades-user-data
+              mountPath: /var/www/html/res
+            - name: ades-processing-services
+              mountPath: /opt/zooservices_user
       volumes:
         - name: ades-config
           persistentVolumeClaim:
             claimName: ades-config-pv-claim
+        - name: ades-user-data
+          persistentVolumeClaim:
+                claimName: ades-user-data-pv-claim
+        - name: ades-processing-services
+          persistentVolumeClaim:
+                claimName: ades-processing-services-pv-claim
       restartPolicy: Always
 
