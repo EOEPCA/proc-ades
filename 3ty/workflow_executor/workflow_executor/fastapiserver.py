@@ -164,7 +164,7 @@ def read_execute(content: ExecuteContent, response: Response):
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
 
-    return resp_status
+    return {"jobID": workflow_name }
 
 
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
@@ -177,7 +177,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     print('Debug: %s' % state.debug)
 
     resp_status = None
-    status = {}
+
     try:
         resp_status = workflow_executor.status.run(namespace=namespace, workflow_name=workflow_name, state=state)
 
