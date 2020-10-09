@@ -21,7 +21,7 @@ spec:
             - "--stderr"
             - "/calrissian/output-data/revsort-stderr.log"
             - "--max-ram"
-            - "8G"
+            - "4G"
             - "--max-cores"
             - "2"
             - "--tmp-outdir-prefix"
