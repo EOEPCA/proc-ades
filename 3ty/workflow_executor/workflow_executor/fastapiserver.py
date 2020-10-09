@@ -177,7 +177,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     print('Debug: %s' % state.debug)
 
     resp_status = None
-    status = {}
+
     try:
         resp_status = workflow_executor.status.run(namespace=namespace, workflow_name=workflow_name, state=state)
 
