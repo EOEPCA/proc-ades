@@ -14,21 +14,8 @@ def run(namespace, workflow_name, state=None):
     api_instance = kubernetes.client.BatchV1Api(api_client)
     pretty = True
 
-    # v1 = client.CoreV1Api(api_client)
-    # ret = v1.list_namespaced_pod(watch=False, namespace=namespace)
-    # error_pod_name = ""
-    # for i in ret.items:
-    #
-    #     if i.status.phase == "Running":
-    #         status = {"status": "Running", "error": ""}
-    #         pprint(status)
-    #         return 0
-    #     elif i.status.phase == "Pending":
-    #         status = {"status": "Running", "error": ""}
-    #         pprint(status)
-    #         return 0
-    #     elif i.status.phase == "Failed":
-    #         error_pod_name = i.metadata.name
+    print("## JOB STATUS")
+
     try:
         api_response = api_instance.read_namespaced_job_status(name=workflow_name,namespace= namespace, pretty=pretty)
 
@@ -48,3 +35,4 @@ def run(namespace, workflow_name, state=None):
     except ApiException as e:
         print("Exception when calling get status: %s\n" % e)
         raise e
+
