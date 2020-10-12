@@ -168,7 +168,6 @@
 </li>
 </ul>
 </li>
-<li><a href="#traceabilityMatrix">6. Use Case Traceability</a></li>
 </ul>
 </div>
 </div>
@@ -1951,6 +1950,9 @@ Concretely, this function read an <a href="#_application_item">Application Item<
 </div>
 <div class="title">Figure 6. ADES Data Stage-In Activity Diagram</div>
 </div>
+<div class="paragraph">
+<p>The data Stage-In identifies all the <strong><a href="#_application_workflow">Application Workflow</a></strong> <code>inputs</code> that are of the type Directory. For each of them, if the input is in the <strong>URI</strong> form, it tries to resolve it as a resource manager link and copy the referenced data items on the processing job workspace. It also creates a STAC catalog JSON document referencing the locally copied data. The local directory path containing the catalog.json file and the data is passed to the corresponding CWL <code>input</code> at <a href="#_workflow_execution">Workflow Execution</a>.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_data_inputoutput_3">4.3.2. Data Input/Output</h4>
@@ -2053,6 +2055,9 @@ Concretely, this function read an <a href="#_application_item">Application Item<
 <img src="./images/datastageout.png" alt="datastageout" width="512" height="598">
 </div>
 <div class="title">Figure 7. ADES Data Stage-out Activity Diagram</div>
+</div>
+<div class="paragraph">
+<p>The data Stage-Out identifies all the <strong><a href="#_application_workflow">Application Workflow</a></strong> <code>outputs</code> that are of the type Directory. For each of them, it creates a STAC catalog JSON document referencing relatively the locally produced data. Then the local directories are stored persistently to the Resource Manager store. A root catalog referencing all the directory catalogs is also stored with the results and published in the Resource Manager Catalog.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2370,49 +2375,224 @@ The 2 next sections describes</p>
 </div>
 <div class="sect2">
 <h3 id="_application_package">5.3. Application Package</h3>
-<div class="sect3">
-<h4 id="_application_item">5.3.1. Application Item</h4>
-
-</div>
-<div class="sect3">
-<h4 id="_application_workflow">5.3.2. Application Workflow</h4>
-
-</div>
-<div class="sect3">
-<h4 id="_application_image">5.3.3. Application Image</h4>
-<div style="page-break-after: always;"></div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="traceabilityMatrix">6. Use Case Traceability</h2>
-<div class="sectionbody">
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="title">Content Description</div>
 <div class="paragraph">
-<p>This section contains:</p>
+<p>The <strong>Application Package</strong> is the interface for the application developer. It contains 3 essentials elements:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>A traceability matrix against the use case analysis document of the project, indicating which components address each use case</p>
+<p>The <strong><a href="#_application_item">Application Item</a></strong> is the entry point of the application in a Resource Manager. This item is encoded in a <a href="#OWS">OWS Context</a> document.</p>
+</li>
+<li>
+<p>The <strong><a href="#_application_workflow">Application Workflow</a></strong> is the processor graph describing the steps execution of the software processor.</p>
+</li>
+<li>
+<p>The <strong><a href="#_application_image">Application Image</a></strong> is the container image including the processor software and its dependencies.</p>
 </li>
 </ul>
 </div>
-</td>
+<div class="paragraph">
+<p>In the following section, we will use the <code>vegetation-index</code> application as an example to illustrate the spcifications and convention of the <strong>Application Package</strong></p>
+</div>
+<div class="sect3">
+<h4 id="_application_item">5.3.1. Application Item</h4>
+<div class="paragraph">
+<p>The <strong>Application Item</strong> is the entry point of the application in a Resource Manager. It is an <a href="#OWS">OWS Context</a> document designed to be searchable and queryable as an <code>Atom entry</code>.</p>
+</div>
+<div class="paragraph">
+<p>Below is the <strong>Application Item</strong> of the <code>vegetation-index</code> application.<br>
+We will describe the essantial elements of this document.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="preprocessor">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="tag">&lt;feed</span> <span class="attribute-name">xmlns</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://www.w3.org/2005/Atom</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tag">&lt;title</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">text</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>Result for OpenSearch query in eoepca-services<span class="tag">&lt;/title&gt;</span>
+    <span class="tag">&lt;id&gt;</span>https://catalog.terradue.com:443/eoepca-services/search?uid=vegetation-index<span class="entity">&amp;amp;</span>format=atom<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;updated&gt;</span>2020-10-12T07:32:51.013305Z<span class="tag">&lt;/updated&gt;</span>
+    <span class="tag">&lt;link</span> <span class="attribute-name">rel</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">self</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">application/atom+xml</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">title</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">Reference link</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">https://catalog.terradue.com/eoepca-services/search?uid=vegetation-index</span><span class="entity">&amp;amp;</span><span class="content">format=atom</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;link</span> <span class="attribute-name">rel</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">search</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">application/opensearchdescription+xml</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">title</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">OpenSearch Description link</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">https://catalog.terradue.com/eoepca-services/description</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+    <span class="tag">&lt;entry&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+        <span class="tag">&lt;id&gt;</span>https://catalog.terradue.com:443/eoepca-services/search?format=atom<span class="entity">&amp;amp;</span>uid=vegetation-index<span class="tag">&lt;/id&gt;</span>
+        <span class="tag">&lt;title</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">text</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>Vegetation index<span class="tag">&lt;/title&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+        <span class="tag">&lt;summary</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">html</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>Vegetation index processor<span class="tag">&lt;/summary&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="tag">&lt;published&gt;</span>2020-10-12T07:32:51.01297Z<span class="tag">&lt;/published&gt;</span>
+        <span class="tag">&lt;updated&gt;</span>2020-10-25T10:34:19.721262Z<span class="tag">&lt;/updated&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+        <span class="tag">&lt;link</span> <span class="attribute-name">rel</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">self</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">application/atom+xml</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">title</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">Reference link</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">https://catalog.terradue.com/eoepca-services/search?format=atom</span><span class="entity">&amp;amp;</span><span class="content">uid=vegetation-index</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span> <i class="conum" data-value="6"></i><b>(6)</b>
+        <span class="tag">&lt;owc:offering</span> <span class="attribute-name">code</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://www.opengis.net/eoc/applicationContext/cwl</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">xmlns:owc</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://www.opengis.net/owc/1.0</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
+            <span class="tag">&lt;owc:content</span> <span class="attribute-name">type</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">application/cwl</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">href</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/vegetation-index/vegetation-index.cwl</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span> <i class="conum" data-value="8"></i><b>(8)</b>
+        <span class="tag">&lt;/owc:offering&gt;</span>
+        <span class="tag">&lt;identifier</span> <span class="attribute-name">xmlns</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://purl.org/dc/elements/1.1/</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>vegetation-index<span class="tag">&lt;/identifier&gt;</span> <i class="conum" data-value="9"></i><b>(9)</b>
+    <span class="tag">&lt;/entry&gt;</span>
+    <span class="tag">&lt;totalResults</span> <span class="attribute-name">xmlns</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://a9.com/-/spec/opensearch/1.1/</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>1<span class="tag">&lt;/totalResults&gt;</span>
+    <span class="tag">&lt;startIndex</span> <span class="attribute-name">xmlns</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://a9.com/-/spec/opensearch/1.1/</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>1<span class="tag">&lt;/startIndex&gt;</span>
+    <span class="tag">&lt;itemsPerPage</span> <span class="attribute-name">xmlns</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://a9.com/-/spec/opensearch/1.1/</span><span class="delimiter">&quot;</span></span><span class="tag">&gt;</span>20<span class="tag">&lt;/itemsPerPage&gt;</span>
+    <span class="tag">&lt;os:Query</span> <span class="attribute-name">role</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">request</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">xmlns:dct</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://purl.org/dc/terms/</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">xmlns:param</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://a9.com/-/spec/opensearch/extensions/parameters/1.0/</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">xmlns:dc</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://purl.org/dc/elements/1.1/</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">xmlns:os</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">http://a9.com/-/spec/opensearch/1.1/</span><span class="delimiter">&quot;</span></span> <span class="attribute-name">geo:uid</span>=<span class="string"><span class="delimiter">&quot;</span><span class="content">vegetation-index</span><span class="delimiter">&quot;</span></span> <span class="tag">/&gt;</span>
+<span class="tag">&lt;/feed&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The Atom Feed enclosing the Application Item. in our case, the feed is the result of an <a href="#CEOS-OS-BP">OpenSearch</a> query to a Catalog.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <strong>Application Item</strong> as an Atom Entry</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The <strong>Application Title</strong> used to label the <a href="#procservice">Processing Service</a> deployed on the ADES.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <strong>Application Summary</strong> used as the description of the <a href="#procservice">Processing Service</a> deployed on the ADES.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The <strong>Application Date</strong> used to timestamp the <a href="#procservice">Processing Service</a> deployed on the ADES.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Following the <a href="#CEOS-OS-BP">OpenSearch</a> protocol, the self link is the persistent link to the resource. this is often managed automatically by the Resource Manager</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>The <a href="#OWS">OWS Context</a> <code>offering</code> declaring the <strong><a href="#_application_workflow">Application Workflow</a></strong> with the specific code <code><a href="http://www.opengis.net/eoc/applicationContext/cwl" class="bare">http://www.opengis.net/eoc/applicationContext/cwl</a></code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>The actual <strong><a href="#_application_workflow">Application Workflow</a></strong> resource. It can be either enclosed in the document or referenced with a link like in this example. The Mime-Type is <code>application/cwl</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>The <strong>Application Identifier</strong> used to <strong>uniquely</strong> identify the <a href="#procservice">Processing Service</a> deployed on the ADES.</td>
 </tr>
 </table>
 </div>
-<hr>
+</div>
+<div class="sect3">
+<h4 id="_application_workflow">5.3.2. Application Workflow</h4>
+<div class="paragraph">
+<p>The <strong>Application Workflow</strong> is the core document of the processor in <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a>. It describes, as a Directed Acyclic Graph (DAG), the execution of the user processor defining the commands to be executed with their arguments as well as the inputs/outputs.<br>
+The ADES relies on the <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> tool via <a href="#Calrissian">[Calrissian]</a> to execute the workflow. Thus, the ADES supports entirely the <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> specifications. Therefore, we will not explain in details here the <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> specifications available as a <a href="#Reference Document">Reference Documents</a>.<br>
+The purpose of this section is to describe the elemnts used in the CWL in the functional design of the ADES.</p>
+</div>
+<div class="paragraph">
+<p>Below is the <strong>Application Workflow</strong> <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> of the <code>vegetation-index</code> application.<br>
+We will describe the essantial elements of this document.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="yaml"><span class="error">$graph</span>:
+  <span class="key">cwlVersion</span>: <span class="string"><span class="content">v1.0</span></span>
+  - <span class="string"><span class="content">class: CommandLineTool</span></span>
+    <span class="key">id</span>: <span class="string"><span class="content">clt</span></span>
+    <span class="key">baseCommand</span>: <span class="string"><span class="content">vegetation-index</span></span>
+    <span class="key">inputs</span>:
+      <span class="key">inp1</span>:
+        <span class="key">inputBinding</span>:
+          <span class="key">position</span>: <span class="string"><span class="content">1</span></span>
+          <span class="key">prefix</span>: <span class="string"><span class="content">--input-reference</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">Directory</span></span>
+      <span class="key">inp2</span>:
+        <span class="key">inputBinding</span>:
+          <span class="key">position</span>: <span class="string"><span class="content">2</span></span>
+          <span class="key">prefix</span>: <span class="string"><span class="content">--aoi</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">string</span></span>
+    <span class="key">outputs</span>:
+      <span class="key">results</span>:
+        <span class="key">outputBinding</span>:
+          <span class="key">glob</span>: <span class="string"><span class="content">.</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">Any</span></span>
+    <span class="key">hints</span>:
+      <span class="key">DockerRequirement</span>:
+        <span class="key">dockerPull</span>: <span class="string"><span class="content">terradue/eoepca-vegetation-index:0.1 </span></span><i class="conum" data-value="7"></i><b>(7)</b>
+    <span class="key">requirements</span>:
+      <span class="key">EnvVarRequirement</span>:
+        <span class="key">envDef</span>:
+          <span class="key">PATH</span>: <span class="string"><span class="content">/opt/anaconda/envs/env_vi/bin:/opt/anaconda/envs/env_vi/bin:/opt/anaconda/envs/env_default/bin:/opt/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span></span>
+          <span class="key">PREFIX</span>: <span class="string"><span class="content">/opt/anaconda/envs/env_vi</span></span>
+      <span class="key">ResourceRequirement</span>: <span class="string"><span class="content">{}</span></span>
+  - <span class="string"><span class="content">class: Workflow </span></span><i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="key">doc</span>: <span class="string"><span class="content">Vegetation index processor</span></span>
+    <span class="key">id</span>: <span class="string"><span class="content">vegetation-index</span></span>
+    <span class="key">inputs</span>: <i class="conum" data-value="2"></i><b>(2)</b>
+      <span class="key">aoi</span>:
+        <span class="key">doc</span>: <span class="string"><span class="content">Area of interest in WKT</span></span>
+        <span class="key">label</span>: <span class="string"><span class="content">Area of interest</span></span>
+        <span class="key">type</span>: <span class="string"><span class="content">string </span></span><i class="conum" data-value="3"></i><b>(3)</b>
+      <span class="key">input_reference</span>:
+        <span class="key">doc</span>: <span class="string"><span class="content">EO product for vegetation index</span></span>
+        <span class="key">label</span>: <span class="string"><span class="content">EO product for vegetation index</span></span>
+        <span class="error">stac:catalog</span>: <span class="error">catalog.json</span>
+        <span class="error">stac:collection</span>: <span class="error">source</span>
+        <span class="key">type</span>: <span class="string"><span class="content">Directory[] </span></span><i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="key">label</span>: <span class="string"><span class="content">Vegetation index</span></span>
+    <span class="key">outputs</span>: <i class="conum" data-value="4"></i><b>(4)</b>
+    - <span class="string"><span class="content">id: wf_outputs</span></span>
+      <span class="key">outputSource</span>:
+      - <span class="string"><span class="content">node_1/results</span></span>
+      <span class="key">type</span>:
+        <span class="key">items</span>: <span class="string"><span class="content">Directory </span></span><i class="conum" data-value="5"></i><b>(5)</b>
+        <span class="key">type</span>: <span class="string"><span class="content">array</span></span>
+    <span class="key">requirements</span>:
+    - <span class="string"><span class="content">class: ScatterFeatureRequirement </span></span><i class="conum" data-value="6"></i><b>(6)</b>
+    <span class="key">steps</span>:
+      <span class="key">node_1</span>:
+        <span class="key">in</span>:
+          <span class="key">inp1</span>: <span class="string"><span class="content">input_reference</span></span>
+          <span class="key">inp2</span>: <span class="string"><span class="content">aoi</span></span>
+        <span class="key">out</span>:
+        - <span class="string"><span class="content">results</span></span>
+        <span class="key">run</span>: <span class="string"><span class="content">'#clt'</span></span>
+        <span class="key">scatter</span>: <span class="string"><span class="content">inp1</span></span>
+        <span class="key">scatterMethod</span>: <span class="string"><span class="content">dotproduct</span></span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the <code>Workflow</code> class object of the <a href="#CWL">Common Workflow Language (<a href="#CWL-spec">[CWL-spec]</a>)</a> is the main element used by the ADES to extract the information about the inputs/outputs of the Application</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the <code>inputs</code> section defines all the input necessary for the command. When the <strong>Application Package</strong> is deployed as as <a href="#procservice">Processing Service</a>, the <code>inputs</code> used by the <a href="#_wps_server">WPS Server</a> to declare the processing inputs at the <a href="#_web_processing_services">Web Processing Services</a> interface.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>the <code>type</code> used for <code>input</code> is replicated at <a href="#_web_processing_services">Web Processing Services</a> interface level to describe the exepected input. A specific convention is applied when using the type <code>Directory</code> and is explained in the <a href="#_data_stage_in">Data Stage-In</a> section.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>the <code>outputs</code> section defines the outputs of the command. When the <strong>Application Package</strong> is deployed as as <a href="#procservice">Processing Service</a>, the <code>outputs</code> used by the <a href="#_wps_server">WPS Server</a> to declare the processing outputs at the <a href="#_web_processing_services">Web Processing Services</a> interface.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>the <code>type</code> used for <code>output</code> is replicated at <a href="#_web_processing_services">Web Processing Services</a> interface level to describe the produced output. A specific convention is applied when using the type <code>Directory</code> and is explained in the <a href="#_data_stage_out">Data Stage-Out</a> section.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>the scattering functions of CWL is replicated in the ADES with <a href="#Calrissian">[Calrissian]</a> using different virtual machines instances to run the process in parallel.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>All the <strong><a href="#_application_image">Application Image</a></strong> specified in the <strong>Application Workflow</strong> are pulled and used to instantiate the processing container on the cluster.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_application_image">5.3.3. Application Image</h4>
+<div class="paragraph">
+<p>One or more <strong>Application Image</strong> can be used in the <strong><a href="#Application PAckage">[Application PAckage]</a></strong> to support the execution of the processor. The <strong>Application Image</strong> is specified as a <a href="#Docker">[Docker]</a> Image in the <strong><a href="#_application_workflow">Application Workflow</a></strong></p>
+</div>
 <div class="paragraph large">
 <p>&lt;&lt; End of Document &gt;&gt;</p>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -2426,7 +2606,7 @@ The 2 next sections describes</p>
 <div id="footer">
 <div id="footer-text">
 Version 2<br>
-Last updated 2020-10-09 14:22:50 UTC
+Last updated 2020-10-12 08:52:05 UTC
 </div>
 </div>
 <link rel="stylesheet" href="stylesheets/coderay-asciidoctor.css">
