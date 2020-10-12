@@ -194,9 +194,9 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             return e
             
   
-    except ApiException as e:
+    except ApiException as err:
             e = Error()
-            e.set_error(12, e.body)
+            e.set_error(12, err.body)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             return e
 
@@ -219,11 +219,13 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
         resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
                                                    mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,
                                                    state=state)
-    except ApiException as e:
-        response.status_code = e.status
-        resp_status = {"status": "failed", "error": e.reason}
+    except ApiException as err:
+            e = Error()
+            e.set_error(12, err.body)
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return e
 
-    json_compatible_item_data = jsonable_encoder(resp_status)
+    json_compatible_item_data = jsonable_encoder({"wf_output":resp_status})    
     return JSONResponse(content=json_compatible_item_data)
 
 
