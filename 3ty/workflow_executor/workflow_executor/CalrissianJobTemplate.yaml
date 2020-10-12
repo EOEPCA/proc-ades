@@ -50,7 +50,7 @@ spec:
                   fieldPath: metadata.name
       containers:
         - name: stage-out
-          image: terradue/c7-stage-out:1.5
+          image: terradue/c7-stage-out:1.6
           command: ["stage-out"]
           args:
             - "--source"
