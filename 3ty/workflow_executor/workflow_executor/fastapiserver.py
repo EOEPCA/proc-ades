@@ -9,6 +9,7 @@ import workflow_executor
 from workflow_executor import prepare, client, result
 from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
+from pprint import pprint
 
 app = FastAPI(
     title="the title",
@@ -67,8 +68,8 @@ def read_root():
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent, response: Response):
     state = client.State()
-    print('Verbosity: %s' % state.verbosity)
-    print('Debug: %s' % state.debug)
+    print('Prepare POST')
+
 
     namespace = sanitize_k8_parameters(content.serviceID)
     volumeSize = 4
@@ -106,8 +107,8 @@ def read_prepare(prepare_id: str, response: Response):
     namespace = sanitize_k8_parameters(prepare_id)
 
     state = client.State()
-    print('Verbosity: %s' % state.verbosity)
-    print('Debug: %s' % state.debug)
+    print('Prepare GET')
+
 
     try:
         resp_status = workflow_executor.prepare.get(namespace=namespace, state=state)
@@ -128,8 +129,7 @@ def read_execute(content: ExecuteContent, response: Response):
     # {"runID": "runID-123","serviceID": "service-id-123", "prepareID":"uuid" ,"cwl":".......","inputs":".........."}
 
     state = client.State()
-    print('Verbosity: %s' % state.verbosity)
-    print('Debug: %s' % state.debug)
+    print('Execute POST')
 
     namespace = sanitize_k8_parameters(content.serviceID)
     cwl_content = content.cwl
@@ -173,8 +173,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     state = client.State()
-    print('Verbosity: %s' % state.verbosity)
-    print('Debug: %s' % state.debug)
+    print('Status GET')
 
     resp_status = None
     from fastapi import status
@@ -187,13 +186,13 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
         elif resp_status["status"] == "Success":
             response.status_code = status.HTTP_200_OK
             status = {"percent": 100, "msg": "done"}
-        elif resp_status["status"] == "Failed": 
+        elif resp_status["status"] == "Failed":
             e = Error()
             e.set_error(12, resp_status["error"])
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             return e
-            
-  
+
+
     except ApiException as err:
             e = Error()
             e.set_error(12, err.body)
@@ -211,21 +210,24 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     mount_folder = "/workflow"
 
     state = client.State()
-    print('Verbosity: %s' % state.verbosity)
-    print('Debug: %s' % state.debug)
+    print('Result GET')
 
     resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
                                                    mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,
                                                    state=state)
+        print("getresult success")
+        pprint(resp_status)
     except ApiException as err:
             e = Error()
             e.set_error(12, err.body)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             return e
 
-    json_compatible_item_data = jsonable_encoder({"wf_output":resp_status})    
+    json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
+    pprint("wf_output json: ")
+    pprint(json_compatible_item_data)
     return JSONResponse(content=json_compatible_item_data)
 
 
