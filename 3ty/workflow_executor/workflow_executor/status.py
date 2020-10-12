@@ -28,7 +28,7 @@ def run(namespace, workflow_name, state=None):
             pprint(status)
             return status
         elif api_response.status.failed:
-            status = {"status": "Failed", "error": "Failed job"}
+            status = {"status": "Failed", "error": api_response.status.conditions[0].message}
             pprint(status)
             return status
 

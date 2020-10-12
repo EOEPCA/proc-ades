@@ -185,15 +185,20 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             response.status_code = status.HTTP_200_OK
             status = {"percent": 50, "msg": "running"}
         elif resp_status["status"] == "Success":
-            response.status_code = status.HTTP_201_CREATED
+            response.status_code = status.HTTP_200_OK
             status = {"percent": 100, "msg": "done"}
-        elif resp_status["status"] == "Failed":
-            response.status_code = status.HTTP_500_INTERNAL
-            status = {"percent": 0, "msg": "failed"}
-
+        elif resp_status["status"] == "Failed": 
+            e = Error()
+            e.set_error(12, resp_status["error"])
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return e
+            
+  
     except ApiException as e:
-        response.status_code = e.status
-        status = {"status": "failed", "error": e.body}
+            e = Error()
+            e.set_error(12, e.body)
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return e
 
     return status
 
