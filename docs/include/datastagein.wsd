@@ -3,7 +3,7 @@
 start
 
 :Prepare a **Data StageIn Volume**;
-:Read all **`File`** and **`Directory`**\nWorkflow's parameters\nin CWL;
+:Read all **`Directory`**\nWorkflow's parameters\nin CWL;
 note right
     **CWL workflow**
     ====

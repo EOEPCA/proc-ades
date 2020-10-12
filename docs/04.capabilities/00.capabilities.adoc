@@ -84,6 +84,8 @@ This is a pre-processing step that provision all the data needed for the workflo
 include::../include/datastagein.wsd[]
 ....
 
+The data Stage-In identifies all the **<<Application Workflow>>** `inputs` that are of the type Directory. For each of them, if the input is in the **URI** form, it tries to resolve it as a resource manager link and copy the referenced data items on the processing job workspace. It also creates a STAC catalog JSON document referencing the locally copied data. The local directory path containing the catalog.json file and the data is passed to the corresponding CWL `input` at <<Workflow Execution>>.
+
 === Data Input/Output
 
 * Input 
@@ -128,6 +130,8 @@ This is a post-processing step that retrieve all the results produced the workfl
 ....
 include::../include/datastageout.wsd[]
 ....
+
+The data Stage-Out identifies all the **<<Application Workflow>>** `outputs` that are of the type Directory. For each of them, it creates a STAC catalog JSON document referencing relatively the locally produced data. Then the local directories are stored persistently to the Resource Manager store. A root catalog referencing all the directory catalogs is also stored with the results and published in the Resource Manager Catalog.
 
 === Data Input/Output
 

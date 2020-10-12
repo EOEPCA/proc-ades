@@ -60,11 +60,11 @@ include::04.capabilities/00.capabilities.adoc[]
 
 include::05.interfaces/00.interfaces.adoc[]
 
-<<<
+// <<<
 
-include::06.traceability/00.traceability.adoc[]
+// include::06.traceability/00.traceability.adoc[]
 
-'''
+// '''
 
 include::end-of-document.adoc[]
 
