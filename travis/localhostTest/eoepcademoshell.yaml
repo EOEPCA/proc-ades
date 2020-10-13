@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-demo
+spec:
+  volumes: [{'name': 'slstr-tiling-input-data',
+             'persistentVolumeClaim': {'claimName': 'wf-bd22ffd8-cb1c-11ea-8a3d-a0c5899f98fe-volume-input-data'}},
+            {'name': 'slstr-tiling-tmpout',
+             'persistentVolumeClaim': {'claimName': 'wf-bd22ffd8-cb1c-11ea-8a3d-a0c5899f98fe-volume-tmpout'}},
+            {'name': 'slstr-tiling-output-data',
+             'persistentVolumeClaim': {'claimName': 'wf-bd22ffd8-cb1c-11ea-8a3d-a0c5899f98fe-volume-output-data'}}]
+  containers:
+    - name: redis
+      image: redis
+      volumeMounts: [{'mountPath': '/t2application/input-data',
+                      'name': 'slstr-tiling-input-data',
+                      'readOnly': True},
+                     {'mountPath': '/t2application/tmpout',
+                      'name': 'slstr-tiling-tmpout'},
+                     {'mountPath': '/t2application/output-data',
+                      'name': 'slstr-tiling-output-data'}]
+
+
+  hostNetwork: true
+  dnsPolicy: Default

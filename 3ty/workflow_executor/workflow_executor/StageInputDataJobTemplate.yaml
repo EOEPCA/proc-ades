@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stage-in-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: stage-input-data
+        image: terradue/stage-in:1.0
+        imagePullPolicy: IfNotPresent
+        command: ["stage-in"]
+        args:
+        - "-t"
+        - "/tmp/staged"
+        - "-c"
+        - "stage-in.yaml"
+        volumeMounts:
+        - mountPath: /tmp
+          name: calrissian-input-data
+      restartPolicy: OnFailure
+      volumes:
+      - name: calrissian-input-data
+        persistentVolumeClaim:
+          claimName: calrissian-input-data

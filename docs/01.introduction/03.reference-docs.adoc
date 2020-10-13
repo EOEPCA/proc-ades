@@ -76,7 +76,7 @@ https://portal.opengeospatial.org/files/?artifact_id=55183
 | 12-084r2, +
 14/01/2014
 
-| [[CWL]][CWL]
+| [[CWL-spec]][CWL]
 | Common Workflow Language Specifications, +
 https://www.commonwl.org/v1.0/
 | v1.0.2

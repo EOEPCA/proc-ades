@@ -83,5 +83,7 @@
         "__memory": "cpp",
         "filesystem": "cpp",
         "regex": "cpp"
-    }
+    },
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true
 }

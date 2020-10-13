@@ -7,7 +7,7 @@ skinparam component<<tbd>> {
     FontColor white
 }
 
-skinparam component<<3rd>> {
+skinparam frame<<3rd>> {
     BackgroundColor CornFlowerBlue
     BorderColor DarkBlue
 }
@@ -17,32 +17,31 @@ skinparam component<<reuse>> {
     BorderColor Orange
 }
 
-() "Resources APIs" as resources
+package "ADES Container"{
 
-package "ADES Service"{
+    [Web Processing Service] as wps
 
-    package "Web Processing Service" as wps
+    [Workflow Executor] as wfexe 
 
-    [Service] as zooservice <<3rd>>
+    package "**Processing Service**" as procservice{
 
-    frame "OWS Context" as ows
+        frame "OWS Context" as ows <<3rd>>
+        frame "Application Workflow" as cwlapp <<3rd>>
+    }
 
-    [CWL Runner] as cwlrun <<3rd>>
-
-    ows -[hidden]right- cwlrun
-
-    zooservice --> cwlrun : triggers
-
-    frame "Workflow (CWL)" as cwl
-
-    cwlrun --> cwl : read workflow
-    zooservice --> ows : read service\ndescription
+    wps --> cwlapp : read workflow
+    wps --> ows : read service\ndescription
 
 }
 
-cloud "processing clusters"{
+cloud "Processing Cluster"{
 
-    node "Application Container" {
+    database "Storage"{
+        frame "Application Image" as appimg <<3rd>>
+        database "Runtime volume" as volume
+    }
+
+    node "Application Container" as appcon {
         [Commands] <<reuse>> as commands
     }
 
@@ -51,16 +50,18 @@ cloud "processing clusters"{
         [Stage-Out] as stageout <<tbd>>
     }
 
-    commands -[hidden]up- stagein
 }
 
-cwlrun --> stagein : Stage-in data
-cwlrun --> stageout : Stage-out data
-cwlrun -right-> commands : executes
+wfexe --> stagein : Stage-in data
+wfexe --> stageout : Stage-out data
+wfexe -down-> procservice : invokes
 
-stagein -( resources
-stageout -( resources
+cwlapp --> commands : describes
 
-wps -down- zooservice
+appcon -- appimg : uses
+appcon -- volume : mount
+
+wps -down- wfexe : executes job
+wps --> appimg : pull image
 
 @enduml

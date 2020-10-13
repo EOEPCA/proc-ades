@@ -1,0 +1,45 @@
+@startuml ADES Workflow Executor Component Diagram
+
+start
+
+:Prepare the\nWorkflow Execution;
+note right
+    **Processing Cluster**
+    ----
+    - Create the application\n
+      namespace is not present
+    - Provision Storage for the job
+    ====
+    **CWL**
+    ----
+    - Integrate global CWL
+        - job inputs
+        - stage-in/out
+        - application workflow
+end note
+
+partition "CWL execution by Calrissian" {
+
+    :Data Stage-In;
+    note right
+        See specific component
+    end note
+
+    :**Application Execution**;
+
+    :Data Stage-Out;
+    note right
+        See specific component
+    end note
+}
+
+:Dispose the\nWorkflow Execution;
+note right
+    **Processing Cluster**
+    ====
+    - Remove Storage for the job
+end note
+
+stop
+
+@enduml

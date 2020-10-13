@@ -1,8 +1,6 @@
 #include "service.h"
 #include "service_internal.h"
 
-#include "zooargo.hpp"
-
 #include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
@@ -16,9 +14,25 @@
 #include <string>
 #include <utility>
 
-#define X3STRING std::string, std::string, std::string
-#define X2STRING std::string, std::string
-#define X2INPUT std::string, std::unique_ptr<mods::ArgoInterface::tgInput>
+#include <json.h>
+#include "workflow_executor.hpp"
+
+//https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
+struct InputParameter{
+  std::string id{""};
+  std::string href{""};
+  std::string value{""};
+  std::string mimeType{""};
+  std::string dataType{""};
+
+  void add(json_object* json){
+    json_object_object_add(json,"id",json_object_new_string(id.c_str()));
+    json_object_object_add(json,"href",json_object_new_string(href.c_str()));
+    json_object_object_add(json,"value",json_object_new_string(value.c_str()));
+    json_object_object_add(json,"mimeType",json_object_new_string(mimeType.c_str()));
+    json_object_object_add(json,"dataType",json_object_new_string(dataType.c_str()));
+  }
+};
 
 class Util {
 public:
@@ -34,39 +48,6 @@ public:
 };
 
 #define LOGTEST (std::cerr)
-void _MEdumpMap(map *t) {
-  if (t != NULL) {
-    LOGTEST << t->name << ": (" << t->value << ")\n";
-    //        if(t->next!=NULL){
-    //            // _MEdumpMap(t->next);
-    //        }
-  } else {
-    LOGTEST << "NULL\n";
-  }
-}
-
-void MEdumpMap(map *t) {
-  map *tmp = t;
-  while (tmp != NULL) {
-    _MEdumpMap(tmp);
-    tmp = tmp->next;
-  }
-  LOGTEST << "----------------END\n";
-}
-
-void MEdumpMaps(maps *m) {
-  maps *tmp = m;
-  while (tmp != NULL) {
-    LOGTEST << "\n----------------INI\n";
-    LOGTEST << "MAP => [" << tmp->name << "] \n";
-    LOGTEST << " * CONTENT [" << tmp->name << "] \n";
-    LOGTEST << "----------------VALUE" << std::endl;
-    MEdumpMap(tmp->content);
-    LOGTEST << " * CHILD [" << tmp->name << "] \n" << std::endl;
-    MEdumpMaps(tmp->child);
-    tmp = tmp->next;
-  }
-}
 
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
   std::ifstream infile(filePath);
@@ -100,7 +81,7 @@ std::string isBoundingBoxData(maps *&_params, std::string postfix) {
   return "";
 }
 
-std::pair<X2INPUT> getNodeParameter(maps *&_params) {
+void getNodeParameter(maps *&_params,std::list<InputParameter>& parameters) {
   // ZOO puts "NULL" if the value is not present... i want to change in blank
   bool minOccurenceZero = false;
   map *minOcc = getMap(_params->content, "minOccurs");
@@ -108,94 +89,87 @@ std::pair<X2INPUT> getNodeParameter(maps *&_params) {
     minOccurenceZero = !strcmp(minOcc->value, "0");
   }
 
-  auto param = std::make_pair<X2INPUT>("", nullptr);
-
-  param.first = _params->name;
-  param.second = std::make_unique<mods::ArgoInterface::tgInput>();
-  param.second->id = _params->name;
-
+  int len = 0;
   map *isArray = getMap(_params->content, "isArray");
-  if (isArray) {
-    int len = 0;
-    map *length = getMap(_params->content, "length");
-    if (length) {
-      len = std::stoi(length->value);
-      std::string sValue;
-      std::string postFix;
-      for (int i = 0; i < len; i++) {
-        sValue.clear();
-        postFix.clear();
-        sValue = "value";
-        if (i > 0) {
-          postFix = "_" + std::to_string(i);
-          sValue.append(postFix);
-          //                    sValue.append("_");
-          //                    sValue.append(std::to_string(i));
-        }
-        map *value = getMap(_params->content, sValue.c_str());
-        if (value) {
-          auto bb = isBoundingBoxData(_params, postFix);
-          if (i > 0) {
-            if (bb.empty()) {
-              if (param.second)
-                param.second->value.append(",");
-            } else {
-              if (param.second)
-                param.second->value.append("\n");
-            }
-          }
+  map *length = getMap(_params->content, "length");
 
-          if (bb.empty()) {
-            if (param.second)
-              param.second->value.append(value->value);
-          } else {
-            if (param.second)
-              param.second->value.append(bb);
-          }
-        }
-      }
-    }
-  } else {
-    map *value = getMap(_params->content, "value");
-    if (value) {
-      if (minOccurenceZero) {
-        if (strcmp(value->value, "NULL")) {
-          auto bb = isBoundingBoxData(_params, "");
-          if (bb.empty())
-            if (param.second)
-              param.second->value = value->value;
-            else {
-              if (param.second)
-                param.second->value = bb;
-            }
-        }
-      } else {
-        auto bb = isBoundingBoxData(_params, "");
-        if (bb.empty())
-          if (param.second)
-            param.second->value = value->value;
-          else {
-            if (param.second)
-              param.second->value = bb;
-          }
-      }
-    }
+  if (isArray && length){
+    len = std::stoi(length->value);
+  }else{
+    len=1;
   }
+
+  std::string sValue;
+  std::string postFix;
 
   map *mimeType = getMap(_params->content, "mimeType");
-  if (mimeType) {
-    if (param.second)
-      param.second->mimeType = mimeType->value;
+  map *dataType = getMap(_params->content, "dataType");
+
+  for (int i = 0; i < len; i++) {
+
+    //--------------CLEAR
+    InputParameter parameter;
+
+    map *value= nullptr;
+    map *href= nullptr;
+    sValue.clear();
+    postFix.clear();
+    postFix = "_" + std::to_string(i);
+    //--------------CLEAR
+
+    parameter.id=_params->name;
+
+    if (mimeType && strlen(mimeType->value)>0){
+      parameter.mimeType=mimeType->value;
+    }
+    if (dataType && strlen(dataType->value)>0){
+      parameter.dataType=dataType->value;
+    }
+
+    //--------------VALUE
+    sValue = "value";
+    if (i > 0) {
+      sValue.append(postFix);
+    }
+    value = getMap(_params->content, sValue.c_str());
+    //--------------VALUE
+
+    //--------------xlink:href
+    sValue = "xlink:href";
+    if (i > 0) {
+      sValue.append(postFix);
+    }
+    href = getMap(_params->content, sValue.c_str());
+    //--------------xlink:href
+
+    if(value && strlen(value->value)){
+      parameter.value=value->value;
+    }
+
+    if(href && strlen(href->value)){
+      parameter.href=href->value;
+    }
+
+    if (!parameter.value.empty()){
+      auto bb = isBoundingBoxData(_params, postFix);//legacy
+      if (!bb.empty()){
+        parameter.value=bb;
+      }
+
+    }
+
+    parameters.push_back(parameter);
   }
 
-  return param;
 }
 
-void getT2InputConf(maps *m, std::list<std::pair<X2INPUT>> &input) {
+void getT2InputConf(maps *m, std::list<InputParameter>& parameters) {
   maps *tmp = m;
   while (tmp != NULL) {
-    input.push_back(getNodeParameter(tmp));
-    getT2InputConf(tmp->child, input);
+
+    getNodeParameter(tmp,parameters);
+
+    getT2InputConf(tmp->child, parameters);
     tmp = tmp->next;
   }
 }
@@ -257,78 +231,109 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     std::map<std::string, std::string> confEoepca;
     getConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
 
+
+    std::map<std::string, std::string> serviceConf;
+    getConfigurationFromZooMapConfig(conf, "serviceConf", serviceConf);
+
+
+    if(serviceConf["sleepGetStatus"].empty()){
+      serviceConf["sleepGetStatus"]="60";
+    }
+
+    if(serviceConf["sleepGetPrepare"].empty()){
+      serviceConf["sleepGetPrepare"]="60";
+    }
+
+    if(serviceConf["sleepBeforeRes"].empty()){
+      serviceConf["sleepBeforeRes"]="60";
+    }
+
     std::map<std::string, std::string> lenv;
     getConfigurationFromZooMapConfig(conf, "lenv", lenv);
 
-    if (confEoepca["libeoepcaargo"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration libeoepcaargo.so empty");
-      return SERVICE_FAILED;
-    }
 
-    if (confEoepca["libargo"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration libargo.so empty");
-      return SERVICE_FAILED;
-    }
+    if (confEoepca["libWorkflowExecutor"].empty()) {
+      std::string err{"eoepca configuration libWorkflowExecutor empty"};
 
-
-    if (confEoepca["argoConfig"].empty()) {
-      setStatus(conf, "failed", "eoepca configuration argoConfig empty");
-      return SERVICE_FAILED;
-    }
-
-    if (!fileExist(confEoepca["argoConfig"].c_str())){
-      setStatus(conf, "failed", "eoepca configuration argoConfig not exist");
-      return SERVICE_FAILED;
-    }
-
-    auto argoConfig =
-        std::make_unique<mods::ArgoInterface::ArgoWorkflowConfig>();{
-
-            std::stringstream sBuffer;
-            if(loadFile(confEoepca["argoConfig"].c_str(),sBuffer)){
-              std::string err{"eoepca configuration cannot load file: "};
-              err.append(confEoepca["argoConfig"]);
-
-              setStatus(conf, "failed", err.c_str());
-              return SERVICE_FAILED;
-            }
-            
-            argoConfig->argoConfigFile=sBuffer.str();
-        }
-
-    // argoConfig->argoUri = confEoepca["argoUrl"];
-    // argoConfig->k8Uri = confEoepca["k8Url"];
-    argoConfig->eoepcaargoPath = confEoepca["libeoepcaargo"];
-
-    setStatus(conf, "running", "argoConfigFile loaded");
-    std::cerr << argoConfig->argoConfigFile << "\n";
-
-
-    auto argoInterface =
-        std::make_unique<mods::ArgoInterface>(confEoepca["libargo"]);
-
-    if (!argoInterface->IsValid()) {
-      fflush(stderr);
-      std::string err("The library ");
-      err.append(confEoepca["libargo"]);
-      err.append(" is not valid!");
       setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
       return SERVICE_FAILED;
+    }
+
+
+    if (confEoepca["WorkflowExecutorConfig"].empty()) {
+      std::string err{"eoepca configuration WorkflowExecutorConfig empty" };
+
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
+      return SERVICE_FAILED;
+    }
+
+    if (!fileExist(confEoepca["WorkflowExecutorConfig"].c_str())){
+      std::string err{"eoepca configuration WorkflowExecutorConfig not exist"};
+
+      setStatus(conf, "failed",  err.c_str());
+      updateStatus(conf, 100, err.c_str());
+      return SERVICE_FAILED;
+    }
+
+    std::map<std::string, std::string> userEoepca;
+    getConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
+    std::cerr << "user: "<< userEoepca["user"] << " grants: "  << userEoepca["grant"] << "\n\n";
+
+
+    std::stringstream sConfigBuffer;
+    if(loadFile(confEoepca["WorkflowExecutorConfig"].c_str(),sConfigBuffer)){
+      std::string err{"eoepca configuration cannot load file: "};
+      err.append(confEoepca["WorkflowExecutorConfig"]);
+
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
+      return SERVICE_FAILED;
+    }
+
+    std::cerr << "WorkflowExecutorConfig: \n" << sConfigBuffer.str() << "\n\n\n";
+
+    auto workflowExecutor=std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
+    if (!workflowExecutor->IsValid()){
+      std::string err{"eoepca libworkflow_executor.so is not valid"};
+      setStatus(conf, "failed", err.c_str());
+      updateStatus(conf, 100, err.c_str());
+      return SERVICE_FAILED;
+    }else{
+      std::cerr << "\nlibworkflow_executor.so: VALID!\n\n";
     }
     //==================================GET CONFIGURATION
 
     //==================================GET PARAMETERS
-    std::list<std::pair<X2INPUT>> inputParam;
-    getT2InputConf(inputs, inputParam);
-    MEdumpMaps(inputs);
-    for (auto &a : inputParam) {
-      std::cerr << "Inputs: " << a.first << " " << a.second->id << " " << a.second->value
-                << " " << a.second->mimeType << "\n";
+
+    std::list<InputParameter> params;
+    getT2InputConf(inputs, params);
+
+    std::cerr << "ZOO input:\n";
+    dumpMaps(inputs);
+
+    json_object *jstart=json_object_new_object();
+    json_object *jArray=json_object_new_array();
+    for (auto &a : params) {
+      json_object *jParamjParam=json_object_new_object();
+      a.add(jParamjParam);
+      json_object_array_add(jArray, jParamjParam);
     }
+    json_object_object_add(jstart, "inputs", jArray);
+
+    std::string jParams{json_object_to_json_string_ext(jstart, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY)};
+    json_object_put(jstart);
+
+    Util::innerReplace(jParams,"\\/","/" );
+    std::cerr << "\n\nJson Inputs: \n"<< jParams.c_str() << "\n\n";
+    params.clear();
     //==================================GET PARAMETERS
 
     //==================================GET CWL CONTENT
-    std::string path("/zooservices/");
+    std::string path(confEoepca["userworkspace"]);
+    path.append("/").append(userEoepca["user"]).append("/");
+
     path.append(lenv["Identifier"]).append(".yaml");
     std::stringstream cwlBuffer;
     if (loadFile(path.c_str(), cwlBuffer)) {
@@ -338,53 +343,153 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       setStatus(conf, "failed", err.c_str());
       return SERVICE_FAILED;
     }
-    //  const char *filePath, std::stringstream &sBuffer
+
+    std::cerr << "User cwl:\n" <<  cwlBuffer.str() << "\n";
     //==================================GET CWL CONTENT
 
     setStatus(conf, "running", "the service is started");
     std::string argoWorkflowId("");
 
-    std::cerr << "start!\n" <<  std::endl;
-    argoInterface->start(*argoConfig.get(), cwlBuffer.str(), inputParam,
-                         lenv["Identifier"], lenv["uusid"],
-                         argoWorkflowId);
-
-    std::cerr << "start finished" << std::endl;
+    int counter=1;
     int percent = 0;
     std::string message("");
-    std::cerr << "getStats start" << std::endl;
-    while (argoInterface->getStatus(*argoConfig.get(), argoWorkflowId, percent,
-                                    message)) {
-      updateStatus(conf, percent, message.c_str());
-      std::cerr << "going to sleep" << std::endl;
-      sleep(10);
+    if (confEoepca["WorkflowExecutorHost"].empty()) {
+
+      //=============================START
+      std::cerr << "start!\n" <<  std::endl;
+      std::string serviceID{""};
+      auto resStart=workflowExecutor->start(sConfigBuffer.str(),path/*cwlBuffer.str()*/,jParams,
+                                            lenv["Identifier"], lenv["uusid"],serviceID);
+      if (resStart){
+        std::string err{"Start empty"};
+
+        setStatus(conf, "failed", serviceID.c_str());
+        updateStatus(conf, 100, serviceID.c_str());
+        return SERVICE_FAILED;
+      }
+      std::cerr << "serviceID: " << serviceID << "\n\n" << std::endl;
+      if (serviceID.empty()) {
+        std::string err{"serviceID empty"};
+
+        setStatus(conf, "failed", err.c_str());
+        updateStatus(conf, 100, err.c_str());
+        return SERVICE_FAILED;
+      }
+      std::cerr << "start finished" << std::endl;
+      //=============================START
+
+
+      //=============================STATUS
+
+      std::cerr << "getStats start" << std::endl;
+      int w8for=std::stoi(serviceConf["sleepGetStatus"]);
+      while(workflowExecutor->getStatus(sConfigBuffer.str(),serviceID,percent,message)){
+        std::cerr << "going to sleep counter: " << counter << std::endl;
+        counter=counter+1;
+        sleep(w8for);
+      }
+
+      updateStatus(conf, 95, "waiting for logs");
+      w8for=std::stoi(serviceConf["sleepBeforeRes"]);
+      sleep(w8for);
+      std::cerr << "status finished" << std::endl;
+      //=============================STATUS
+
+      //=============================GETRESULT
+      updateStatus(conf, 98, "Get Results");
+      std::list<std::pair<std::string, std::string>> outPutList{};
+      std::cerr << "getresult " << argoWorkflowId << std::endl;
+      workflowExecutor->getResults(sConfigBuffer.str(),serviceID,outPutList);
+      std::cerr << "getresults finished" << std::endl;
+      for (auto &[k, p] : outPutList) {
+        std::cerr << "output" << k   << " " << p << std::endl;
+        setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+      }
+      std::cerr << "mapping results" << std::endl;
+      //=============================GETRESULT
+      //  - accepted
+      //  - running
+      //  - successful
+      //  - failed
+
+    }else if (!confEoepca["WorkflowExecutorHost"].empty()){
+
+      auto wfpm=std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
+
+      wfpm->hostName=confEoepca["WorkflowExecutorHost"];
+      wfpm->serviceID=lenv["Identifier"];
+      wfpm->runID = lenv["uusid"];
+
+      std::string prepareID;
+      std::cerr << "workflowExecutor->webPrepare init\n";
+      auto retWeb=workflowExecutor->webPrepare(*wfpm);
+      std::cerr << "workflowExecutor->webPrepare done\n";
+
+
+      std::cerr << "workflowExecutor->webGetPrepare init\n";
+      int w8for=std::stoi(serviceConf["sleepGetPrepare"]);
+      while (workflowExecutor->webGetPrepare(*wfpm) ){
+        std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
+        counter=counter+1;
+        sleep(w8for);
+      }
+      std::cerr << "workflowExecutor->webGetPrepare end\n";
+
+      wfpm->cwl=cwlBuffer.str();
+      wfpm->inputs=jParams;
+
+      std::cerr << "workflowExecutor->webExecute init\n";
+      retWeb=workflowExecutor->webExecute(*wfpm);
+      std::cerr << "workflowExecutor->webExecute end\n";
+
+      counter=1;
+      w8for=std::stoi(serviceConf["sleepGetStatus"]);
+      std::cerr << "workflowExecutor->webGetStatus init\n";
+      sleep(w8for);
+      while (workflowExecutor->webGetStatus(*wfpm) ){
+        std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
+        counter=counter+1;
+        sleep(w8for);
+      }
+      std::cerr << "workflowExecutor->end init\n";
+
+      //waiting for results
+      w8for=std::stoi(serviceConf["sleepBeforeRes"]);
+      updateStatus(conf, 99, "waiting for results");
+      sleep(w8for);
+
+
+      std::list<std::pair<std::string, std::string>> outPutList{};
+      std::cerr << "workflowExecutor->webGetResults init\n";
+      workflowExecutor->webGetResults(*wfpm,outPutList);
+      std::cerr << "workflowExecutor->webGetResults end\n";
+
+      std::cerr << "getresults finished" << std::endl;
+      for (auto &[k, p] : outPutList) {
+        std::cerr << "output: " << k<< " " << p << std::endl;
+        setMapInMaps(outputs, k.c_str(), "value", p.c_str());
+      }
+      std::cerr << "mapping results" << std::endl;
+
+
+
+    }else{
+      //error
+
+
+
+
     }
 
-    std::cerr << "status finished" << std::endl;
+
+
     updateStatus(conf, 100, "Done");
-    sleep(40);
-
-    std::list<std::pair<std::string, std::string>> outPutList{};
-    std::cerr << "getresult " << argoWorkflowId << std::endl;
-    argoInterface->getResults(*argoConfig.get(), argoWorkflowId, outPutList);
-    std::cerr << "getresults finished" << std::endl;
-    for (auto &[k, p] : outPutList) {
-      std::cerr << "output" << p << " " << k << std::endl;
-      setMapInMaps(outputs, k.c_str(), "value", p.c_str());
-    }
-    std::cerr << "mapping results" << std::endl;
-
-    //  - accepted
-    //  - running
-    //  - successful
-    //  - failed
-
     setStatus(conf, "successful", "");
     return SERVICE_SUCCEEDED;
 
   } catch (std::runtime_error &err) {
 
-    updateStatus(conf, 100, "Done");
+    updateStatus(conf, 100, err.what());
     setStatus(conf, "failed", err.what());
     return SERVICE_FAILED;
 

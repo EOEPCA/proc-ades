@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "id": "optional_combo_parameter",
+      "input": {
+        "format": {
+          "mimeType": "application/json"
+        },
+        "value": {
+          "href": "http://catalog.terradue.com/asdsadas/asdasdad/assdadasd/dasd"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "results",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "async",
+  "response": "raw"
+}

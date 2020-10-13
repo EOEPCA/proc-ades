@@ -23,4 +23,7 @@ then
   done
 fi
 
-
+if [ -n "${2}" ]
+then
+  mkdir -p "${2}"
+fi

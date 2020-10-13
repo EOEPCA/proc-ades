@@ -19,14 +19,14 @@ When a breakdown is necessary, a general overview of the function can be given. 
 == Application Deployment to Web Processing Service
 === Overview and Purpose
 
-This is the main function in charge of building a <<appservice,Service>> component from an Application Package.
-Concretely, this function read an <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>. With all the information in those documents, it builds a process describing 
+This is the main function in charge of building a <<Processing Service>> from an <<Application Package>>.
+Concretely, this function read an <<Application Item>> as an <<OWS Context>> referencing the <<Application Workflow>>. With all the information in those documents, it builds a <<Processing Service>> describing 
 
 * General information about the service: identifier, title, abstract
 * Input parameters definition: identifiers, types, options, default values,...
 * Ouput results options: identifiers, types, format
 
-Regardless of the deployment mechanism, the <<Common Workflow Language (CWL),CWL Workflow>> is used to convey the information that describes the process inputs/outputs into WPS data model.
+Regardless of the deployment mechanism, the <<Application Workflow>> is used to convey the information that describes the process inputs/outputs into <<WPS Server>> data model.
 
 The mapping between CWL and WPS follows the work performed in the OGC Testbed 16.
 
@@ -41,10 +41,10 @@ All software and their dependecies are described in the nextr sections
 === Data Input/Output
 
 * Input
-** <<OWS Context>> referencing a <<Common Workflow Language (CWL),CWL Workflow>>
+** <<Application Item>> as an <<OWS Context>> describing the application referencing a <<Application Workflow>>
 
 * Output
-** <<appservice,Service Component>>
+** <<Processing Service>>
 
 === Applicable Resources
 
@@ -55,7 +55,7 @@ All software and their dependecies are described in the nextr sections
 
 === Overview and Purpose
 
-The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<appservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
+The submission of a job starts a process instantiation and execution of an application. Basically, the ADES executes the <<procservice,Service Component>> built during the <<Application Deployment to Web Processing Service,application deployment>>.
 
 This function triggers 3 main operations sequantially
 
@@ -84,6 +84,8 @@ This is a pre-processing step that provision all the data needed for the workflo
 include::../include/datastagein.wsd[]
 ....
 
+The data Stage-In identifies all the **<<Application Workflow>>** `inputs` that are of the type Directory. For each of them, if the input is in the **URI** form, it tries to resolve it as a resource manager link and copy the referenced data items on the processing job workspace. It also creates a STAC catalog JSON document referencing the locally copied data. The local directory path containing the catalog.json file and the data is passed to the corresponding CWL `input` at <<Workflow Execution>>.
+
 === Data Input/Output
 
 * Input 
@@ -97,26 +99,25 @@ include::../include/datastagein.wsd[]
 
 * <<CWL>>
 * <<ZOO>>
+* <<STAC>>
 
 == Workflow Execution
 
-_TBD_
+Calrissian is the responsible for orchestrating and executing the CWL defining the application. It directly interacts with Kubernetes for submitting jobs on different pods.
 
 === Overview and Purpose
 
-// .ADES Workflow Execution Activity Diagram
-// [plantuml, workflowexec, png] 
-// ....
-// include::../include/workflowexec.wsd[]
-// ....
 
 === Data Input/Output
 
-_TBD_
+* Data Staged-in catalog
+* Application CWL
+* Data produced catalog
 
 === Applicable Resources
 
-_TBD_
+* <<STAC>>
+* <<CWL>>
 
 == Data Stage-Out
 
@@ -129,6 +130,8 @@ This is a post-processing step that retrieve all the results produced the workfl
 ....
 include::../include/datastageout.wsd[]
 ....
+
+The data Stage-Out identifies all the **<<Application Workflow>>** `outputs` that are of the type Directory. For each of them, it creates a STAC catalog JSON document referencing relatively the locally produced data. Then the local directories are stored persistently to the Resource Manager store. A root catalog referencing all the directory catalogs is also stored with the results and published in the Resource Manager Catalog.
 
 === Data Input/Output
 

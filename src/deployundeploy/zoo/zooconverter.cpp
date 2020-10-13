@@ -134,13 +134,17 @@ parseParam<EOEPCA::OWS::ComplexData>(EOEPCA::OWS::ComplexData *param) {
   os << "\t<ComplexData>\n";
 
 
+  std::list<std::string> mtInsertedDefault{};
+
 
   if (param->getDefaultSupported()) {
     os << "\t\t<Default>\n";
 
-    if (!param->getDefaultSupported()->getMimeType().empty())
+    if (!param->getDefaultSupported()->getMimeType().empty()) {
       os << "\t\t\tmimeType = " << param->getDefaultSupported()->getMimeType()
          << "\n";
+      mtInsertedDefault.push_back(param->getDefaultSupported()->getMimeType());
+    }
 
     if (!param->getDefaultSupported()->getEncoding().empty())
       os << "\t\t\tencoding = " << param->getDefaultSupported()->getEncoding()
@@ -157,18 +161,27 @@ parseParam<EOEPCA::OWS::ComplexData>(EOEPCA::OWS::ComplexData *param) {
 
   if (!param->getSupported().empty()) {
     for (auto &supp : param->getSupported()) {
-      os << "\t\t<Supported>\n";
 
-      if (!supp->getMimeType().empty())
-        os << "\t\t\tmimeType = " << supp->getMimeType() << "\n";
+      bool f{false};
+      for(auto&inserted:mtInsertedDefault){
+          if(inserted==supp->getMimeType()){
+            f=true;
+          }
+      }
 
-      if (!supp->getEncoding().empty())
-        os << "\t\t\tencoding = " << supp->getEncoding() << "\n";
+      if(!f){
+        os << "\t\t<Supported>\n";
+        if (!supp->getMimeType().empty())
+          os << "\t\t\tmimeType = " << supp->getMimeType() << "\n";
 
-      if (!supp->getSchema().empty())
-        os << "\t\t\tschema =   " << supp->getSchema() << "\n";
+        if (!supp->getEncoding().empty())
+          os << "\t\t\tencoding = " << supp->getEncoding() << "\n";
 
-      os << "\t\t</Supported>\n";
+        if (!supp->getSchema().empty())
+          os << "\t\t\tschema =   " << supp->getSchema() << "\n";
+
+        os << "\t\t</Supported>\n";
+      }
     }
   }
 
@@ -433,12 +446,30 @@ std::list<std::unique_ptr<ZooApplication>> ZooConverter::convert(
           }
         }
 
-        for (auto &output : processDescription->getOutputs()) {
-          auto res = parseParam<EOEPCA::OWS::Param>(output.get());
-          if (!res.empty()) {
-            zooJob->addOutput(std::move(res));
-          }
+
+        auto theOutput=std::make_unique<EOEPCA::OWS::ComplexData>();
+        {
+          theOutput->setIdentifier("wf_outputs");
+          theOutput->setTitle("wf_outputs");
+
+          auto supportedDefault=std::make_unique<EOEPCA::OWS::Format>();
+          supportedDefault->setMimeType("application/json");
+
+          theOutput->moveDefaultSupported(supportedDefault);
+          theOutput->moveAddSupported(supportedDefault);
+
+          auto res = parseParam<EOEPCA::OWS::Param>(theOutput.get());
+
+          zooJob->addOutput(std::move(res));
         }
+
+
+//        for (auto &output : processDescription->getOutputs()) {
+//          auto res = parseParam<EOEPCA::OWS::Param>(output.get());
+//          if (!res.empty()) {
+//            zooJob->addOutput(std::move(res));
+//          }
+//        }
 
         zooConfig->setConfigFile((std::string)*zooJob);
 

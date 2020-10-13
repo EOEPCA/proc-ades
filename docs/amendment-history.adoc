@@ -13,6 +13,8 @@ The Amendment Record Sheet below records the history and issue status of this do
 | 0.1 | 14/04/2020 | Initial in-progress draft
 | 0.1.1 | 09/06/2020 | Update Design with ADES release 0.1
 | 0.1.2 | 06/07/2020 | Updated Design for ADES release 0.1. Added <<Functional Design>> and <<External Interfaces>> sections
+| 0.2.0 | 14/09/2020 | Updated Design for ADES release 0.2  Updated <<Functional Design>> section
+| 0.2.1 | 07/10/2020 | Updated Design for ADES release 0.2  Updated <<Functional Design>> and <<Components Design>> section
 |===
 
 '''

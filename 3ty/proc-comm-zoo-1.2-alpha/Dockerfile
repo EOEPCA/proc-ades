@@ -3,6 +3,7 @@ USER root
 
 ARG addUserFeature
 ENV addUserFeature=$addUserFeature
+#ENV HOME /root
 
 #RUN ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
@@ -10,8 +11,13 @@ RUN yum install -y epel-release
 RUN yum update -y
 RUN yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3
 
-COPY assets/libfcgi-2.4.0.orig.tar.gz /opt/libfcgi-2.4.0.orig.tar.gz
-RUN cd /opt/ && gzip -d libfcgi-2.4.0.orig.tar.gz && tar -xvf /opt/libfcgi-2.4.0.orig.tar
+
+RUN yum install -y     bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
+
+
+
+#COPY assets/libfcgi-2.4.0.orig.tar.gz /opt/libfcgi-2.4.0.orig.tar.gz
+#RUN cd /opt/ && gzip -d libfcgi-2.4.0.orig.tar.gz && tar -xvf /opt/libfcgi-2.4.0.orig.tar
 
 RUN yum install -y git
 
@@ -26,7 +32,9 @@ ENV PATH "$PATH:/usr/local/bin"
 COPY assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
 COPY  assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_
+COPY  assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c && mv /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_ /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c; fi
+RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/service_json.c && mv /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_ /opt/zoo-project/zoo-project/zoo-kernel/service_json.c; fi
 
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 

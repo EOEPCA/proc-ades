@@ -1,0 +1,34 @@
+version: "3.5"
+
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up -d
+#sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml stop
+#sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml down
+services:
+  ades:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eoepca/proc-ades:build
+    container_name: ades
+    networks:
+      - eoepca_network
+    ports:
+      - target: 80
+        published: 8888
+        protocol: tcp
+        mode: host
+    volumes:
+      # configuration volume
+      - ./config:/var/etc/ades:ro
+
+networks:
+  eoepca_network:
+    driver: bridge
+    name: eoepcanetwork
+
+#docker rmi t2cm:0.1 t2sm:0.1 t2sd:0.1
+#  docker-compose rm -f
+# docker-compose up -d
+# docker-compose stop
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml rm

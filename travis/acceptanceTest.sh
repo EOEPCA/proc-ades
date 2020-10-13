@@ -64,6 +64,30 @@ if [ "${TRAVIS}" == "true" ]; then
   echo "show rdirienzo's working area "
   docker exec zoo find /opt/zooservices_user/rdirienzo
 
+  echo "catalog CWL referrer: https://catalog.terradue.com/eoepca-services/search?uid=test_entites"
+  curl -s "https://catalog.terradue.com/eoepca-services/search?uid=test_entites"
+
+  echo "install application"
+  ./travis/transational/02_RunSyncRdirienzo.sh travis/transational/deploy_test.json
+
+  sleep 10
+  echo "new test service"
+  ./travis/transational/01_getProcessRdirienzo.sh "test_entites_" 
+
+  sleep 10
+  echo "md5sum..."
+  mSum=$(./travis/transational/01_getProcessRdirienzo.sh "test_entites_"  | md5sum)
+
+  echo "md5sum: $mSum"
+  echo "$mSum" | grep "3f317eb9e0da77f5c3b217482250e55b"
+  if [ $? -eq 0 ]
+  then
+    echo "OK"
+  else
+    echo "MD5SUM failed"
+    exit 1
+  fi
+
 fi
 
 

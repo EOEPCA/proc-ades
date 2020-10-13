@@ -336,15 +336,26 @@ int createUserSpace(maps* conf,const char* User){
   char* script=(char*)malloc(1024*3);
   memset(script,'\0',1024*3);
 
+  char* statusInfoPath=(char*)malloc(1024)  ;
+  memset(statusInfoPath,'\0',1024);
+
+  map *statusInfoPathMAP = getMapFromMaps (conf, "main", "tmpPath");
+  if (statusInfoPathMAP && statusInfoPathMAP->value && strlen(statusInfoPathMAP->value)>0){
+    sprintf(statusInfoPath,"%s/statusInfos/%s",statusInfoPathMAP->value,User);
+  }else{
+    sprintf(statusInfoPath,"/var/www/html/res/statusInfos/%s",User);
+  }
+
+
   map *rdrMAP = getMapFromMaps (conf, "eoepca", "userSpaceScript");
 
   if(rdrMAP && rdrMAP->value && strlen(rdrMAP->value)>0){
-    sprintf(script,"%s \"%s\" 1>/dev/null",rdrMAP->value,thePath);
+    sprintf(script,"%s \"%s\" \"%s\" \"%s\"    1>/dev/null",rdrMAP->value,thePath,statusInfoPath,User);
   }else{
-    sprintf(script,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+    sprintf(script,"/opt/t2scripts/prepareUserSpace.sh \"%s\" \"%s\" \"%s\" 1>/dev/null",thePath,statusInfoPath,User);
   }
 
-  fprintf(stderr,"/opt/t2scripts/prepareUserSpace.sh \"%s\" 1>/dev/null",thePath);
+  fprintf(stderr,"creation script: %s \n",script);
 
   int y=system(script);
 //  if(!exitFolder(thePath)){
@@ -352,11 +363,78 @@ int createUserSpace(maps* conf,const char* User){
 //  }else{
 //  }
 //
+  free(statusInfoPath);
   free(thePath);
   free(script);
 
   return y;
 }
+
+
+int removeService(maps* conf,char* service=NULL){
+
+  char* username=NULL;
+  char* anonymousUser=NULL;
+  char* userServicePath=NULL;
+  char* deleteScript=NULL;
+
+  if (conf && service){
+    maps* eoepcaMap=getMaps(conf,"eoepca");
+    if (eoepcaMap){
+      map* defaultUser=getMap(eoepcaMap->content,"defaultUser");
+      if (defaultUser){
+        anonymousUser=zStrdup(defaultUser->value);
+      }
+
+
+      map* userServicePathMap=getMap(eoepcaMap->content,"userworkspace");
+      if (userServicePathMap){
+        userServicePath=zStrdup(userServicePathMap->value);
+      }
+
+
+      map* deleteScriptMap=getMap(eoepcaMap->content,"removeServiceScript");
+      if (deleteScriptMap){
+        deleteScript=zStrdup(deleteScriptMap->value);
+      }
+    }
+
+    maps* userMap=getMaps(conf,"eoepcaUser");
+    if (userMap){
+      map* theUser=getMap(userMap->content,"user");
+      if (theUser){
+        username=zStrdup(theUser->value);
+      }
+    }
+
+    if( strcmp(anonymousUser,username)!=0 && deleteScript!=NULL ) {
+      if(
+          deleteScript && strlen(deleteScript)>0
+          && username && strlen(username)>0
+          && userServicePath && strlen(userServicePath)>0
+          ){
+
+          char* script=(char*)malloc(1024*3);
+          memset(script,'\0',1024*3);
+          sprintf(script,"%s '%s' '%s' '%s' 1>/dev/null",deleteScript,userServicePath,username ,service );
+
+        fprintf(stderr,"%s\n",script);
+         int y=system(script);
+
+          free(script);
+      }
+    }
+  }
+
+  free(username);  username=NULL;
+  free(anonymousUser);anonymousUser=NULL;
+  free(userServicePath);userServicePath=NULL;
+  free(deleteScript);deleteScript=NULL;
+
+  return 0;
+}
+
+
 
 //rdr
 int
@@ -1418,6 +1496,7 @@ void
 loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
                    maps ** inputs, maps ** ioutputs, int *eres)
 {
+  char eoUserPath[1024];
   char tmps1[1024];
   char ntmp[1024];
   maps *m = *myMap;
@@ -1426,6 +1505,21 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
   /**
    * Extract serviceType to know what kind of service should be loaded
    */
+
+
+  memset(eoUserPath,'\0',1024);
+  map* eoUserMap=getMapFromMaps(m,"eoepcaUser","user");
+  map* eoUserPathMap=getMapFromMaps(m,"eoepca","userworkspace");
+
+  if( eoUserMap && strlen(eoUserMap->value)>0 && eoUserPathMap && strlen(eoUserPathMap->value)>0){
+
+    sprintf(eoUserPath,"%s/%s",eoUserPathMap->value,eoUserMap->value);
+
+    fprintf(stderr,"MAP ALL:--> %s***************0 \n",eoUserPath);
+
+  }
+
+
   map *r_inputs = NULL;
   map* cwdMap=getMapFromMaps(m,"main","servicePath");
   if(cwdMap!=NULL){
@@ -1458,9 +1552,11 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
         else
           sprintf (tmps1, "%s/", ntmp);
 	  
-        char *altPath = zStrdup (tmps1);
+        char *altPath = zStrdup ( strlen(eoUserPath)>0?eoUserPath:tmps1);
+
         r_inputs = getMap (s1->content, "ServiceProvider");
         sprintf (tmps1, "%s/%s", altPath, r_inputs->value);
+        fprintf(stderr,"--->%s \n",tmps1);
         free (altPath);
 	 }
 #ifdef DEBUG
@@ -2225,6 +2321,29 @@ runRequest (map ** inputs)
 
     json_object *res=json_object_new_object();
     setMapInMaps(m,"headers","Content-Type","application/json;charset=UTF-8");
+
+
+    if((
+            strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
+          strcasecmp(cgiRequestMethod,"post")==0
+        ){
+
+          cgiQueryString="/processes/eoepcaadesdeployprocess/jobs";
+    }
+
+//    if((
+//            strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
+//          strcasecmp(cgiRequestMethod,"delete")==0
+//        ){
+//
+//
+//
+//
+//          //cgiRequestMethod="post";
+//          cgiQueryString="/processes/eoepcaadesundeployprocess/jobs";
+//    }
+
+
     /* - Root url */
     if(cgiContentLength==1){
       map* tmpMap=getMapFromMaps(m,"main","serverAddress");
@@ -2264,6 +2383,28 @@ runRequest (map ** inputs)
     }else if(strcmp(cgiQueryString,"/api")==0){
       /* - /api url */
       produceApi(m,res);
+    }else if(  strstr(cgiQueryString,"/processes/")   &&  strcasecmp(cgiRequestMethod,"delete")==0 ){
+
+
+      fprintf(stderr,"%s\n",cgiQueryString);
+      char* p=strstr(cgiQueryString,"/processes/");
+      if (strlen(cgiQueryString)>11/*/processes/*/){
+
+        char *orig = zStrdup (p+11);
+        if(orig[strlen(orig)-1]=='/')
+            orig[strlen(orig)-1]=0;
+
+        char *theS=strchr(orig,'/');
+        if (theS){
+          *theS='\0';
+        }
+
+        fprintf(stderr,"%s\n",orig);
+        removeService(m,orig);
+        free (orig);
+
+      }
+
     }else if(strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0){
       /* - /processes */
       json_object *res3=json_object_new_array();

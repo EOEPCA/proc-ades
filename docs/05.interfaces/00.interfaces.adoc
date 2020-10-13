@@ -2,7 +2,6 @@
 = External Interfaces
 
 [NOTE]
-.Work In Progress
 ===============================================
 This section focuses on the available functionality published over interfaces.
 
@@ -39,7 +38,7 @@ The 2 next sections describes
 * The 2 first versions implementing the https://www.ogc.org/standards/common[Web Service Common]
 * The latest API implementing a REST interface described in http://openapis.org/[OpenAPI]
 
-== WPS 1.0.0 & 2.0.0
+=== WPS 1.0.0 & 2.0.0
 
 The https://www.ogc.org/standards/wps[OpenGIS® Web Processing Service (WPS)] Interface Standard provides rules for standardizing how inputs and outputs (requests and responses) for geospatial processing services, such as polygon overlay. The standard also defines how a client can request the execution of a process, and how the output from the process is handled. It defines an interface that facilitates the publishing of geospatial processes and clients’ discovery of and binding to those processes. The data required by the WPS can be delivered across a network or they can be available at the server. 
 
@@ -49,7 +48,7 @@ Base URL: https://ades.eoepca.org/ows
 
 include::../include/wps1and2-interface.adoc[]
 
-== OGC API Processes
+=== OGC API Processes
 
 The OGC API - Processes enables the execution of computing processes and the retrieval of metadata describing their purpose and functionality. Typically, these processes combine raster, vector, and/or coverage data with well-defined algorithms to produce new raster, vector, and/or coverage information.
 
@@ -58,3 +57,145 @@ The OGC API - Processes enables the execution of computing processes and the ret
 Base URL: https://ades.eoepca.org/api
 
 include::../include/ogcwps-summary.adoc[]
+
+== Application Package
+
+The **Application Package** is the interface for the application developer. It contains 3 essentials elements:
+
+* The **<<Application Item>>** is the entry point of the application in a Resource Manager. This item is encoded in a <<OWS Context>> document.
+* The **<<Application Workflow>>** is the processor graph describing the steps execution of the software processor.
+* The **<<Application Image>>** is the container image including the processor software and its dependencies.
+
+In the following section, we will use the `vegetation-index` application as an example to illustrate the spcifications and convention of the **Application Package**
+
+=== Application Item
+
+The **Application Item** is the entry point of the application in a Resource Manager. It is an <<OWS Context>> document designed to be searchable and queryable as an `Atom entry`.
+
+Below is the **Application Item** of the `vegetation-index` application.
+We will describe the essantial elements of this document.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"> <1>
+    <title type="text">Result for OpenSearch query in eoepca-services</title>
+    <id>https://catalog.terradue.com:443/eoepca-services/search?uid=vegetation-index&amp;format=atom</id>
+    <updated>2020-10-12T07:32:51.013305Z</updated>
+    <link rel="self" type="application/atom+xml" title="Reference link" href="https://catalog.terradue.com/eoepca-services/search?uid=vegetation-index&amp;format=atom" />
+    <link rel="search" type="application/opensearchdescription+xml" title="OpenSearch Description link" href="https://catalog.terradue.com/eoepca-services/description" />
+    <entry> <2>
+        <id>https://catalog.terradue.com:443/eoepca-services/search?format=atom&amp;uid=vegetation-index</id>
+        <title type="text">Vegetation index</title> <3>
+        <summary type="html">Vegetation index processor</summary> <4>
+        <published>2020-10-12T07:32:51.01297Z</published>
+        <updated>2020-10-25T10:34:19.721262Z</updated> <5>
+        <link rel="self" type="application/atom+xml" title="Reference link" href="https://catalog.terradue.com/eoepca-services/search?format=atom&amp;uid=vegetation-index" /> <6>
+        <owc:offering code="http://www.opengis.net/eoc/applicationContext/cwl" xmlns:owc="http://www.opengis.net/owc/1.0"> <7>
+            <owc:content type="application/cwl" href="https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/vegetation-index/vegetation-index.cwl" /> <8>
+        </owc:offering>
+        <identifier xmlns="http://purl.org/dc/elements/1.1/">vegetation-index</identifier> <9>
+    </entry>
+    <totalResults xmlns="http://a9.com/-/spec/opensearch/1.1/">1</totalResults>
+    <startIndex xmlns="http://a9.com/-/spec/opensearch/1.1/">1</startIndex>
+    <itemsPerPage xmlns="http://a9.com/-/spec/opensearch/1.1/">20</itemsPerPage>
+    <os:Query role="request" xmlns:dct="http://purl.org/dc/terms/" xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/" geo:uid="vegetation-index" />
+</feed>
+```
+
+<1> The Atom Feed enclosing the Application Item. in our case, the feed is the result of an <<CEOS-OS-BP,OpenSearch>> query to a Catalog.
+<2> The **Application Item** as an Atom Entry
+<3> The **Application Title** used to label the <<Processing Service>> deployed on the ADES.
+<4> The **Application Summary** used as the description of the <<Processing Service>> deployed on the ADES.
+<5> The **Application Date** used to timestamp the <<Processing Service>> deployed on the ADES.
+<6> Following the <<CEOS-OS-BP,OpenSearch>> protocol, the self link is the persistent link to the resource. this is often managed automatically by the Resource Manager
+<7> The <<OWS>> `offering` declaring the **<<Application Workflow>>** with the specific code `http://www.opengis.net/eoc/applicationContext/cwl`.
+<8> The actual **<<Application Workflow>>** resource. It can be either enclosed in the document or referenced with a link like in this example. The Mime-Type is `application/cwl`.
+<9> The **Application Identifier** used to **uniquely** identify the <<Processing Service>> deployed on the ADES.
+
+=== Application Workflow
+
+The **Application Workflow** is the core document of the processor in <<CWL>>. It describes, as a Directed Acyclic Graph (DAG), the execution of the user processor defining the commands to be executed with their arguments as well as the inputs/outputs.
+The ADES relies on the <<CWL>> tool via <<Calrissian>> to execute the workflow. Thus, the ADES supports entirely the <<CWL>> specifications. Therefore, we will not explain in details here the <<CWL>> specifications available as a <<Reference Document, Reference Documents>>.
+The purpose of this section is to describe the elemnts used in the CWL in the functional design of the ADES.
+
+Below is the **Application Workflow** <<CWL>> of the `vegetation-index` application.
+We will describe the essantial elements of this document.
+
+```yaml
+$graph:
+  cwlVersion: v1.0
+  - class: CommandLineTool
+    id: clt
+    baseCommand: vegetation-index
+    inputs:
+      inp1:
+        inputBinding: 
+          position: 1
+          prefix: --input-reference
+        type: Directory
+      inp2:
+        inputBinding:
+          position: 2
+          prefix: --aoi
+        type: string
+    outputs:
+      results:
+        outputBinding:
+          glob: .
+        type: Any
+    hints:
+      DockerRequirement:
+        dockerPull: terradue/eoepca-vegetation-index:0.1 <7>
+    requirements:
+      EnvVarRequirement:
+        envDef:
+          PATH: /opt/anaconda/envs/env_vi/bin:/opt/anaconda/envs/env_vi/bin:/opt/anaconda/envs/env_default/bin:/opt/anaconda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          PREFIX: /opt/anaconda/envs/env_vi
+      ResourceRequirement: {}
+  - class: Workflow <1>
+    doc: Vegetation index processor
+    id: vegetation-index
+    inputs: <2>
+      aoi:
+        doc: Area of interest in WKT
+        label: Area of interest
+        type: string <3>
+      input_reference:
+        doc: EO product for vegetation index
+        label: EO product for vegetation index
+        stac:catalog: catalog.json
+        stac:collection: source
+        type: Directory[] <3>
+    label: Vegetation index
+    outputs: <4>
+    - id: wf_outputs
+      outputSource:
+      - node_1/results
+      type:
+        items: Directory <5>
+        type: array
+    requirements:
+    - class: ScatterFeatureRequirement <6>
+    steps:
+      node_1:
+        in:
+          inp1: input_reference
+          inp2: aoi
+        out:
+        - results
+        run: '#clt'
+        scatter: inp1
+        scatterMethod: dotproduct
+```
+
+<1> the `Workflow` class object of the <<CWL>> is the main element used by the ADES to extract the information about the inputs/outputs of the Application
+<2> the `inputs` section defines all the input necessary for the command. When the **Application Package** is deployed as as <<Processing Service>>, the `inputs` used by the <<WPS Server>> to declare the processing inputs at the <<Web Processing Services>> interface.
+<3> the `type` used for `input` is replicated at <<Web Processing Services>> interface level to describe the exepected input. A specific convention is applied when using the type `Directory` and is explained in the <<Data Stage-In>> section.
+<4> the `outputs` section defines the outputs of the command. When the **Application Package** is deployed as as <<Processing Service>>, the `outputs` used by the <<WPS Server>> to declare the processing outputs at the <<Web Processing Services>> interface.
+<5> the `type` used for `output` is replicated at <<Web Processing Services>> interface level to describe the produced output. A specific convention is applied when using the type `Directory` and is explained in the <<Data Stage-Out>> section.
+<6> the scattering functions of CWL is replicated in the ADES with <<Calrissian>> using different virtual machines instances to run the process in parallel.
+<7> All the **<<Application Image>>** specified in the **Application Workflow** are pulled and used to instantiate the processing container on the cluster.
+
+=== Application Image
+
+One or more **Application Image** can be used in the **<<Application PAckage>>** to support the execution of the processor. The **Application Image** is specified as a <<Docker>> Image in the **<<Application Workflow>>**

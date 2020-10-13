@@ -19,6 +19,9 @@
 		<Supported>
 			MimeType = application/atom+xml
 		</Supported>
+		<Supported>
+			MimeType = application/cwl
+		</Supported>
 	</ComplexData>
 </DataInputs>
 

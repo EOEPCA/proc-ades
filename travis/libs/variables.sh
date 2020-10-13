@@ -24,6 +24,7 @@ then
   CMAKERELEASE="Release"
   RELEASETYPE='release'
   TRAVIS_NAME=''
+  TAG_PREFIX=''
 	echo 'Branch selected: master '
 fi
 
@@ -31,6 +32,7 @@ fi
 if [ "${TRAVIS_BRANCH}" == 'develop' ]
 then
   RELEASETYPE='develop'
+  TAG_PREFIX='dev'
 	echo 'Branch selected: develop' 
 fi
 
@@ -42,14 +44,14 @@ export DOCKER_ZOO='eoepca/proc-comm-zoo:latest'
 export TRAVIS_BUILD_NUMBER="${TRAVIS_BUILD_NUMBER:-0}"
 
 #docker temp image name
-export LOCAL_IMAGE_NAME="proc-ades:1.0"
+export LOCAL_IMAGE_NAME="proc-ades:build"
 
 #eoepca repository
 export EOEPCA_REPOSITORY='eoepca'
 #eoepca name
 export EOEPCA_IMAGE="proc-ades"
 #eoepca tag
-export EOEPCA_TAG="${TRAVIS_NAME}${TRAVIS_BRANCH}_${TRAVIS_BUILD_NUMBER}"
+export EOEPCA_TAG="${TAG_PREFIX}latest"
 #final image
 export EOEPCA_ADES_ZOO="${EOEPCA_REPOSITORY}/${EOEPCA_IMAGE}:${EOEPCA_TAG}"
 
