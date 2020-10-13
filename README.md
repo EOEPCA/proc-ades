@@ -31,7 +31,7 @@
     <br />
     <a href="https://github.com/EOEPCA/proc-ades/wiki"><strong>Get Started »</strong></a>
     <br />
-    <a href="https://eoepca.github.io/proc-ades/develop/">Open Design</a>
+    <a href="https://eoepca.github.io/proc-ades/master/">Open Design</a>
     .
     <a href="https://github.com/EOEPCA/proc-ades/issues">Report Bug</a>
     ·
