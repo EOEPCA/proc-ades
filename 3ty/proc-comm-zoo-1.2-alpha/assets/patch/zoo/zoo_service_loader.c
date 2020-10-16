@@ -461,14 +461,41 @@ addUserToMap(maps* conf){
   if(orig!=NULL)
     for (; s; ei++ ) {
       if(strstr(s,"=")!=NULL && strlen(strstr(s,"="))>1){
-        
-      	// int len=strlen(s);
-      	// char* tmpName=;
-      	// char* tmpValue=strstr(s,"=")+1;
-      	// char* tmpName1=(char*)malloc((1+(len-(strlen(tmpValue)+1)))*sizeof(char));
-      	// snprintf(tmpName1,(len-strlen(tmpValue)),"%s",tmpName);
 
-        if(strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
+
+//        REDIRECT_REDIRECT_EOEPCA_WORKSPACE
+
+        if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
+          char* baseU=strchr(s,'=');
+          if (strlen(baseU)>1){
+            char* workspace= ++baseU;
+//            fprintf(stderr,"GNAGNERA >%s<\n",workspace);
+
+            maps *_tmpMaps = createMaps("eoepcaUser");
+            if(_tmpMaps->content == NULL)
+              _tmpMaps->content = createMap ("user",workspace);
+            else
+              addToMap (_tmpMaps->content,"user",workspace);
+
+            if( strcmp(anonymousUser,workspace)==0 ){
+              // it is  anonymous, can only reads
+              // rwx
+              map *theGrants = createMap("grant","1--");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }else{
+              // it is ok!
+              map *theGrants = createMap("grant","111");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }
+
+            if(conf){
+              addMapsToMaps (&conf, _tmpMaps);
+            }
+          }
+        }
+
+
+        if(false && strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
           // fprintf(stderr,"--> %s=%s \n", tmpName1, tmpValue );
           char* baseU=strchr(s,'=');
           if (baseU){
