@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: eoepca/proc-ades:build
+    image: eoepca/proc-ades:latest
     container_name: ades
     networks:
       - eoepca_network
@@ -20,6 +20,7 @@ services:
     volumes:
       # configuration volume
       - ./config:/var/etc/ades:ro
+      - ./:/work
 
 networks:
   eoepca_network:
@@ -32,3 +33,4 @@ networks:
 # docker-compose stop
 #sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up
 #sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml rm
+#  docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" ades  bash
