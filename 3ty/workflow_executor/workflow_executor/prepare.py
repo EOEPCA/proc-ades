@@ -45,25 +45,8 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     ### Configuring storage_class and creating kubernetes secrets for stageout
     storage_class_name = ""
     if workflow_config != None:
-        try:
+        storage_class_name = workflow_config["storageclass"]
 
-            storage_class_name = workflow_config["storageclass"]
-
-            secret = client.V1Secret()
-            secret.metadata = client.V1ObjectMeta(name="procades-secret")
-            secret.type = "Opaque"
-            secret.data = workflow_config["stageout"]
-            v1.create_namespaced_secret(namespace, secret)
-            volumeSize=workflow_config["volumesize"]
-
-
-
-        except ApiException as e:
-            # Status appears to be a string.
-            if e.status == 409:
-                print("procades-secret has already been installed")
-            else:
-                raise
 
     #### Creating pod manager role
     print("####################################")

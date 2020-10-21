@@ -81,14 +81,6 @@ def read_prepare(content: PrepareContent, response: Response):
 
     default_value = ""
     workflow_config = {
-        "stageout": {
-            "catalog_endpoint": os.getenv('CATALOG_ENDPOINT', default_value),
-            "catalog_username": os.getenv('CATALOG_USERNAME', default_value),
-            "catalog_apikey": os.getenv('CATALOG_APIKEY', default_value),
-            "storage_host": os.getenv('STORAGE_HOST', default_value),
-            "storage_username": os.getenv('STORAGE_USERNAME', default_value),
-            "storage_apikey": os.getenv('STORAGE_APIKEY', default_value)
-        },
         "storageclass": os.getenv('STORAGE_CLASS', default_value),
         "volumesize": os.getenv('VOLUME_SIZE', volumeSize)
     }
@@ -133,11 +125,52 @@ def read_execute(content: ExecuteContent, response: Response):
 
     namespace = sanitize_k8_parameters(content.serviceID)
     cwl_content = content.cwl
-    inputs_content = content.inputs
+    inputs_content = json.loads(content.inputs)
     volume_name_prefix = f"{namespace}-volume"
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
+
+    # retrieve config params and store them in json
+    # these will be used in the stageout phase
+    default_value = ""
+
+    inputs_content["inputs"].append({
+        "id":"store_host",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_HOST', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id":"store_username",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_USERNAME', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id":"store_apikey",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_APIKEY', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id": "job",
+        "dataType": "string",
+        "value": workflow_name,
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id": "outputfile",
+        "dataType": "string",
+        "value": f"{workflow_name}.res",
+        "mimeType": "",
+        "href": ""})        
+
+    pprint(f"inputs_content {inputs_content}")
     # inputcwlfile is input_json + cwl_file
     # create 2 temp files
     with tempfile.NamedTemporaryFile(mode="w") as cwl_file, tempfile.NamedTemporaryFile(mode="w") as input_json:
@@ -145,7 +178,7 @@ def read_execute(content: ExecuteContent, response: Response):
         cwl_file.flush()
         cwl_file.seek(0)
 
-        input_json.write(inputs_content)
+        input_json.write(json.dumps(inputs_content))
         input_json.flush()
         input_json.seek(0)
 
@@ -232,6 +265,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 
 def main():
+    print("DEBuG MODE")
     uvicorn.run(app)
 
 

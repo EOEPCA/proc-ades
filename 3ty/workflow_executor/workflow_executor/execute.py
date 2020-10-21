@@ -10,12 +10,15 @@ from os import path
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import tempfile
+from cwl_wrapper.parser import Parser
+from io import StringIO
 
 
 def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, outputFolder, namespace, state=None):
     print(job_input_json_file)
     job_input_json = json.load(open(job_input_json_file))
 
+    
     print("parsing cwl")
     with open(cwl_document, 'r') as stream:
         try:
@@ -32,65 +35,21 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     inputs = {}
     for k, v in workflow['inputs'].items():
 
-        # if input is of type stac:collection then a stage-in is required
-        if "stac:catalog" in v:
 
-            isarray = "[]" in v["type"]
-            type = v["type"].replace("[]", "")
-            print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ")
+        for input in job_input_json["inputs"]:
 
-            input_counter = 1
+            if input['id'] == k:
+                type = v["type"]
 
-            for input in job_input_json["inputs"]:
-                if input['id'] == k:
-                    stac_catalog_yaml = {"catalog": {}}
-                    stac_catalog_yaml["catalog"]["id"] = "catid"
-                    stac_catalog_yaml["catalog"]["title"] = "cat title"
-                    stac_catalog_yaml["catalog"]["description"] = "cat description"
-                    stac_catalog_yaml["catalog"]["collections"] = []
-                    stac_catalog_yaml["catalog"]["collections"]
-                    stac_catalog_yaml_entry = {k: {}}
-                    stac_catalog_yaml_entry[k]["title"] = v["label"]
-                    stac_catalog_yaml_entry[k]["description"] = v["label"] + " catalogue reference"
-                    stac_catalog_yaml_entry[k]["entries"] = [input['value']]
-                    stac_catalog_yaml["catalog"]["collections"].append(stac_catalog_yaml_entry)
-
-                    print("Running stac stage-in")
-                    mountFolder = outputFolder
-                    outputFolderForSingleInput = path.join(outputFolder, f"{k}_input{str(input_counter)}")
-                    temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
-                    yamlString = yaml.dump(stac_catalog_yaml)
-                    temp.write(yamlString)
-                    temp.seek(0)
-                    print(temp.name)
-                    print(temp.read())
-                    os.chmod(temp.name, 0o777)
-                    timeout = 30000
-                    stagein.stac_stagein_run(namespace=namespace, volume_name_prefix=volume_name_prefix,
-                                             input_yaml=temp.name, timeout=timeout, mountFolder=mountFolder,
-                                             outputFolder=outputFolderForSingleInput, state=state)
-                    temp.close()
-
-                    if isarray:
-                        if k not in inputs:
-                            inputs[k] = []
-                        inputs[k].append({"class": type, "path": outputFolderForSingleInput})
-                    else:
-                        inputs[k] = {"class": type, "path": outputFolderForSingleInput}
-                    input_counter += 1
-
-        else:
-            for input in job_input_json["inputs"]:
-                if input['id'] == k:
-                    type = v["type"]
-
-                    if "[]" in type:
-                        if k not in inputs.keys():
-                            inputs[k] = []
-                        inputs[k].append(input['value'])
-                    else:
-                        inputs[k] = {}
-                        inputs[k] = input['value']
+                if "[]" in type:
+                    if k not in inputs.keys():
+                        inputs[k] = []
+                    #inputs[k].append(input['input']['value'])
+                    inputs[k].append(input['value'])
+                else:
+                    inputs[k] = {}
+                    #inputs[k] = input['input']['value']
+                    inputs[k] = input['value']
 
     print("Input json to pass to the cwl runner: ")
     pprint(inputs)
@@ -103,9 +62,13 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     output_volume_name = volume_name_prefix + "-output-data"
     tmpout_volume_name = volume_name_prefix + "-tmpout"
 
-    workflow_id = helpers.getCwlWorkflowId(cwl_document)
+
+    # cwl-wrapper
+    wrapped_cwl_document=wrapcwl(cwl_document)
+
+    workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
-    cwl_input_json = process_inputs(cwl_document, job_input_json, volume_name_prefix,
+    cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json, volume_name_prefix,
                                     path.join(mount_folder, "input-data"), namespace, state=state)
 
     # copying cwl in volume -input-data
@@ -116,13 +79,13 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
-    helpers.copy_files_to_volume(sources=[cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
-                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state)
+    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
+                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state, workflow_name=workflow_name)
 
     os.remove(tmppath)
 
     jsonInputFilename = ntpath.basename(tmppath)
-    cwlDocumentFilename = ntpath.basename(cwl_document)
+    cwlDocumentFilename = ntpath.basename(wrapped_cwl_document)
 
     # # Setup K8 configs
     config.load_kube_config()
@@ -154,3 +117,24 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
         except ApiException as e:
             print("Exception when submitting job: %s\n" % e, file=sys.stderr)
             return e
+
+
+
+def wrapcwl(cwl_document):
+
+    directory=os.path.dirname(cwl_document)
+
+    filename=os.path.basename(cwl_document)
+    filename_wo_extension=os.path.splitext(filename)[0]
+    wrappedcwl=os.path.join(directory,f"{filename_wo_extension}_wrapped.cwl")
+
+    k = dict()
+    k['cwl'] = cwl_document
+    k['rulez'] = None
+    k['output'] = wrappedcwl
+    k['maincwl'] = None
+    k['stagein'] = None
+    k['stageout'] = None
+    wf = Parser(k)
+    wf.write_output()
+    return wrappedcwl

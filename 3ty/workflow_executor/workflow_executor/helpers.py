@@ -14,13 +14,17 @@ from pprint import pprint
 import uuid
 
 
-def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None):
+def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None, workflow_name=None):
 
     config.load_kube_config()
     api_client = client.ApiClient()
     api_instance = client.CoreV1Api(api_client)
 
-    pod_name = f"copy-pod"
+
+    if workflow_name:
+        pod_name = f"{workflow_name}-copy-pod"
+    else:    
+        pod_name = f"copy-pod"
     resp = None
     try:
         resp = api_instance.read_namespaced_pod(name=pod_name, namespace=namespace)
