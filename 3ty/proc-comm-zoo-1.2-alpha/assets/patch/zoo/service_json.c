@@ -1222,12 +1222,29 @@ extern "C" {
     map *tmpPath = getMapFromMaps (conf, "openapi", "rootUrl");
     map *cIdentifier = getMapFromMaps (conf, "lenv", "oIdentifier");
     map *sessId = getMapFromMaps (conf, "lenv", "usid");
-    char *Url0=(char*) malloc((strlen(tmpPath->value)+
+
+    int wpLen=0;
+    char* wp=NULL;
+    map* eoUserMap=getMapFromMaps(conf,"eoepcaUser","user");
+    if (eoUserMap && eoUserMap->value){
+      wpLen=strlen(eoUserMap->value);
+      wp=(char*)malloc((10+wpLen)*sizeof(char));
+      memset(wp,0,(10+wpLen)*sizeof(char));
+      sprintf(wp,"/%s",eoUserMap->value);
+    }else{
+      fprintf(stderr,"///////////////////////////////////////////// \n" );
+      fprintf(stderr,"workspace did not define\n");
+      fprintf(stderr,"///////////////////////////////////////////// \n" );
+    }
+
+    char *Url0=(char*) malloc(wpLen*(strlen(tmpPath->value)+
 			       strlen(cIdentifier->value)+
 			       strlen(sessId->value)+18)*sizeof(char));
+
     int needResult=-1;
     char *message, *status;
-    sprintf(Url0,"%s/processes/%s/jobs/%s",
+    sprintf(Url0,"%s%s/processes/%s/jobs/%s",
+            (wpLen>0?wp:""),
 	    tmpPath->value,
 	    cIdentifier->value,
 	    sessId->value);
@@ -1254,6 +1271,7 @@ extern "C" {
     }
     json_object_object_add(obj,"links",res);
     free(Url0);
+    free(wp);
     return 0;
   }
 

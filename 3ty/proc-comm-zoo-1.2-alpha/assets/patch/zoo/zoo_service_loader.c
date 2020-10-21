@@ -462,14 +462,14 @@ addUserToMap(maps* conf){
     for (; s; ei++ ) {
       if(strstr(s,"=")!=NULL && strlen(strstr(s,"="))>1){
 
-
-//        REDIRECT_REDIRECT_EOEPCA_WORKSPACE
-
         if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
           char* baseU=strchr(s,'=');
           if (strlen(baseU)>1){
             char* workspace= ++baseU;
 //            fprintf(stderr,"GNAGNERA >%s<\n",workspace);
+
+
+            username = zStrdup(workspace);
 
             maps *_tmpMaps = createMaps("eoepcaUser");
             if(_tmpMaps->content == NULL)
