@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ades-processing-services-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: glusterfs-storage
+  resources:
+    requests:
+      storage: 5Gi
