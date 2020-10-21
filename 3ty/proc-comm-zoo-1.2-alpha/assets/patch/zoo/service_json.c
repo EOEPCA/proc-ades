@@ -1190,13 +1190,36 @@ extern "C" {
     sprintf(tmp,"%s/%s_%s.json",
 	    tmpPath->value,cIdentifier->value,sessId->value);
     FILE* foutput=fopen(tmp,"w+");
+
+
+    fprintf(stderr,"/////////////////////%s//////////////////////// \n",tmp );
+
+
     if(foutput!=NULL){
       fclose(foutput);
       char tmpUrl[1024];
       map* tmpPath1 = getMapFromMaps (conf, "main", "tmpUrl");
-      sprintf(tmpUrl,"%s/%s_%s.json",tmpPath1->value,
+
+      int wpLen=0;
+      char* wp=NULL;
+      map* eoUserMap=getMapFromMaps(conf,"eoepcaUser","user");
+      if (eoUserMap && eoUserMap->value){
+        wpLen=strlen(eoUserMap->value);
+        wp=(char*)malloc((10+wpLen)*sizeof(char));
+        memset(wp,0,(10+wpLen)*sizeof(char));
+        sprintf(wp,"/%s",eoUserMap->value);
+      }
+
+      sprintf(tmpUrl,"%s%s/%s_%s.json",
+              (wpLen>0?wp:""),
+              tmpPath1->value,
 	      cIdentifier->value,sessId->value);
       setMapInMaps(conf,"headers","Location",tmpUrl);
+
+
+
+      fprintf(stderr,"/////////////////////%s//////////////////////// \n",tmpUrl );
+
     }
     if(res==3){
       setMapInMaps(conf,"headers","Status","201 Created");
