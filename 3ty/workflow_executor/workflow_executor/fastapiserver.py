@@ -241,6 +241,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = f"{namespace}-volume"
     mount_folder = "/workflow"
+    outputfile=f"{workflow_name}.res"
 
     state = client.State()
     print('Result GET')
@@ -248,13 +249,14 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
-                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,
+                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,outputfile=outputfile,
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
     except ApiException as err:
             e = Error()
             e.set_error(12, err.body)
+            print(err.body)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             return e
 
