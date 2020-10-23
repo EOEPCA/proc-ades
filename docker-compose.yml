@@ -4,6 +4,19 @@ version: "3.5"
 #sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml stop
 #sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml down
 services:
+
+  web-wf-exe:
+    build:
+      context: 3ty/workflow_executor/webinterface
+      dockerfile: Dockerfile
+    image: web-wf-exe:1.0
+    hostname: webwf.org
+    container_name: web-wf-exe
+    networks:
+      - eoepca_network
+#    ports:
+#      - "9999:80"
+
   ades:
     build:
       context: .
@@ -20,7 +33,13 @@ services:
     volumes:
       # configuration volume
       - ./config:/var/etc/ades:ro
+      # da rimuovere - ./:/work
       - ./:/work
+    links:
+      - web-wf-exe
+    depends_on:
+      - web-wf-exe
+
 
 networks:
   eoepca_network:
