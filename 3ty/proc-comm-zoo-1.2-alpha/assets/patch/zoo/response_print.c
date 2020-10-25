@@ -1805,6 +1805,35 @@ void printProcessResponse(maps* m,map* request, int pid,service* serv,const char
   time(&time1);
   nr=NULL;
 
+
+
+  int ei = 1;
+  int canContinue=false;
+  char **orig = environ;
+  char *s=*orig;
+  char workspace[1024*2];
+  char* pWorkspace = NULL;
+  memset(workspace,0,1024*2);
+  for (; s; ei++ ) {
+      if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
+        char* baseU=strchr(s,'=');
+        if (strlen(baseU)>1){
+          pWorkspace = ++baseU;          
+        }
+      }
+    // fprintf(stderr, "------> %s \n", s);    
+    s = *(orig+ei);
+  }
+
+  if (pWorkspace){
+    const char *HTTP_HOST = std::getenv("HTTP_HOST");
+    const char *REQUEST_SCHEME = std::getenv("REQUEST_SCHEME");
+    const char *REQUEST_URI = std::getenv("REQUEST_URI");
+    sprintf(workspace, "%s://%s/%s/zoo", REQUEST_SCHEME, HTTP_HOST,pWorkspace);
+    fprintf(stderr, "------> >>>>>>%s://%s<<<<<\n", REQUEST_SCHEME, HTTP_HOST);
+    fprintf(stderr,"---------WORKSPACE: %s--------------\n",workspace);
+  }
+  
   doc = xmlNewDoc(BAD_CAST "1.0");
   map* version=getMapFromMaps(m,"main","rversion");
   int vid=getVersionId(version->value);
@@ -1834,6 +1863,12 @@ void printProcessResponse(maps* m,map* request, int pid,service* serv,const char
        * percentCompleted attribute). 
        * Else fallback to the initial method using the xml file to write in ...
        */
+
+      if (strlen(workspace)>0 && tmpm1 && tmpm1->value ){
+        free(tmpm1->value);
+        tmpm1->value = zStrdup(workspace);
+      }
+
       map* cwdMap=getMapFromMaps(m,"main","servicePath");
       struct stat myFileInfo;
       int statRes;
@@ -1861,14 +1896,26 @@ void printProcessResponse(maps* m,map* request, int pid,service* serv,const char
 	  sprintf(currentSid,"%s",tmp_lenv->value);
 	if(tmpm==NULL || strcasecmp(tmpm->value,"false")==0){
 	  sprintf(url,"%s?request=Execute&service=WPS&version=1.0.0&Identifier=GetStatus&DataInputs=sid=%s&RawDataOutput=Result",tmpm1->value,currentSid);
-	}else{
+	
+    // fprintf(stderr,"---------THEPATH: %s--------------\n",tmpm1->value);
+    // fprintf(stderr,"---------WORKSPACE1: %s--------------\n",workspace);
+
+  }else{
 	  if(strlen(tmpm->value)>0)
 	    if(strcasecmp(tmpm->value,"true")!=0)
-	      sprintf(url,"%s/%s/GetStatus/%s",tmpm1->value,tmpm->value,currentSid);
+	      {
+          //  fprintf(stderr,"---------WORKSPACE2: %s--------------\n",workspace);
+          sprintf(url,"%s/%s/GetStatus/%s",tmpm1->value,tmpm->value,currentSid);
+        }
 	    else
-	      sprintf(url,"%s/GetStatus/%s",tmpm1->value,currentSid);
-	  else
+	      {
+          // fprintf(stderr,"---------WORKSPACE3: %s--------------\n",workspace);
+          sprintf(url,"%s/GetStatus/%s",tmpm1->value,currentSid);
+          }
+	  else{
+      // fprintf(stderr,"---------WORKSPACE4: %s--------------\n",workspace);
 	    sprintf(url,"%s/?request=Execute&service=WPS&version=1.0.0&Identifier=GetStatus&DataInputs=sid=%s&RawDataOutput=Result",tmpm1->value,currentSid);
+    }
 	}
       }else{
 	int lpid;
@@ -1896,22 +1943,6 @@ void printProcessResponse(maps* m,map* request, int pid,service* serv,const char
     if(test!=NULL && strcasecmp(test->value,"true")==0){
 
 
-      int ei = 1;
-      int canContinue=false;
-      char **orig = environ;
-      char *s=*orig;
-      for (; s; ei++ ) {
-          if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
-            char* baseU=strchr(s,'=');
-            if (strlen(baseU)>1){
-              char* workspace= ++baseU;
-              fprintf(stderr,"---------WORKSPACE: %s--------------\n",workspace);
-            }
-          }
-
-
-        s = *(orig+ei);
-      }
       fprintf(stderr,"---------URL: %s--------------\n",url);
 //      fprintf(stderr,"-----------------------\n");
 //      //maps* m,map* request, int pid,service* serv,const char* service,int status,maps* inputs,maps* outputs

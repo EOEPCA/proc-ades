@@ -2127,7 +2127,11 @@ runRequest (map ** inputs)
   //   free(theServicePath->value);
   //   theServicePath->value=tmpNewPath;
   // }
-  
+
+//  map* eoUserMap=getMapFromMaps(m,"eoepcaUser","user");
+//  if (eoUserMap && eoUserMap->value){
+//    fprintf(stderr,"eoUserMap->value=%s a8\n",eoUserMap->value);
+//  }
 
 
   map *getPath = getMapFromMaps (m, "main", "gettextPath");
@@ -2273,9 +2277,9 @@ runRequest (map ** inputs)
   }
 
   // Populate the Registry
-  char conf_dir[1024];
+  char conf_dir[1024*2];
   int t;
-  char tmps1[1024];
+  char tmps1[1024*2];
   r_inputs = NULL;
   r_inputs = getMap (request_inputs, "metapath");
   map* cwdMap0=getMapFromMaps(m,"main","servicePath");
@@ -3232,8 +3236,19 @@ runRequest (map ** inputs)
     setMapInMaps (m, "lenv", "oIdentifier", r_inputs->value);
   } 
   else {
-    fprintf(stderr,"rdr a8\n");
+
+    char conf_dir2[1024*2];
+    memset(conf_dir2,0,1024*2);
+
+    strcpy(conf_dir2,conf_dir);
+    getUserWorkspacePath(m,conf_dir,conf_dir2,1024);
+    strcpy(conf_dir,conf_dir2);
+
+//    fprintf(stderr,"rdr a8--> conf_dir %s -- %s\n", conf_dir, r_inputs->value);
+//    fprintf(stderr,"rdr a8--> conf_dir2 %s -- %s\n", conf_dir2, r_inputs->value);
+
     snprintf (tmps1, 1024, "%s/%s.zcfg", conf_dir, r_inputs->value);
+
 #ifdef DEBUG
     fprintf (stderr, "Trying to load %s\n", tmps1);
 #endif
