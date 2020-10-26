@@ -67,3 +67,4 @@ charts/ades/files/kubeconfig-*
 charts/ades/values.cpe.terradue.yaml
 
 
+charts/ades/values.eoepca-dev.terradue.yaml
