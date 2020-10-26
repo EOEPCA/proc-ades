@@ -16,6 +16,9 @@ export TRAVIS_BRANCH
 
 TRAVIS_NAME="travis_"
 
+TAG_VERSION=${TRAVIS_BRANCH}
+TAG_PREFIX=''
+
 export CMAKERELEASE="Debug"
 
 #simple anchor
@@ -23,9 +26,21 @@ if [ "${TRAVIS_BRANCH}" == 'master' ]
 then
   CMAKERELEASE="Release"
   RELEASETYPE='release'
+  TAG_VERSION='latest'
   TRAVIS_NAME=''
   TAG_PREFIX=''
 	echo 'Branch selected: master '
+fi
+
+#simple anchor
+if [[ "${TRAVIS_BRANCH}" =~ v(.*) ]]
+then
+  CMAKERELEASE="Release"
+  RELEASETYPE='release'
+  TAG_VERSION=${BASH_REMATCH[1]}
+  TRAVIS_NAME=''
+  TAG_PREFIX=''
+	echo 'Branch selected:' ${TRAVIS_BRANCH}
 fi
 
 #simple anchor
@@ -33,6 +48,7 @@ if [ "${TRAVIS_BRANCH}" == 'develop' ]
 then
   RELEASETYPE='develop'
   TAG_PREFIX='dev'
+  TAG_VERSION='latest'
 	echo 'Branch selected: develop' 
 fi
 
@@ -51,7 +67,7 @@ export EOEPCA_REPOSITORY='eoepca'
 #eoepca name
 export EOEPCA_IMAGE="proc-ades"
 #eoepca tag
-export EOEPCA_TAG="${TAG_PREFIX}latest"
+export EOEPCA_TAG="${TAG_PREFIX}${TAG_VERSION}"
 #final image
 export EOEPCA_ADES_ZOO="${EOEPCA_REPOSITORY}/${EOEPCA_IMAGE}:${EOEPCA_TAG}"
 

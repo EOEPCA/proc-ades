@@ -21,7 +21,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: ades-config
-          image: eoepca/proc-ades:latest
+          image: eoepca/proc-ades:0.2
           imagePullPolicy: Always
           resources:
             requests:

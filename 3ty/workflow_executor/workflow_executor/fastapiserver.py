@@ -72,11 +72,13 @@ def read_prepare(content: PrepareContent, response: Response):
 
 
     namespace = sanitize_k8_parameters(content.serviceID)
-    volumeSize = 4
+    defaultVolumeSize=4
+    volumeSize = os.getenv('VOLUME_SIZE',defaultVolumeSize )
+
     volumeName = f"{namespace}-volume"
 
     print('namespace: %s' % namespace)
-    print('volume_size: %d' % volumeSize)
+    print(f"volume_size: {volumeSize}")
     print('volume_name: %s' % volumeName)
 
     default_value = ""
