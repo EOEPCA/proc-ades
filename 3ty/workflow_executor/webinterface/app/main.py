@@ -11,8 +11,21 @@ app = FastAPI(
     docs_url="/api/docs", redoc_url="/api/redoc"
 )
 
-number = 0
 
+class OptionStatus:
+    status = 0
+
+    def reset(self):
+        self.status = 0
+
+    def update(self):
+        self.status = self.status + 25
+        if self.status > 99:
+            self.status = 100
+        
+        return self.status
+ 
+st = OptionStatus()
 
 class Error:
 
@@ -55,6 +68,7 @@ def read_prepare(content: PrepareContent):
     print("entry: /prepare")
     print(str(content))
     print('return: {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}')
+    st.reset()
     return {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}
 
 
@@ -63,8 +77,6 @@ def read_read(prepare_id: str):
     print('\n'*2)
     print("entry: /prepare/{prepare_id}")
     print(prepare_id)
-    number = 0
-
     return {}
     # 200 done
     # 100 ripassa dopo
@@ -77,7 +89,7 @@ def read_execute(content: ExecuteContent):
     print("entry: /execute")
     print(str(content))
     print('return: {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}')
-    number = 0
+    st.reset()
     return {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}
 
 
@@ -86,13 +98,13 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
     print('\n'*2)
     print("entry: status/{service_id}/{run_id}/{prepare_id}/{job_id}")
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
-    print('return: {"percent": 100, "msg": "done"}')
+    myVal = st.update()
+    print(f'"percent": {myVal}, "msg": "the message"')    
 
-    number = number + 25
-    if number > 99:
-        number = 100
-
-    return {"percent": number, "msg": "done"}
+    if myVal != 100:
+        return {"percent": myVal, "msg": "message"}
+    else:
+        return {"percent": 100, "msg": "done"}
 
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)

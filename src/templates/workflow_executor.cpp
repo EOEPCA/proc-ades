@@ -448,6 +448,9 @@ webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
     std::cerr << "buffer: " << buffer<<"\n";
     msgWeb.dump();
 
+    wfpm.perc = msgWeb.percent;
+    wfpm.message  = msgWeb.msg;
+    
     if (msgWeb.percent==100){
       ret=0;
     }

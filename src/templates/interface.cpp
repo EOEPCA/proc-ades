@@ -419,6 +419,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       wfpm->hostName=confEoepca["WorkflowExecutorHost"];
       wfpm->serviceID=lenv["Identifier"];
       wfpm->runID = lenv["uusid"];
+      wfpm->perc = -1;
+      wfpm->message = "";
 
       std::string prepareID;
       std::cerr << "workflowExecutor->webPrepare init\n";
@@ -447,6 +449,9 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       std::cerr << "workflowExecutor->webGetStatus init\n";
       sleep(w8for);
       while (workflowExecutor->webGetStatus(*wfpm) ){
+        if (wfpm->perc!=-1)
+          updateStatus(conf,wfpm->perc,wfpm->message);
+          
         std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
         counter=counter+1;
         sleep(w8for);

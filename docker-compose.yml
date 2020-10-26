@@ -18,7 +18,7 @@ services:
 #      - "9999:80"
 
   ades:
-    image: eoepca/proc-ades:travis__185
+    image: eoepca/proc-ades:travis__186
     container_name: ades
     networks:
       - eoepca_network
