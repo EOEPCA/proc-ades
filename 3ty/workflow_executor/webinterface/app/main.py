@@ -11,6 +11,8 @@ app = FastAPI(
     docs_url="/api/docs", redoc_url="/api/redoc"
 )
 
+number = 0
+
 
 class Error:
 
@@ -61,6 +63,7 @@ def read_read(prepare_id: str):
     print('\n'*2)
     print("entry: /prepare/{prepare_id}")
     print(prepare_id)
+    number = 0
 
     return {}
     # 200 done
@@ -74,6 +77,7 @@ def read_execute(content: ExecuteContent):
     print("entry: /execute")
     print(str(content))
     print('return: {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}')
+    number = 0
     return {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}
 
 
@@ -83,7 +87,12 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
     print("entry: status/{service_id}/{run_id}/{prepare_id}/{job_id}")
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
     print('return: {"percent": 100, "msg": "done"}')
-    return {"percent": 100, "msg": "done"}
+
+    number = number + 25
+    if number > 99:
+        number = 100
+
+    return {"percent": number, "msg": "done"}
 
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
