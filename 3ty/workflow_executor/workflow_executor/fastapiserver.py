@@ -77,7 +77,7 @@ def read_prepare(content: PrepareContent, response: Response):
     volumeName = f"{namespace}-volume"
 
     print('namespace: %s' % namespace)
-    print('volume_size: %d' % volumeSize)
+    print(f"volume_size: {volumeSize}")
     print('volume_name: %s' % volumeName)
 
     default_value = ""
@@ -131,6 +131,13 @@ def read_execute(content: ExecuteContent, response: Response):
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
+
+    # cwl_wrapper config
+    cwl_wrapper_config=dict()
+    cwl_wrapper_config["maincwl"]=os.getenv('CWL_WRAPPER_MAINCWL', None)
+    cwl_wrapper_config["stagein"]=os.getenv('CWL_WRAPPER_STAGEIN', None)
+    cwl_wrapper_config["stageout"]=os.getenv('CWL_WRAPPER_STAGEOUT', None)
+    cwl_wrapper_config["rulez"]=os.getenv('CWL_WRAPPER_RULEZ', None)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
@@ -193,7 +200,8 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         volume_name_prefix=volume_name_prefix,
                                                         mount_folder=mount_folder,
                                                         namespace=namespace,
-                                                        workflow_name=workflow_name)
+                                                        workflow_name=workflow_name,
+                                                        cwl_wrapper_config=cwl_wrapper_config)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}

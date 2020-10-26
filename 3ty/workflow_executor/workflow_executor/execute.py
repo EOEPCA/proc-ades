@@ -56,7 +56,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     return inputs
 
 
-def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, state=None):
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, cwl_wrapper_config=None, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
@@ -64,7 +64,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
 
 
     # cwl-wrapper
-    wrapped_cwl_document=wrapcwl(cwl_document)
+    wrapped_cwl_document=wrapcwl(cwl_document,cwl_wrapper_config)
 
     # remove std.out and std.err lines to let calrissian take care of it
     delete_line_by_full_match(wrapped_cwl_document,"  stderr: std.err")
@@ -124,21 +124,34 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
 
 
 
-def wrapcwl(cwl_document):
+def wrapcwl(cwl_document,cwl_wrapper_config=None):
 
     directory=os.path.dirname(cwl_document)
 
     filename=os.path.basename(cwl_document)
     filename_wo_extension=os.path.splitext(filename)[0]
+    
+    # default cwl_wrapper_configs
     wrappedcwl=os.path.join(directory,f"{filename_wo_extension}_wrapped.cwl")
 
-    k = dict()
-    k['cwl'] = cwl_document
-    k['rulez'] = None
-    k['output'] = wrappedcwl
-    k['maincwl'] = None
-    k['stagein'] = None
-    k['stageout'] = None
+
+    if cwl_wrapper_config:
+        k = dict()
+        k['cwl'] = cwl_document
+        k['rulez'] = cwl_wrapper_config['rulez'] if cwl_wrapper_config['rulez'] else None
+        k['output'] = wrappedcwl
+        k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config['maincwl'] else None
+        k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config['stagein'] else None
+        k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config['stageout'] else None
+    else:
+        k = dict()
+        k['cwl'] = cwl_document
+        k['rulez'] = None
+        k['output'] = wrappedcwl
+        k['maincwl'] = None
+        k['stagein'] = None
+        k['stageout'] = None
+
     wf = Parser(k)
     wf.write_output()
     return wrappedcwl
