@@ -12,21 +12,6 @@ app = FastAPI(
 )
 
 
-class OptionStatus:
-    status = 0
-
-    def reset(self):
-        self.status = 0
-
-    def update(self):
-        self.status = self.status + 25
-        if self.status > 99:
-            self.status = 100
-        
-        return self.status
- 
-st = OptionStatus()
-
 class Error:
 
     def __init__(self):
@@ -68,7 +53,6 @@ def read_prepare(content: PrepareContent):
     print("entry: /prepare")
     print(str(content))
     print('return: {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}')
-    st.reset()
     return {"prepareID": "0303598c-d75f-11ea-9904-c4b301bbaa1f"}
 
 
@@ -89,7 +73,6 @@ def read_execute(content: ExecuteContent):
     print("entry: /execute")
     print(str(content))
     print('return: {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}')
-    st.reset()
     return {"jobID": "141b9d92-d75f-11ea-9c9a-27f34c7e8856"}
 
 
@@ -98,13 +81,9 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
     print('\n'*2)
     print("entry: status/{service_id}/{run_id}/{prepare_id}/{job_id}")
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
-    myVal = st.update()
-    print(f'"percent": {myVal}, "msg": "the message"')    
-
-    if myVal != 100:
-        return {"percent": myVal, "msg": "message"}
-    else:
-        return {"percent": 100, "msg": "done"}
+    print("percent: 100, msg: done")    
+    
+    return {"percent": 100, "msg": "done"}
 
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
