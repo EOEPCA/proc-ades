@@ -33,6 +33,17 @@ then
 fi
 
 #simple anchor
+if [[ "${TRAVIS_BRANCH}" =~ v(.*) ]]
+then
+  CMAKERELEASE="Release"
+  RELEASETYPE='release'
+  TAG_VERSION=${BASH_REMATCH[1]}
+  TRAVIS_NAME=''
+  TAG_PREFIX=''
+	echo 'Branch selected:' ${TRAVIS_BRANCH}
+fi
+
+#simple anchor
 if [ "${TRAVIS_BRANCH}" == 'develop' ]
 then
   RELEASETYPE='develop'
