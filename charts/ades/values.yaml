@@ -1,0 +1,110 @@
+# Default values for ades.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: eoepca/proc-ades
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: ades.eoepca.terradue.com
+      paths: ["/"]
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 4Gi
+  requests:
+    cpu: 1
+    memory: 2Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+storageClassName: glusterfs-storage
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+workflowExecutor:
+  kubeconfig: "files/kubeconfig"
+  # This is the resource manager endpoint of the catalog used for processing results publication (must be base64 encoded)
+  catalogEndpoint: "catalogEndpointbase64"
+  # catalog username (must be base64 encoded)
+  catalogUsername: "usernamebase64=="
+  # catalog password (must be base64 encoded)
+  catalogApiKey: "apikeybase64=="
+  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV) (must be base64 encoded)
+  storageHost: "storageHostbase64=="
+  # store username (must be base64 encoded)
+  storageUsername: "storageUsernamebase64=="
+  # store password (must be base64 encoded)
+  storageApiKey: "storageApiKey64=="
+  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
+  processingStorageClass: glusterfs-storage
+  # Size of the Kubernetes Volumes in gigabytes
+  processingVolumeSize: 10
+
+persistence:
+  enabled: true
+  # existingUserDataClaim:
+  # existingProcServicesClaim:
+  storageClass: ""
+  userDataAccessMode: ReadWriteOnce
+  userDataSize: 10Gi
+  procServicesAccessMode: ReadWriteOnce
+  procServicesSize: 5Gi
