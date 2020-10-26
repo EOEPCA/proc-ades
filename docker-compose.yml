@@ -18,10 +18,7 @@ services:
 #      - "9999:80"
 
   ades:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: eoepca/proc-ades:latest
+    image: eoepca/proc-ades:travis__182
     container_name: ades
     networks:
       - eoepca_network
