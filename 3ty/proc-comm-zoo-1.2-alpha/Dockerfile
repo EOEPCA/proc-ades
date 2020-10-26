@@ -37,7 +37,7 @@ COPY  assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-ker
 COPY  assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c && mv /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_ /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c; fi
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/service_json.c && mv /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_ /opt/zoo-project/zoo-project/zoo-kernel/service_json.c; fi
-RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/response_print.c && mv /opt/zoo-project/zoo-project/zoo-kernel/response_print.c__ /opt/zoo-project/zoo-project/zoo-kernel/response_print.c; fi
+RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/response_print.c && mv /opt/zoo-project/zoo-project/zoo-kernel/response_print.c_ /opt/zoo-project/zoo-project/zoo-kernel/response_print.c; fi
 
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 
