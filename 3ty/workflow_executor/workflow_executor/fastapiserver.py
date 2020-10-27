@@ -134,10 +134,10 @@ def read_execute(content: ExecuteContent, response: Response):
 
     # cwl_wrapper config
     cwl_wrapper_config=dict()
-    cwl_wrapper_config["maincwl"]=os.getenv('CWL_WRAPPER_MAINCWL', None)
-    cwl_wrapper_config["stagein"]=os.getenv('CWL_WRAPPER_STAGEIN', None)
-    cwl_wrapper_config["stageout"]=os.getenv('CWL_WRAPPER_STAGEOUT', None)
-    cwl_wrapper_config["rulez"]=os.getenv('CWL_WRAPPER_RULEZ', None)
+    cwl_wrapper_config["maincwl"]=os.getenv('ADES_WFEXEC_MAINCWL', None)
+    cwl_wrapper_config["stagein"]=os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
+    cwl_wrapper_config["stageout"]=os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
+    cwl_wrapper_config["rulez"]=os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
