@@ -461,14 +461,41 @@ addUserToMap(maps* conf){
   if(orig!=NULL)
     for (; s; ei++ ) {
       if(strstr(s,"=")!=NULL && strlen(strstr(s,"="))>1){
-        
-      	// int len=strlen(s);
-      	// char* tmpName=;
-      	// char* tmpValue=strstr(s,"=")+1;
-      	// char* tmpName1=(char*)malloc((1+(len-(strlen(tmpValue)+1)))*sizeof(char));
-      	// snprintf(tmpName1,(len-strlen(tmpValue)),"%s",tmpName);
 
-        if(strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
+        if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
+          char* baseU=strchr(s,'=');
+          if (strlen(baseU)>1){
+            char* workspace= ++baseU;
+//            fprintf(stderr,"GNAGNERA >%s<\n",workspace);
+
+
+            username = zStrdup(workspace);
+
+            maps *_tmpMaps = createMaps("eoepcaUser");
+            if(_tmpMaps->content == NULL)
+              _tmpMaps->content = createMap ("user",workspace);
+            else
+              addToMap (_tmpMaps->content,"user",workspace);
+
+            if( strcmp(anonymousUser,workspace)==0 ){
+              // it is  anonymous, can only reads
+              // rwx
+              map *theGrants = createMap("grant","1--");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }else{
+              // it is ok!
+              map *theGrants = createMap("grant","111");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }
+
+            if(conf){
+              addMapsToMaps (&conf, _tmpMaps);
+            }
+          }
+        }
+
+
+        if(false && strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
           // fprintf(stderr,"--> %s=%s \n", tmpName1, tmpValue );
           char* baseU=strchr(s,'=');
           if (baseU){
@@ -2100,7 +2127,11 @@ runRequest (map ** inputs)
   //   free(theServicePath->value);
   //   theServicePath->value=tmpNewPath;
   // }
-  
+
+//  map* eoUserMap=getMapFromMaps(m,"eoepcaUser","user");
+//  if (eoUserMap && eoUserMap->value){
+//    fprintf(stderr,"eoUserMap->value=%s a8\n",eoUserMap->value);
+//  }
 
 
   map *getPath = getMapFromMaps (m, "main", "gettextPath");
@@ -2246,9 +2277,9 @@ runRequest (map ** inputs)
   }
 
   // Populate the Registry
-  char conf_dir[1024];
+  char conf_dir[1024*2];
   int t;
-  char tmps1[1024];
+  char tmps1[1024*2];
   r_inputs = NULL;
   r_inputs = getMap (request_inputs, "metapath");
   map* cwdMap0=getMapFromMaps(m,"main","servicePath");
@@ -3205,8 +3236,19 @@ runRequest (map ** inputs)
     setMapInMaps (m, "lenv", "oIdentifier", r_inputs->value);
   } 
   else {
-    fprintf(stderr,"rdr a8\n");
+
+    char conf_dir2[1024*2];
+    memset(conf_dir2,0,1024*2);
+
+    strcpy(conf_dir2,conf_dir);
+    getUserWorkspacePath(m,conf_dir,conf_dir2,1024);
+    strcpy(conf_dir,conf_dir2);
+
+//    fprintf(stderr,"rdr a8--> conf_dir %s -- %s\n", conf_dir, r_inputs->value);
+//    fprintf(stderr,"rdr a8--> conf_dir2 %s -- %s\n", conf_dir2, r_inputs->value);
+
     snprintf (tmps1, 1024, "%s/%s.zcfg", conf_dir, r_inputs->value);
+
 #ifdef DEBUG
     fprintf (stderr, "Trying to load %s\n", tmps1);
 #endif

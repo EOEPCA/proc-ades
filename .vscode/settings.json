@@ -82,7 +82,14 @@
         "vector": "cpp",
         "__memory": "cpp",
         "filesystem": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "any": "cpp",
+        "condition_variable": "cpp",
+        "future": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "thread": "cpp",
+        "unordered_set": "cpp"
     },
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true

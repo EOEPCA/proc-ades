@@ -1,0 +1,4 @@
+RewriteEngine On
+SetEnvIf Request_URI "^\/?(\w+)\/(.*)" EOEPCA_WORKSPACE=$1
+RewriteRule ^\/?(\w+)\/(.*) /_run/$2 [L]
+

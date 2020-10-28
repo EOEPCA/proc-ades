@@ -21,6 +21,8 @@ TAG_PREFIX=''
 
 export CMAKERELEASE="Debug"
 
+export TAG_PREFIX=''
+
 #simple anchor
 if [ "${TRAVIS_BRANCH}" == 'master' ]
 then
