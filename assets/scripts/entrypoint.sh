@@ -5,7 +5,7 @@ cp -f /opt/t2service/* /zooservices/
 ldconfig
 
 chown 48:48 /opt/zooservices_user
-chown 48:48 /var/www/html/res
+chown 48:48 /var/www/_run/res
 
 # Starting Workflow Executor
 echo "Starting workflow executor..."
@@ -15,4 +15,6 @@ echo "Workflow executor started"
 
 # Starting WPS ZOO
 echo "Starting WPS ZOO. Listening for request..."
-/usr/sbin/httpd -DFOREGROUND
+/usr/sbin/httpd -DBACKGROUND
+
+tail -f /dev/null

@@ -75,6 +75,8 @@ public:
     std::string jobID;
     std::string cwl;
     std::string inputs;
+    int perc;
+    std::string message;
 
     std::string hostName;
     ~WorkflowExecutorWebParameters()=default;
@@ -88,6 +90,10 @@ public:
       std::cerr << "\tjobID: " << jobID << "\n";
       std::cerr << "\tcwl: " << cwl << "\n";
       std::cerr << "\tinputs: " << inputs << "\n";
+
+      std::cerr << "\tperc: " << perc << "\n";
+      std::cerr << "\tmessage: " << message << "\n";
+
     }
 
   };

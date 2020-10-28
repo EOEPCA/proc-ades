@@ -31,10 +31,13 @@ ENV PATH "$PATH:/usr/local/bin"
 
 COPY assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
+
+COPY  assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c_
 COPY  assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_
 COPY  assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c && mv /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c_ /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c; fi
 RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/service_json.c && mv /opt/zoo-project/zoo-project/zoo-kernel/service_json.c_ /opt/zoo-project/zoo-project/zoo-kernel/service_json.c; fi
+RUN  if [ -n "$addUserFeature" ]; then rm /opt/zoo-project/zoo-project/zoo-kernel/response_print.c && mv /opt/zoo-project/zoo-project/zoo-kernel/response_print.c_ /opt/zoo-project/zoo-project/zoo-kernel/response_print.c; fi
 
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 
@@ -45,17 +48,18 @@ RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && ls -ltr && make && make insta
 
 ##install zoo
 RUN yum install -y vim httpd \
-	&& mkdir -p /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/html/res/statusInfos \
+	&& mkdir -p /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/_run/res/statusInfos \
 	&& mkdir -p /zooservices &&  chmod 777 /zooservices \
-	&& mkdir -p /var/www/fcgi/ /var/www/html/zoo  /var/www/html/wps3 /var/www/t2dep /var/www/html/watchjob \
-	&& chown -R 48:48 /var/www/zoo-bin/ /var/www/zoo-bin/ /var/www/data/ /var/www/html/res  \
+	&& mkdir -p /var/www/fcgi/ /var/www/_run/zoo  /var/www/_run/wps3 /var/www/t2dep /var/www/_run/watchjob \
+	&& chown -R 48:48 /var/www/zoo-bin/ /var/www/zoo-bin/ /var/www/data/ /var/www/_run/res  \
 	&& echo '/usr/local/lib' > /etc/ld.so.conf.d/zoo.conf && ldconfig \
 	&& mkdir -p /opt/t2build/includes  /opt/t2service/ /opt/opt/t2service/t2scripts/ \
-	&& mkdir -p /var/www/zoo-bin/ /var/www/html/zoo/
+	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/
 
-COPY assets/zoo/httpd/htaccess_wps3 /var/www/html/wps3/.htaccess
-COPY assets/zoo/httpd/htaccess_watchjob /var/www/html/watchjob/.htaccess
-COPY assets/zoo/httpd/htaccess /var/www/html/zoo/.htaccess
+COPY assets/zoo/httpd/htaccess_html /var/www/html/.htaccess
+COPY assets/zoo/httpd/htaccess_wps3 /var/www/_run/wps3/.htaccess
+COPY assets/zoo/httpd/htaccess_watchjob /var/www/_run/watchjob/.htaccess
+COPY assets/zoo/httpd/htaccess /var/www/_run/zoo/.htaccess
 COPY assets/zoo/httpd/zoo.conf	/etc/httpd/conf.d/zoo.conf
 COPY assets/main.cfg /etc/zoo-project/main.cfg
 COPY assets/oas.cfg /etc/zoo-project/oas.cfg

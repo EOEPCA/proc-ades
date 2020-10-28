@@ -34,10 +34,6 @@ if [ "${TRAVIS}" == "true" ]; then
   echo ""
   sleep 2
 
-  echo "user anonymous can't deploy services"
-  echo "show user space"
-  docker exec zoo find /opt/zooservices_user/anonymous
-
   echo "run: travis/transational/02_RunSyncRdirienzo.sh"
   ./travis/transational/02_RunSyncRdirienzo.sh travis/transational/deploy.json
   echo ""

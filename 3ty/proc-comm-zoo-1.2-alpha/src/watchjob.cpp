@@ -153,14 +153,11 @@ int sendFinalResult(std::stringstream &finalBuffer) {
 }
 
 int main(int argc, char **argv, char **envp) {
-
-  //    std::cout << cgicc::HTTPHTMLHeader() << std::endl;
-  //    for (char **env = envp; *env != 0; env++)
-  //    {
-  //      char *thisEnv = *env;
-  //      printf("%s\n", thisEnv);
-  //    }
-  //    return 0;
+//    for (char **env = envp; *env != 0; env++)
+//    {
+//      char *thisEnv = *env;
+//      std::cerr << thisEnv << "\n";
+//    }
 
   cgicc::Cgicc cgi;
   auto cgiEnv = cgi.getEnvironment();
@@ -191,9 +188,9 @@ int main(int argc, char **argv, char **envp) {
   auto finalFile = std::make_unique<char[]>(M1024);
   std::memset(statusFile.get(), '\0', M1024);
 
-  sprintf(configFile.get(), "/var/www/html/res/%s_lenv.cfg", processId.c_str());
-  sprintf(statusFile.get(), "/var/www/html/res/%s.status", processId.c_str());
-  sprintf(finalFile.get(), "/var/www/html/res/%s_final_%s.json",
+  sprintf(configFile.get(), "/var/www/_run/res/%s_lenv.cfg", processId.c_str());
+  sprintf(statusFile.get(), "/var/www/_run/res/%s.status", processId.c_str());
+  sprintf(finalFile.get(), "/var/www/_run/res/%s_final_%s.json",
           serviceId.c_str(), processId.c_str());
 
   INIReader info(std::string(configFile.get()));
@@ -207,18 +204,19 @@ int main(int argc, char **argv, char **envp) {
   const char *CONTEXT_PREFIX = std::getenv("CONTEXT_PREFIX");
   const char *HTTP_HOST = std::getenv("HTTP_HOST");
   const char *REQUEST_SCHEME = std::getenv("REQUEST_SCHEME");
+  const char *REQUEST_URI = std::getenv("REQUEST_URI");
+
   auto uri = std::make_unique<char[]>(M1024 * 2);
   std::memset(uri.get(), '\0', M1024 * 2);
-  sprintf(uri.get(), "%s://%s%s%s", REQUEST_SCHEME, HTTP_HOST,
-          CONTEXT_PREFIX, cgiEnv.getPathInfo().c_str());
-
+  sprintf(uri.get(), "%s://%s%s", REQUEST_SCHEME, HTTP_HOST,
+          REQUEST_URI);
 
 
   if (isResult) {
     if (loadFile(finalFile.get(), finalBuffer) == 0) {
       return sendFinalResult(finalBuffer);
     } else {
-      std::cout << HTTPSTATUSM(404, "Can't load the result file") << std::endl;
+      std::cout << HTTPSTATUSM(404, "1_Can't load the result file") << std::endl;
       return 0;
     }
 
@@ -229,8 +227,9 @@ int main(int argc, char **argv, char **envp) {
       sendStatus(theStatus.c_str(), uri.get(), processId, statusV);
 
     } else {
+
       if (theStatus=="none"){
-        std::cout << HTTPSTATUSM(404, "Can't load the status File file")
+        std::cout << HTTPSTATUSM(404, "2_Can't load the status File file")
                   << std::endl;
         return 0;
       }

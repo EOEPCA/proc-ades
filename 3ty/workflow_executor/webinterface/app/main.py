@@ -61,7 +61,6 @@ def read_read(prepare_id: str):
     print('\n'*2)
     print("entry: /prepare/{prepare_id}")
     print(prepare_id)
-
     return {}
     # 200 done
     # 100 ripassa dopo
@@ -82,7 +81,8 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str):
     print('\n'*2)
     print("entry: status/{service_id}/{run_id}/{prepare_id}/{job_id}")
     print(f'{service_id} {run_id} {prepare_id} {job_id}')
-    print('return: {"percent": 100, "msg": "done"}')
+    print("percent: 100, msg: done")    
+    
     return {"percent": 100, "msg": "done"}
 
 
