@@ -9,22 +9,22 @@ from kubernetes.stream import stream
 import sys
 
 
-def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
+def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, state=None):
     try:
 
-        outputJson = path.join(mount_folder,f"{workflowname}-stac-output.out")
+        outputJson = path.join(mount_folder,outputfile)
 
         # create an instance of the API class
         config.load_kube_config()
         api_instance = client.CoreV1Api(client.ApiClient())
 
-        name = 'busybox-pod'
+        name = f"{workflowname}-copy-pod"
         resp = None
         try:
             resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
         except ApiException as e:
             if e.status != 404:
-                print("Exception when reading byxybox-pod: %s\n" % e, file=sys.stderr)
+                print("Exception when reading copy-pod: %s\n" % e, file=sys.stderr)
                 raise e
 
         if not resp:
@@ -71,7 +71,7 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, state=None):
         exec_command = [
             '/bin/sh',
             '-c',
-            f"cat {outputJson} >&2"]
+            f"cat {mount_folder}/*/{outputfile} >&2"]
         resp = stream(api_instance.connect_get_namespaced_pod_exec,
                       name,
                       namespace,

@@ -10,7 +10,7 @@ spec:
         runAsUser: 1000
         runAsGroup: 3000
         fsGroup: 2000
-      initContainers:
+      containers:
         - name: calrissian
           image: dukegcb/calrissian:latest
           imagePullPolicy: IfNotPresent
@@ -48,67 +48,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-      containers:
-        - name: stage-out
-          image: terradue/c7-stage-out:1.6
-          command: ["stage-out"]
-          args:
-            - "--source"
-            - "/calrissian/output-data/revsort-output.json"
-            - "--endpoint"
-            - "$(CATALOG_ENDPOINT)"
-            - "--username"
-            - "$(CATALOG_USERNAME)"
-            - "--apikey"
-            - "$(CATALOG_APIKEY)"
-            - "--store-host"
-            - "$(STORAGE_HOST)"
-            - "--store-username"
-            - "$(STORAGE_USERNAME)"
-            - "--store-apikey"
-            - "$(STORAGE_APIKEY)"
-            - "--job"
-            - "t2workflow123"
-            - "--outputfile"
-            - "/calrissian/output-data/stac-output.out"
-          volumeMounts:
-            - mountPath: /calrissian/input-data
-              name: calrissian-input-data
-            - mountPath: /calrissian/tmpout
-              name: calrissian-tmpout
-            - mountPath: /calrissian/output-data
-              name: calrissian-output-data
-          env:
-            - name: CATALOG_ENDPOINT
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_endpoint
-            - name: CATALOG_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_username
-            - name: CATALOG_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_apikey
-            - name: STORAGE_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_host
-            - name: STORAGE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_username
-            - name: STORAGE_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_apikey
 
       restartPolicy: Never
       volumes:

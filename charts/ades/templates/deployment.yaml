@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ades.fullname" . }}
+  labels:
+    {{- include "ades.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "ades.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "ades.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ades.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          readinessProbe:
+            httpGet:
+              path: /wps3/processes
+              port: http
+              httpHeaders:
+              - name: Accept
+                value: application/json
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: KUBECONFIG
+              value: /var/etc/ades/kubeconfig
+            - name: CATALOG_ENDPOINT
+              value: {{ .Values.workflowExecutor.catalogEndpoint | quote }}
+            - name: CATALOG_USERNAME
+              value: {{ .Values.workflowExecutor.catalogUsername | quote }}
+            - name: CATALOG_APIKEY
+              value: {{ .Values.workflowExecutor.catalogApiKey | quote }}
+            - name: STORAGE_HOST
+              value: {{ .Values.workflowExecutor.storageHost | quote }}
+            - name: STORAGE_USERNAME
+              value: {{ .Values.workflowExecutor.storageUsername | quote }}
+            - name: STORAGE_APIKEY
+              value: {{ .Values.workflowExecutor.storageApiKey | quote }}
+            - name: STORAGE_CLASS
+              value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
+            - name: VOLUME_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+          volumeMounts:
+            - name: ades-config
+              mountPath: /var/etc/ades
+            - name: ades-user-data
+              mountPath: /var/www/html/res
+            - name: ades-processing-services
+              mountPath: /opt/zooservices_user
+      volumes:
+        - name: ades-config
+          configMap:
+            name: {{ .Release.Name }}-configmap
+        - name: ades-user-data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            {{- if .Values.persistence.existingUserDataClaim }}
+            claimName: {{ .Values.persistence.existingUserDataClaim }}
+            {{- else }}
+            claimName: {{ template "ades.fullname" . }}-user-data
+            {{- end -}}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: ades-processing-services
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            {{- if .Values.persistence.existingProcessingServicesClaim }}
+            claimName: {{ .Values.persistence.existingProcessingServicesClaim }}
+            {{- else }}
+            claimName: {{ template "ades.fullname" . }}-processing-services
+            {{- end -}}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+      restartPolicy: Always
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

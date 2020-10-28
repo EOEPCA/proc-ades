@@ -4,7 +4,9 @@ COPY 3ty/workflow_executor /usr/local/workflow_executor
 
 RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
 ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-RUN conda install -c conda-forge python-kubernetes click fastapi uvicorn
+RUN conda config --add channels eoepca
+RUN conda config --add channels conda-forge
+RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
 RUN cd /usr/local/workflow_executor/ && python setup.py install
 
 WORKDIR /
@@ -49,6 +51,7 @@ COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
+RUN yum install mlocate -y
 
 EXPOSE 80
 

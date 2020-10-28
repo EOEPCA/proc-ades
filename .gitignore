@@ -56,8 +56,11 @@ notes
 config/kubeconfig
 config/ades-config.env
 
-config/ades-config-t2.env
-config/kubeconfig-t2
-.vscode/cache/
 work
 .vscode
+charts/ades/files/kubeconfig-*
+charts/ades/values.cpe.terradue.yaml
+config/ades-config-*.env
+config/kubeconfig-*
+charts/ades/values.eoepca-dev.terradue.yaml
+

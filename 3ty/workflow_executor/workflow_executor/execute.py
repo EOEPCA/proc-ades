@@ -10,12 +10,15 @@ from os import path
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 import tempfile
+from cwl_wrapper.parser import Parser
+from io import StringIO
 
 
 def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, outputFolder, namespace, state=None):
     print(job_input_json_file)
     job_input_json = json.load(open(job_input_json_file))
 
+    
     print("parsing cwl")
     with open(cwl_document, 'r') as stream:
         try:
@@ -32,80 +35,44 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     inputs = {}
     for k, v in workflow['inputs'].items():
 
-        # if input is of type stac:collection then a stage-in is required
-        if "stac:catalog" in v:
 
-            isarray = "[]" in v["type"]
-            type = v["type"].replace("[]", "")
-            print(f"Input {k} is of type {v['type']} and contains a stac:collection. Stac-stage-in will run ")
+        for input in job_input_json["inputs"]:
 
-            input_counter = 1
+            if input['id'] == k:
+                type = v["type"]
 
-            for input in job_input_json["inputs"]:
-                if input['id'] == k:
-                    stac_catalog_yaml = {"catalog": {}}
-                    stac_catalog_yaml["catalog"]["id"] = "catid"
-                    stac_catalog_yaml["catalog"]["title"] = "cat title"
-                    stac_catalog_yaml["catalog"]["description"] = "cat description"
-                    stac_catalog_yaml["catalog"]["collections"] = []
-                    stac_catalog_yaml["catalog"]["collections"]
-                    stac_catalog_yaml_entry = {k: {}}
-                    stac_catalog_yaml_entry[k]["title"] = v["label"]
-                    stac_catalog_yaml_entry[k]["description"] = v["label"] + " catalogue reference"
-                    stac_catalog_yaml_entry[k]["entries"] = [input['value']]
-                    stac_catalog_yaml["catalog"]["collections"].append(stac_catalog_yaml_entry)
-
-                    print("Running stac stage-in")
-                    mountFolder = outputFolder
-                    outputFolderForSingleInput = path.join(outputFolder, f"{k}_input{str(input_counter)}")
-                    temp = tempfile.NamedTemporaryFile(mode='w+t', suffix=".yaml")
-                    yamlString = yaml.dump(stac_catalog_yaml)
-                    temp.write(yamlString)
-                    temp.seek(0)
-                    print(temp.name)
-                    print(temp.read())
-                    os.chmod(temp.name, 0o777)
-                    timeout = 30000
-                    stagein.stac_stagein_run(namespace=namespace, volume_name_prefix=volume_name_prefix,
-                                             input_yaml=temp.name, timeout=timeout, mountFolder=mountFolder,
-                                             outputFolder=outputFolderForSingleInput, state=state)
-                    temp.close()
-
-                    if isarray:
-                        if k not in inputs:
-                            inputs[k] = []
-                        inputs[k].append({"class": type, "path": outputFolderForSingleInput})
-                    else:
-                        inputs[k] = {"class": type, "path": outputFolderForSingleInput}
-                    input_counter += 1
-
-        else:
-            for input in job_input_json["inputs"]:
-                if input['id'] == k:
-                    type = v["type"]
-
-                    if "[]" in type:
-                        if k not in inputs.keys():
-                            inputs[k] = []
-                        inputs[k].append(input['value'])
-                    else:
-                        inputs[k] = {}
-                        inputs[k] = input['value']
+                if "[]" in type:
+                    if k not in inputs.keys():
+                        inputs[k] = []
+                    #inputs[k].append(input['input']['value'])
+                    inputs[k].append(input['value'])
+                else:
+                    inputs[k] = {}
+                    #inputs[k] = input['input']['value']
+                    inputs[k] = input['value']
 
     print("Input json to pass to the cwl runner: ")
     pprint(inputs)
     return inputs
 
 
-def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, state=None):
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, cwl_wrapper_config=None, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
     tmpout_volume_name = volume_name_prefix + "-tmpout"
 
-    workflow_id = helpers.getCwlWorkflowId(cwl_document)
+
+    # cwl-wrapper
+    wrapped_cwl_document=wrapcwl(cwl_document,cwl_wrapper_config)
+
+    # remove std.out and std.err lines to let calrissian take care of it
+    delete_line_by_full_match(wrapped_cwl_document,"  stderr: std.err")
+    delete_line_by_full_match(wrapped_cwl_document,"  stdout: std.out")
+
+    workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
-    cwl_input_json = process_inputs(cwl_document, job_input_json, volume_name_prefix,
+    cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json, volume_name_prefix,
                                     path.join(mount_folder, "input-data"), namespace, state=state)
 
     # copying cwl in volume -input-data
@@ -116,13 +83,13 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
-    helpers.copy_files_to_volume(sources=[cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
-                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state)
+    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
+                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state, workflow_name=workflow_name)
 
     os.remove(tmppath)
 
     jsonInputFilename = ntpath.basename(tmppath)
-    cwlDocumentFilename = ntpath.basename(cwl_document)
+    cwlDocumentFilename = ntpath.basename(wrapped_cwl_document)
 
     # # Setup K8 configs
     config.load_kube_config()
@@ -154,3 +121,60 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
         except ApiException as e:
             print("Exception when submitting job: %s\n" % e, file=sys.stderr)
             return e
+
+
+
+def wrapcwl(cwl_document,cwl_wrapper_config=None):
+
+    directory=os.path.dirname(cwl_document)
+
+    filename=os.path.basename(cwl_document)
+    filename_wo_extension=os.path.splitext(filename)[0]
+    
+    # default cwl_wrapper_configs
+    wrappedcwl=os.path.join(directory,f"{filename_wo_extension}_wrapped.cwl")
+
+
+    if cwl_wrapper_config:
+        k = dict()
+        k['cwl'] = cwl_document
+        k['rulez'] = cwl_wrapper_config['rulez'] if cwl_wrapper_config['rulez'] else None
+        k['output'] = wrappedcwl
+        k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config['maincwl'] else None
+        k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config['stagein'] else None
+        k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config['stageout'] else None
+    else:
+        k = dict()
+        k['cwl'] = cwl_document
+        k['rulez'] = None
+        k['output'] = wrappedcwl
+        k['maincwl'] = None
+        k['stagein'] = None
+        k['stageout'] = None
+
+    wf = Parser(k)
+    wf.write_output()
+    return wrappedcwl
+
+def delete_line_by_full_match(original_file, line_to_delete):
+    """ In a file, delete the lines at line number in given list"""
+    is_skipped = False
+    dummy_file = original_file + '.bak'
+    # Open original file in read only mode and dummy file in write mode
+    with open(original_file, 'r') as read_obj, open(dummy_file, 'w') as write_obj:
+        # Line by line copy data from original file to dummy file
+        for line in read_obj:
+            line_to_match = line
+            if line[-1] == '\n':
+                line_to_match = line[:-1]
+            # if current line matches with the given line then skip that line
+            if line_to_match != line_to_delete:
+                write_obj.write(line)
+            else:
+                is_skipped = True
+    # If any line is skipped then rename dummy file as original file
+    if is_skipped:
+        os.remove(original_file)
+        os.rename(dummy_file, original_file)
+    else:
+        os.remove(dummy_file)

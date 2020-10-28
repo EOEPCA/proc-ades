@@ -72,23 +72,16 @@ def read_prepare(content: PrepareContent, response: Response):
 
 
     namespace = sanitize_k8_parameters(content.serviceID)
-    volumeSize = 4
+    defaultVolumeSize=4
+    volumeSize = os.getenv('VOLUME_SIZE',defaultVolumeSize )
     volumeName = f"{namespace}-volume"
 
     print('namespace: %s' % namespace)
-    print('volume_size: %d' % volumeSize)
+    print(f"volume_size: {volumeSize}")
     print('volume_name: %s' % volumeName)
 
     default_value = ""
     workflow_config = {
-        "stageout": {
-            "catalog_endpoint": os.getenv('CATALOG_ENDPOINT', default_value),
-            "catalog_username": os.getenv('CATALOG_USERNAME', default_value),
-            "catalog_apikey": os.getenv('CATALOG_APIKEY', default_value),
-            "storage_host": os.getenv('STORAGE_HOST', default_value),
-            "storage_username": os.getenv('STORAGE_USERNAME', default_value),
-            "storage_apikey": os.getenv('STORAGE_APIKEY', default_value)
-        },
         "storageclass": os.getenv('STORAGE_CLASS', default_value),
         "volumesize": os.getenv('VOLUME_SIZE', volumeSize)
     }
@@ -133,11 +126,59 @@ def read_execute(content: ExecuteContent, response: Response):
 
     namespace = sanitize_k8_parameters(content.serviceID)
     cwl_content = content.cwl
-    inputs_content = content.inputs
+    inputs_content = json.loads(content.inputs)
     volume_name_prefix = f"{namespace}-volume"
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
+
+    # cwl_wrapper config
+    cwl_wrapper_config=dict()
+    cwl_wrapper_config["maincwl"]=os.getenv('ADES_WFEXEC_MAINCWL', None)
+    cwl_wrapper_config["stagein"]=os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
+    cwl_wrapper_config["stageout"]=os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
+    cwl_wrapper_config["rulez"]=os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
+
+    # retrieve config params and store them in json
+    # these will be used in the stageout phase
+    default_value = ""
+
+    inputs_content["inputs"].append({
+        "id":"store_host",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_HOST', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id":"store_username",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_USERNAME', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id":"store_apikey",
+        "dataType": "string",
+        "value":os.getenv('STORAGE_APIKEY', default_value),
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id": "job",
+        "dataType": "string",
+        "value": workflow_name,
+        "mimeType": "",
+        "href": ""})
+
+    inputs_content["inputs"].append({
+        "id": "outputfile",
+        "dataType": "string",
+        "value": f"{workflow_name}.res",
+        "mimeType": "",
+        "href": ""})        
+
+    pprint(f"inputs_content {inputs_content}")
     # inputcwlfile is input_json + cwl_file
     # create 2 temp files
     with tempfile.NamedTemporaryFile(mode="w") as cwl_file, tempfile.NamedTemporaryFile(mode="w") as input_json:
@@ -145,7 +186,7 @@ def read_execute(content: ExecuteContent, response: Response):
         cwl_file.flush()
         cwl_file.seek(0)
 
-        input_json.write(inputs_content)
+        input_json.write(json.dumps(inputs_content))
         input_json.flush()
         input_json.seek(0)
 
@@ -159,7 +200,8 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         volume_name_prefix=volume_name_prefix,
                                                         mount_folder=mount_folder,
                                                         namespace=namespace,
-                                                        workflow_name=workflow_name)
+                                                        workflow_name=workflow_name,
+                                                        cwl_wrapper_config=cwl_wrapper_config)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
@@ -208,6 +250,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = f"{namespace}-volume"
     mount_folder = "/workflow"
+    outputfile=f"{workflow_name}.res"
 
     state = client.State()
     print('Result GET')
@@ -215,13 +258,14 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
-                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,
+                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,outputfile=outputfile,
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
     except ApiException as err:
             e = Error()
             e.set_error(12, err.body)
+            print(err.body)
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
             return e
 
@@ -232,6 +276,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 
 def main():
+    print("DEBuG MODE")
     uvicorn.run(app)
 
 
