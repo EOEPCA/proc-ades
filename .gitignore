@@ -60,4 +60,4 @@ config/ades-config-t2.env
 config/kubeconfig-t2
 .vscode/cache/
 work
-
+.vscode
