@@ -17,6 +17,7 @@ requirements:
     - click
     - cwl-wrapper
     - uvicorn
+    - jinja2
 
 test:
   imports:

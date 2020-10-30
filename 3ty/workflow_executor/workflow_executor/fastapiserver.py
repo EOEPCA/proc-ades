@@ -176,7 +176,12 @@ def read_execute(content: ExecuteContent, response: Response):
         "dataType": "string",
         "value": f"{workflow_name}.res",
         "mimeType": "",
-        "href": ""})        
+        "href": ""})
+
+    default_max_ram_value="4G"
+    default_max_cores_value="2"
+    max_ram=os.getenv('JOB_MAX_RAM', default_max_ram_value)
+    max_cores=os.getenv('JOB_MAX_CORES', default_max_cores_value)
 
     pprint(f"inputs_content {inputs_content}")
     # inputcwlfile is input_json + cwl_file
@@ -201,7 +206,10 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         mount_folder=mount_folder,
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
-                                                        cwl_wrapper_config=cwl_wrapper_config)
+                                                        cwl_wrapper_config=cwl_wrapper_config,
+                                                        cleanJob=True,
+                                                        max_ram=max_ram,
+                                                        max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
@@ -255,10 +263,17 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     state = client.State()
     print('Result GET')
 
+    keepworkspaceString=os.getenv('JOB_KEEPWORKSPACE', "False")
+    keepworkspace= keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+        
     resp_status = {}
     try:
-        resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
-                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,outputfile=outputfile,
+        resp_status = workflow_executor.result.run(namespace=namespace,
+                                                   workflowname=workflow_name,
+                                                   mount_folder=mount_folder,
+                                                   volume_name_prefix=volume_name_prefix,
+                                                   outputfile=outputfile,
+                                                   keepworkspace=keepworkspace,
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
