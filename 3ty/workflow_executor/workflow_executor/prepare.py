@@ -225,27 +225,17 @@ def get(namespace, state=None):
         raise e
 
     # VOLUME CLAIM CHECK
-
-    volumeclaim1 = f"{namespace}-volume-input-data"
-    volumeclaim2 = f"{namespace}-volume-tmpout"
-    volumeclaim3 = f"{namespace}-volume-output-data"
-
+    pretty = True
     try:
-        response1 = v1.read_namespaced_persistent_volume_claim(volumeclaim1, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-        response2 = v1.read_namespaced_persistent_volume_claim(volumeclaim2, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-        response3 = v1.read_namespaced_persistent_volume_claim(volumeclaim3, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-
-        pprint(response1)
-        pprint(response2)
-        pprint(response3)
+        pvc_list = v1.list_namespaced_persistent_volume_claim(namespace, pretty=pretty)
+        for pvc in pvc_list.items:
+            print("%s\t%s" % (pvc.metadata.name, pvc.status.phase))
+            if pvc.status.phase == "Pending":
+                return {"status": "pending"}
+            elif pvc.status.phase == "Failed":
+                return {"status": "failed"}
     except ApiException as e:
-        print("Exception when calling CoreV1Api->read_namespaced_persistent_volume_claim: %s\n" % e)
+        print("Exception when calling CoreV1Api->list_namespaced_persistent_volume_claim: %s\n" % e)
         raise e
 
     return {"status": "success"}

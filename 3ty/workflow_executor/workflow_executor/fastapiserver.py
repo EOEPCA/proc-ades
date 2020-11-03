@@ -71,12 +71,12 @@ def read_prepare(content: PrepareContent, response: Response):
     print('Prepare POST')
 
 
-    namespace = sanitize_k8_parameters(content.serviceID)
+    prepare_id = sanitize_k8_parameters(f"{content.serviceID}{content.runID}")
     defaultVolumeSize=4
     volumeSize = os.getenv('VOLUME_SIZE',defaultVolumeSize )
-    volumeName = f"{namespace}-volume"
+    volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
 
-    print('namespace: %s' % namespace)
+    print('namespace: %s' % prepare_id)
     print(f"volume_size: {volumeSize}")
     print('volume_name: %s' % volumeName)
 
@@ -87,24 +87,24 @@ def read_prepare(content: PrepareContent, response: Response):
     }
 
     try:
-        resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volumeSize, volumeName=volumeName,
+        resp_status = workflow_executor.prepare.run(namespace=prepare_id, volumeSize=volumeSize, volumeName=volumeName,
                                                     state=state, workflow_config=workflow_config)
     except ApiException as e:
         response.status_code = e.status
 
-    return {"prepareID": namespace}
+    return {"prepareID": prepare_id}
 
 
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
-    namespace = sanitize_k8_parameters(prepare_id)
 
     state = client.State()
     print('Prepare GET')
-
+    namespace=prepare_id
+    #volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
 
     try:
-        resp_status = workflow_executor.prepare.get(namespace=namespace, state=state)
+        resp_status = workflow_executor.prepare.get(namespace=namespace,state=state)
     except ApiException as e:
         response.status_code = e.status
 
@@ -124,10 +124,10 @@ def read_execute(content: ExecuteContent, response: Response):
     state = client.State()
     print('Execute POST')
 
-    namespace = sanitize_k8_parameters(content.serviceID)
+    namespace = content.prepareID
     cwl_content = content.cwl
     inputs_content = json.loads(content.inputs)
-    volume_name_prefix = f"{namespace}-volume"
+    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}volume")
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
@@ -219,7 +219,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
-    namespace = sanitize_k8_parameters(service_id)
+    namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     state = client.State()
@@ -254,9 +254,9 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
-    namespace = sanitize_k8_parameters(service_id)
+    namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
-    volume_name_prefix = f"{namespace}-volume"
+    volume_name_prefix = f"{service_id}volume"
     mount_folder = "/workflow"
     outputfile=f"{workflow_name}.res"
 
