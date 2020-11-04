@@ -9,7 +9,7 @@ from kubernetes.stream import stream
 import sys
 
 
-def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile,keepworkspace=False, state=None):
+def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, state=None):
     try:
 
         # create an instance of the API class
@@ -68,14 +68,14 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile,ke
                 }
             }
 
-            print(f"pod_manifest: {pod_manifest}")
+            print(f"Retrieving {outputfile}")
             resp = api_instance.create_namespaced_pod(body=pod_manifest, namespace=namespace)
             while True:
                 resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
                 if resp.status.phase != 'Pending':
                     break
                 time.sleep(1)
-            print("Done.")
+            
 
 
 
@@ -97,23 +97,7 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile,ke
         if not resp:
             print(f"couldn't not find {mount_folder}/{workflowname}/*/{outputfile}")
 
-        if not keepworkspace:
-            # Calling exec and waiting for response
-            print(f"Cleaning {workflowname} data from namespace {namespace}")
-            exec_command = [
-                '/bin/sh',
-                '-c',
-                f"rm -fr {mount_folder}/output-data/{workflowname} {mount_folder}/input-data/{workflowname} {mount_folder}/tmpout/{workflowname}  >&2"]
-            cleanresp = stream(api_instance.connect_get_namespaced_pod_exec,
-                        name,
-                        namespace,
-                        command=exec_command,
-                        stderr=True, stdin=False,
-                        stdout=True, tty=False)
-
-            if "rm: can't remove" in cleanresp:
-                raise ApiException(status=404,reason=f"Cannot clean job {workflowname}. {cleanresp}")
-                
+        print("Retrieving {outputfile} success")    
 
         return eval(resp)
     finally:

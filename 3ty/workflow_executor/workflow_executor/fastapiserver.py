@@ -6,7 +6,7 @@ from fastapi import FastAPI, Form, File, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
-from workflow_executor import prepare, client, result
+from workflow_executor import prepare, client, result, clean
 from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
@@ -64,7 +64,9 @@ def sanitize_k8_parameters(value: str):
 def read_root():
     return {"Hello": "World"}
 
-
+"""
+Executes namespace preparation
+"""
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent, response: Response):
     state = client.State()
@@ -95,6 +97,9 @@ def read_prepare(content: PrepareContent, response: Response):
     return {"prepareID": prepare_id}
 
 
+"""
+Returns prepare status
+"""
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
 
@@ -116,7 +121,9 @@ def read_prepare(prepare_id: str, response: Response):
     # 100 ripassa dopo
     # 500 error
 
-
+"""
+Executes workflow
+"""
 @app.post("/execute", status_code=status.HTTP_201_CREATED)
 def read_execute(content: ExecuteContent, response: Response):
     # {"runID": "runID-123","serviceID": "service-id-123", "prepareID":"uuid" ,"cwl":".......","inputs":".........."}
@@ -217,6 +224,9 @@ def read_execute(content: ExecuteContent, response: Response):
     return {"jobID": workflow_name }
 
 
+"""
+Returns workflow status
+"""
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
@@ -252,19 +262,21 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     return status
 
 
+"""
+Returns workflow result
+"""
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
-    volume_name_prefix = f"{service_id}volume"
+    volume_name_prefix = sanitize_k8_parameters(f"{service_id}volume")
     mount_folder = "/workflow"
     outputfile=f"{workflow_name}.res"
 
     state = client.State()
     print('Result GET')
 
-    keepworkspaceString=os.getenv('JOB_KEEPWORKSPACE', "False")
-    keepworkspace= keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+
         
     resp_status = {}
     try:
@@ -273,7 +285,6 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
                                                    mount_folder=mount_folder,
                                                    volume_name_prefix=volume_name_prefix,
                                                    outputfile=outputfile,
-                                                   keepworkspace=keepworkspace,
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
@@ -285,9 +296,39 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             return e
 
     json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
-    pprint("wf_output json: ")
+    print("wf_output json: ")
     pprint(json_compatible_item_data)
+    print("job success")
+
+
+    keepworkspaceString=os.getenv('JOB_KEEPWORKSPACE', "False")
+    keepworkspace= keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+    if not keepworkspace:
+        print('Removing Workspace')
+        clean_job_status=clean_job(namespace)
+        if isinstance(clean_job_status, Error):
+            return clean_job_status
+        else:
+            pprint(clean_job_status)    
+        print('Removing Workspace Success')
+
+
     return JSONResponse(content=json_compatible_item_data)
+
+
+"""
+Removes Kubernetes namespace
+"""
+def clean_job(namespace: str):     
+    clean_status = {}
+    try:
+        clean_status = workflow_executor.clean.run(namespace=namespace)
+        return clean_status
+    except ApiException as err:
+            e = Error()
+            e.set_error(12, err.body)
+            print(err.body)
+            return e
 
 
 def main():
