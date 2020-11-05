@@ -5,7 +5,7 @@ import sys
 from types import SimpleNamespace
 import yaml
 from jinja2 import Template
-from workflow_executor import helpers, stagein
+from workflow_executor import helpers
 from pprint import pprint
 from os import path
 from kubernetes import client, config
