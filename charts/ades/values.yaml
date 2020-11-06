@@ -82,16 +82,10 @@ affinity: {}
 
 workflowExecutor:
   kubeconfig: "files/kubeconfig"
-  # This is the resource manager endpoint of the catalog used for processing results publication (must be base64 encoded)
-  catalogEndpoint: "catalogEndpointbase64"
-  # catalog username (must be base64 encoded)
-  catalogUsername: "usernamebase64=="
-  # catalog password (must be base64 encoded)
-  catalogApiKey: "apikeybase64=="
-  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV) (must be base64 encoded)
-  storageHost: "storageHostbase64=="
-  # store username (must be base64 encoded)
-  storageUsername: "storageUsernamebase64=="
+  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV)
+  storageHost: "storageHost"
+  # store username
+  storageUsername: "storageUsername"
   # store password (must be base64 encoded)
   storageApiKey: "storageApiKey64=="
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
