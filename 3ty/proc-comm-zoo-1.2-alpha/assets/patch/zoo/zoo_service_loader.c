@@ -498,11 +498,15 @@ addUserToMap(maps* conf){
                     VERIFY_SIGNATURE=tmpP+1;
                     int bufferLen=0;
 
-                    size_t nPAYLOAD=(strlen(PAYLOAD)+2)*sizeof (char);
+                    size_t nPAYLOAD=(strlen(PAYLOAD)+100)*sizeof (char);
                     char* cPAYLOAD=(char*)malloc(nPAYLOAD);
                     memset(cPAYLOAD,'\0',nPAYLOAD);
-                    memcpy(cPAYLOAD,PAYLOAD,(strlen(PAYLOAD))*sizeof (char));
-                    *(cPAYLOAD+strlen(PAYLOAD)) = '=';
+                    memcpy(cPAYLOAD,PAYLOAD,(strlen(PAYLOAD))*sizeof (char));                                      
+                    int theUg=(4 - strlen(PAYLOAD) % 4);
+                    if (theUg)
+                      for (int rt=0;rt<theUg;rt++ ){
+                        *(cPAYLOAD+strlen(PAYLOAD)+rt) = '=';  
+                      }
 
                     unsigned char* buffer=NULL;
                     size_t theLen=0;
