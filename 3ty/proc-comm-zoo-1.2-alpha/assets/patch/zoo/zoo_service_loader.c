@@ -3209,7 +3209,16 @@ runRequest (map ** inputs)
     setMapInMaps (m, "lenv", "oIdentifier", r_inputs->value);
   } 
   else {
-    fprintf(stderr,"rdr a8\n");
+    char conf_dir2[1024*2];
+    memset(conf_dir2,0,1024*2);
+
+    strcpy(conf_dir2,conf_dir);
+    getUserWorkspacePath(m,conf_dir,conf_dir2,1024);
+    strcpy(conf_dir,conf_dir2);
+
+//    fprintf(stderr,"rdr a8--> conf_dir %s -- %s\n", conf_dir, r_inputs->value);
+//    fprintf(stderr,"rdr a8--> conf_dir2 %s -- %s\n", conf_dir2, r_inputs->value);
+
     snprintf (tmps1, 1024, "%s/%s.zcfg", conf_dir, r_inputs->value);
 #ifdef DEBUG
     fprintf (stderr, "Trying to load %s\n", tmps1);

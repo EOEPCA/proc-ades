@@ -210,9 +210,7 @@ int main(int argc, char **argv, char **envp) {
   auto uri = std::make_unique<char[]>(M1024 * 2);
   std::memset(uri.get(), '\0', M1024 * 2);
   sprintf(uri.get(), "%s://%s%s%s", REQUEST_SCHEME, HTTP_HOST,
-          CONTEXT_PREFIX, cgiEnv.getPathInfo().c_str());
-
-
+          "/watchjob", cgiEnv.getPathInfo().c_str());
 
   if (isResult) {
     if (loadFile(finalFile.get(), finalBuffer) == 0) {
