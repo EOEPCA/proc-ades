@@ -63,13 +63,12 @@ spec:
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
             - name: VOLUME_SIZE
               value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
-            
             - name: JOB_MAX_RAM
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingMaxRam | quote }}
             - name: JOB_MAX_CORES
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingMaxCores | quote }}
             - name: JOB_KEEPWORKSPACE
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
 
           volumeMounts:
             - name: ades-config
