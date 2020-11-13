@@ -12,8 +12,6 @@ import sys
 def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, state=None):
     try:
 
-        outputJson = path.join(mount_folder,outputfile)
-
         # create an instance of the API class
         config.load_kube_config()
         api_instance = client.CoreV1Api(client.ApiClient())
@@ -37,9 +35,14 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, s
                 },
                 'spec': {
                     'volumes': [{
-                        'name': f"{workflowname}",
-                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-output-data",
-                                                  'readOnly': True}
+                        'name': f"{workflowname}-output-data",
+                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-output-data"}
+                    },{
+                        'name': f"{workflowname}-input-data",
+                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-input-data"}
+                    },{
+                        'name': f"{workflowname}-tmpout",
+                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-tmpout"}
                     }],
                     'containers': [{
                         'image': 'busybox',
@@ -50,37 +53,51 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, s
                             "while true;do date;sleep 2; done"
                         ],
                         "volumeMounts": [{
-                            'mountPath': f"{mount_folder}",
-                            'name': f"{workflowname}"
+                            'mountPath': f"{mount_folder}/output-data",
+                            'name': f"{workflowname}-output-data"
+                        },
+                        {
+                            'mountPath': f"{mount_folder}/input-data",
+                            'name': f"{workflowname}-input-data"
+                        },
+                        {
+                            'mountPath': f"{mount_folder}/tmpout",
+                            'name': f"{workflowname}-tmpout"
                         }]
                     }]
                 }
             }
 
-
+            print(f"Retrieving {outputfile}")
             resp = api_instance.create_namespaced_pod(body=pod_manifest, namespace=namespace)
             while True:
                 resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
                 if resp.status.phase != 'Pending':
                     break
                 time.sleep(1)
-            print("Done.", file=sys.stderr)
+            
+
 
 
         # Calling exec and waiting for response
         exec_command = [
             '/bin/sh',
             '-c',
-            f"cat {mount_folder}/*/{outputfile} >&2"]
+            f"cat {mount_folder}/output-data/{workflowname}/*/{outputfile} >&2"]
         resp = stream(api_instance.connect_get_namespaced_pod_exec,
                       name,
                       namespace,
                       command=exec_command,
                       stderr=True, stdin=False,
                       stdout=True, tty=False)
-
+        pprint(f"resp cat {mount_folder}/{workflowname}/*/{outputfile}      {resp}" )
         if "cat: can't open" in resp:
             raise ApiException(status=404,reason=f"Result output for job {workflowname} was not found. {resp}")
+
+        if not resp:
+            print(f"couldn't not find {mount_folder}/{workflowname}/*/{outputfile}")
+
+        print("Retrieving {outputfile} success")    
 
         return eval(resp)
     finally:

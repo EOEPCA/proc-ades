@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissianjob
+  name: {{jobname}}
 spec:
   template:
     spec:
@@ -17,32 +17,32 @@ spec:
           command: ["calrissian"]
           args:
             - "--stdout"
-            - "/calrissian/output-data/revsort-output.json"
+            - "{{stdout}}"
             - "--stderr"
-            - "/calrissian/output-data/revsort-stderr.log"
+            - "{{stderr}}"
             - "--max-ram"
-            - "4G"
+            - "{{max_ram}}"
             - "--max-cores"
-            - "2"
+            - "{{max_cores}}"
             - "--tmp-outdir-prefix"
-            - "/calrissian/tmpout/"
+            - "{{tmp_outdir_prefix}}"
             - "--debug"
             - "--tmpdir-prefix"
-            - "/calrissian/tmpout/"
+            - "{{tmpdir_prefix}}"
             - "--leave-tmpdir"
             - "--leave-container"
             - "--no-read-only"
             - "--outdir"
-            - "/calrissian/output-data/"
-            - "/calrissian/input-data/revsort-array.cwl"
-            - "/calrissian/input-data/revsort-array-job.json"
+            - "{{outdir}}"
+            - "{{argument1}}"
+            - "{{argument2}}"
           volumeMounts:
-            - mountPath: /calrissian/input-data
-              name: calrissian-input-data
-            - mountPath: /calrissian/tmpout
-              name: calrissian-tmpout
-            - mountPath: /calrissian/output-data
-              name: calrissian-output-data
+            - mountPath: {{volumemount_input_data_mount_path}}
+              name: {{volumemount_input_data_name}}
+            - mountPath: {{volumemount_tmpout_mount_path}}
+              name: {{volumemount_tmpout_name}}
+            - mountPath: {{volumemount_output_data_mount_path}}
+              name: {{volumemount_output_data_name}}
           env:
             - name: CALRISSIAN_POD_NAME
               valueFrom:
@@ -51,12 +51,12 @@ spec:
 
       restartPolicy: Never
       volumes:
-        - name: calrissian-input-data
+        - name: {{volumemount_input_data_name}}
           persistentVolumeClaim:
-            claimName: calrissian-input-data
-        - name: calrissian-tmpout
+            claimName: {{volumemount_input_data_name}}
+        - name: {{volumemount_tmpout_name}}
           persistentVolumeClaim:
-            claimName: calrissian-tmpout
-        - name: calrissian-output-data
+            claimName: {{volumemount_tmpout_name}}
+        - name: {{volumemount_output_data_name}}
           persistentVolumeClaim:
-            claimName: calrissian-output-data
+            claimName: {{volumemount_output_data_name}}

@@ -82,22 +82,22 @@ affinity: {}
 
 workflowExecutor:
   kubeconfig: "files/kubeconfig"
-  # This is the resource manager endpoint of the catalog used for processing results publication (must be base64 encoded)
-  catalogEndpoint: "catalogEndpointbase64"
-  # catalog username (must be base64 encoded)
-  catalogUsername: "usernamebase64=="
-  # catalog password (must be base64 encoded)
-  catalogApiKey: "apikeybase64=="
-  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV) (must be base64 encoded)
-  storageHost: "storageHostbase64=="
-  # store username (must be base64 encoded)
-  storageUsername: "storageUsernamebase64=="
-  # store password (must be base64 encoded)
-  storageApiKey: "storageApiKey64=="
+  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV)
+  storageHost: "storageHost"
+  # store username
+  storageUsername: "storageUsername"
+  # store password
+  storageApiKey: "storageApi"
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
   processingStorageClass: glusterfs-storage
   # Size of the Kubernetes Volumes in gigabytes
   processingVolumeSize: 10
+  # Max ram to use for a job
+  processingMaxRam: "4Gi"
+  # Max number of CPU cores to use concurrently for a job
+  processingMaxCores: "2"
+  # if false the Ades will clean the volume after the workflow has successfully finished running
+  processingKeepWorkspace: "False"
 
 persistence:
   enabled: true
@@ -108,3 +108,4 @@ persistence:
   userDataSize: 10Gi
   procServicesAccessMode: ReadWriteOnce
   procServicesSize: 5Gi
+

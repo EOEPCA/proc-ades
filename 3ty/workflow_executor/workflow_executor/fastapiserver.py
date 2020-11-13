@@ -6,7 +6,7 @@ from fastapi import FastAPI, Form, File, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
-from workflow_executor import prepare, client, result
+from workflow_executor import prepare, client, result, clean
 from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
@@ -64,19 +64,21 @@ def sanitize_k8_parameters(value: str):
 def read_root():
     return {"Hello": "World"}
 
-
+"""
+Executes namespace preparation
+"""
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent, response: Response):
     state = client.State()
     print('Prepare POST')
 
 
-    namespace = sanitize_k8_parameters(content.serviceID)
+    prepare_id = sanitize_k8_parameters(f"{content.serviceID}{content.runID}")
     defaultVolumeSize=4
     volumeSize = os.getenv('VOLUME_SIZE',defaultVolumeSize )
-    volumeName = f"{namespace}-volume"
+    volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
 
-    print('namespace: %s' % namespace)
+    print('namespace: %s' % prepare_id)
     print(f"volume_size: {volumeSize}")
     print('volume_name: %s' % volumeName)
 
@@ -87,24 +89,27 @@ def read_prepare(content: PrepareContent, response: Response):
     }
 
     try:
-        resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volumeSize, volumeName=volumeName,
+        resp_status = workflow_executor.prepare.run(namespace=prepare_id, volumeSize=volumeSize, volumeName=volumeName,
                                                     state=state, workflow_config=workflow_config)
     except ApiException as e:
         response.status_code = e.status
 
-    return {"prepareID": namespace}
+    return {"prepareID": prepare_id}
 
 
+"""
+Returns prepare status
+"""
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
-    namespace = sanitize_k8_parameters(prepare_id)
 
     state = client.State()
     print('Prepare GET')
-
+    namespace=prepare_id
+    #volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
 
     try:
-        resp_status = workflow_executor.prepare.get(namespace=namespace, state=state)
+        resp_status = workflow_executor.prepare.get(namespace=namespace,state=state)
     except ApiException as e:
         response.status_code = e.status
 
@@ -116,7 +121,9 @@ def read_prepare(prepare_id: str, response: Response):
     # 100 ripassa dopo
     # 500 error
 
-
+"""
+Executes workflow
+"""
 @app.post("/execute", status_code=status.HTTP_201_CREATED)
 def read_execute(content: ExecuteContent, response: Response):
     # {"runID": "runID-123","serviceID": "service-id-123", "prepareID":"uuid" ,"cwl":".......","inputs":".........."}
@@ -124,10 +131,10 @@ def read_execute(content: ExecuteContent, response: Response):
     state = client.State()
     print('Execute POST')
 
-    namespace = sanitize_k8_parameters(content.serviceID)
+    namespace = content.prepareID
     cwl_content = content.cwl
     inputs_content = json.loads(content.inputs)
-    volume_name_prefix = f"{namespace}-volume"
+    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}volume")
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
@@ -176,7 +183,12 @@ def read_execute(content: ExecuteContent, response: Response):
         "dataType": "string",
         "value": f"{workflow_name}.res",
         "mimeType": "",
-        "href": ""})        
+        "href": ""})
+
+    default_max_ram_value="4G"
+    default_max_cores_value="2"
+    max_ram=os.getenv('JOB_MAX_RAM', default_max_ram_value)
+    max_cores=os.getenv('JOB_MAX_CORES', default_max_cores_value)
 
     pprint(f"inputs_content {inputs_content}")
     # inputcwlfile is input_json + cwl_file
@@ -201,7 +213,10 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         mount_folder=mount_folder,
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
-                                                        cwl_wrapper_config=cwl_wrapper_config)
+                                                        cwl_wrapper_config=cwl_wrapper_config,
+                                                        cleanJob=True,
+                                                        max_ram=max_ram,
+                                                        max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
@@ -209,9 +224,12 @@ def read_execute(content: ExecuteContent, response: Response):
     return {"jobID": workflow_name }
 
 
+"""
+Returns workflow status
+"""
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
-    namespace = sanitize_k8_parameters(service_id)
+    namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     state = client.State()
@@ -244,21 +262,29 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     return status
 
 
+"""
+Returns workflow result
+"""
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
-    namespace = sanitize_k8_parameters(service_id)
+    namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
-    volume_name_prefix = f"{namespace}-volume"
+    volume_name_prefix = sanitize_k8_parameters(f"{service_id}volume")
     mount_folder = "/workflow"
     outputfile=f"{workflow_name}.res"
 
     state = client.State()
     print('Result GET')
 
+
+        
     resp_status = {}
     try:
-        resp_status = workflow_executor.result.run(namespace=namespace, workflowname=workflow_name,
-                                                   mount_folder=mount_folder, volume_name_prefix=volume_name_prefix,outputfile=outputfile,
+        resp_status = workflow_executor.result.run(namespace=namespace,
+                                                   workflowname=workflow_name,
+                                                   mount_folder=mount_folder,
+                                                   volume_name_prefix=volume_name_prefix,
+                                                   outputfile=outputfile,
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
@@ -270,9 +296,39 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             return e
 
     json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
-    pprint("wf_output json: ")
+    print("wf_output json: ")
     pprint(json_compatible_item_data)
+    print("job success")
+
+
+    keepworkspaceString=os.getenv('JOB_KEEPWORKSPACE', "False")
+    keepworkspace= keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+    if not keepworkspace:
+        print('Removing Workspace')
+        clean_job_status=clean_job(namespace)
+        if isinstance(clean_job_status, Error):
+            return clean_job_status
+        else:
+            pprint(clean_job_status)    
+        print('Removing Workspace Success')
+
+
     return JSONResponse(content=json_compatible_item_data)
+
+
+"""
+Removes Kubernetes namespace
+"""
+def clean_job(namespace: str):     
+    clean_status = {}
+    try:
+        clean_status = workflow_executor.clean.run(namespace=namespace)
+        return clean_status
+    except ApiException as err:
+            e = Error()
+            e.set_error(12, err.body)
+            print(err.body)
+            return e
 
 
 def main():

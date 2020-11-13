@@ -4,7 +4,8 @@ import os
 import sys
 from types import SimpleNamespace
 import yaml
-from workflow_executor import helpers, stagein
+from jinja2 import Template
+from workflow_executor import helpers
 from pprint import pprint
 from os import path
 from kubernetes import client, config
@@ -56,7 +57,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     return inputs
 
 
-def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, cwl_wrapper_config=None, state=None):
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name,cleanJob=True, max_ram="4G",max_cores="2",cwl_wrapper_config=None, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
@@ -73,7 +74,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json, volume_name_prefix,
-                                    path.join(mount_folder, "input-data"), namespace, state=state)
+                                    path.join(mount_folder, "input-data",workflow_name), namespace, state=state)
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
@@ -83,7 +84,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
-    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath], targetFolder=mount_folder, mountFolder=mount_folder,
+    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath], targetFolder=path.join(mount_folder,workflow_name), mountFolder=mount_folder,
                                  persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state, workflow_name=workflow_name)
 
     os.remove(tmppath)
@@ -99,18 +100,33 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
         print(f"Customizing stage-in job using the template {yamlFileTemplate} ")
-        # volume
-        yaml_modified = f.read().replace("name: calrissianjob", f"name: {workflow_name}")
-        yaml_modified = yaml_modified.replace("/calrissian/output-data", path.join(mount_folder, "output-data"))
-        yaml_modified = yaml_modified.replace("/calrissian/input-data", path.join(mount_folder, "input-data"))
-        yaml_modified = yaml_modified.replace("/calrissian/tmpout", path.join(mount_folder, "tmpout"))
-        yaml_modified = yaml_modified.replace("revsort-array-job.json", jsonInputFilename)
-        yaml_modified = yaml_modified.replace("revsort-array.cwl", f"{cwlDocumentFilename}#{workflow_id}")
-        yaml_modified = yaml_modified.replace("revsort", workflow_id)
-        yaml_modified = yaml_modified.replace("calrissian-", f"{volume_name_prefix}-")
-        yaml_modified = yaml_modified.replace("t2workflow123", f"{workflow_name}")
-        yaml_modified = yaml_modified.replace("calrissian-output.json", f"{workflow_id}-output.json")
-        yaml_modified = yaml_modified.replace("stac-output.out", f"{workflow_name}-stac-output.out")
+
+        
+        # for the moment these 2 variables are hardcoded
+        # TODO make these 2 variables configurable
+    
+
+        template = Template(f.read())
+        variables= {"jobname" : workflow_name,
+                    "stdout"  : path.join(mount_folder,"output-data",workflow_name,f"{workflow_id}-output.json"),
+                    "stderr"  : path.join(mount_folder,"output-data",workflow_name,f"{workflow_id}-stderr.log"),
+                    "max_ram" : max_ram,
+                    "max_cores": max_cores,
+                    "tmp_outdir_prefix" : f"{path.join(mount_folder,'tmpout',workflow_name)}/",
+                    "tmpdir_prefix" : f"{path.join(mount_folder,'tmpout',workflow_name)}/",
+                    "outdir": f"{path.join(mount_folder,'output-data',workflow_name)}/",
+                    "argument1": path.join(mount_folder, "input-data",workflow_name,f"{cwlDocumentFilename}#{workflow_id}"),
+                    "argument2": path.join(mount_folder, "input-data",workflow_name, jsonInputFilename),
+                    "volumemount_input_data_mount_path":path.join(mount_folder, "input-data"),
+                    "volumemount_input_data_name": input_volume_name,
+                    "volumemount_tmpout_mount_path":path.join(mount_folder, "tmpout"),
+                    "volumemount_tmpout_name": tmpout_volume_name,
+                    "volumemount_output_data_mount_path":path.join(mount_folder, "output-data"),
+                    "volumemount_output_data_name": output_volume_name}
+
+        yaml_modified = template.render(variables)
+
+
 
         body = yaml.safe_load(yaml_modified)
         pprint(body)
@@ -154,6 +170,12 @@ def wrapcwl(cwl_document,cwl_wrapper_config=None):
 
     wf = Parser(k)
     wf.write_output()
+
+    with open(wrappedcwl, 'r') as f:
+        print("# WRAPPED CWL")
+        print(f.read())
+        print("# END WRAPPED CWL")
+        
     return wrappedcwl
 
 def delete_line_by_full_match(original_file, line_to_delete):
