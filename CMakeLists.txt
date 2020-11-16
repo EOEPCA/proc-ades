@@ -35,6 +35,10 @@ set(LIB_SRC src/templates/exec.cpp src/templates/workflow_executor.hpp src/templ
 add_library(workflow_executor SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(workflow_executor ${MODS_LIBS})
 
+set(LIB_SRC_PEP src/templates/exec.cpp src/templates/pepresources.hpp src/templates/pepresources.cpp)
+add_library(pep_resource SHARED ${LIB_SRC_PEP})
+TARGET_LINK_LIBRARIES(pep_resource ${MODS_LIBS})
+
 #add_executable(ades_main ${src_main})
 #TARGET_LINK_LIBRARIES(ades_main ${MODS_LIBS})
 

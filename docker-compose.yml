@@ -5,17 +5,27 @@ version: "3.5"
 #sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml down
 services:
 
-  web-wf-exe:
+  mock-wf-exe:
     build:
-      context: 3ty/workflow_executor/webinterface
+      context: test/mock/webinterface
       dockerfile: Dockerfile
-    image: web-wf-exe:1.0
+    image: mock-wf-exe:1.0
     hostname: webwf.org
-    container_name: web-wf-exe
+    container_name: mock-wf-exe
     networks:
       - eoepca_network
 #    ports:
 #      - "9999:80"
+
+  mock-pep:
+    build:
+      context: test/mock/pep
+      dockerfile: Dockerfile
+    image: mock-pep
+    hostname: mock-pep.org
+    container_name: mock-pep
+    networks:
+      - eoepca_network
 
   ades:
     image: proc-ades:build
@@ -33,10 +43,11 @@ services:
       # da rimuovere - ./:/work
       - ./:/work
     links:
-      - web-wf-exe
+      - mock-wf-exe
+      - mock-pep
     depends_on:
-      - web-wf-exe
-
+      - mock-wf-exe
+      - mock-pep
 
 networks:
   eoepca_network:

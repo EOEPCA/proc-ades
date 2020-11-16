@@ -1,5 +1,5 @@
 
-#include "httpfuntions.hpp"
+#include "../includes/httpfuntions.hpp"
 #include "xmlmemorywritewrapper.hpp"
 #include <cstdio>
 #include <eoepca/owl/eoepcaows.hpp>
@@ -21,6 +21,21 @@
 
 #include "service.h"
 #include "service_internal.h"
+
+
+std::string authorizationBearer(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
+    if (eoUserMap){
+        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
+        if (userServicePathMap){
+            char* baseS=strchr(userServicePathMap->value,' ');
+            if (baseS){
+                return std::string(++baseS);
+            }
+        }
+    }
+    return  "";
+}
 
 int mkpath(char *file_path, mode_t mode) {
   // assert(file_path && *file_path);
@@ -263,6 +278,14 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   std::map<std::string, std::string> confEoepca;
   getT2ConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
   std::string buildPath=confEoepca["buildPath"];
+
+
+  std::map<std::string, std::string> confPep;
+  getT2ConfigurationFromZooMapConfig(conf, "pep", confPep);
+
+
+
+
 
   std::map<std::string, std::string> confMain;
   getT2ConfigurationFromZooMapConfig(conf, "main", confMain);
