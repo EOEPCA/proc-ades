@@ -22,6 +22,7 @@
 #include "service.h"
 #include "service_internal.h"
 
+#include "../../templates/pepresources.hpp"
 
 std::string authorizationBearer(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
@@ -252,6 +253,11 @@ class User{
       }
       fprintf(stderr,"setBasePath: %s\n",basePath_.c_str());
     }
+
+    std::string getUsername(){
+        return this->username_;
+    }
+
     std::string getPath(){
       return  basePath_+username_ + "/";
     }
@@ -279,11 +285,27 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
   getT2ConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
   std::string buildPath=confEoepca["buildPath"];
 
-
   std::map<std::string, std::string> confPep;
   getT2ConfigurationFromZooMapConfig(conf, "pep", confPep);
+  bool usepep=confPep["usepep"]=="true";
+  bool pepStopOnError=confPep["stopOnError"]=="true";
+  std::string pephost = confPep["pephost"];
+  auto pepRegisterResources=std::make_unique<mods::PepRegisterResources>(confPep["pepresource"]);
+    if (!pepRegisterResources->IsValid()){
+        std::string err{"eoepca pepresource.so is not valid"};
+        setStatus(conf, "failed", err.c_str());
+        updateStatus(conf, 100, err.c_str());
+        return SERVICE_FAILED;
+    }
 
-
+    mods::PepResource resource;
+    resource.setJwt(authorizationBearer(conf));
+    if (usepep && resource.jwt_empty()){
+        std::string err{"eoepca pepresource.so jwt is empty"};
+        setStatus(conf, "failed", err.c_str());
+        updateStatus(conf, 100, err.c_str());
+        return SERVICE_FAILED;
+    }
 
 
 
@@ -529,6 +551,26 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                   
                   std::cerr << "***" << COMPILE << "\n";
                   int COMPILERES = system((char *)COMPILE.c_str());
+
+                  if (usepep){
+                      resource.setWorkspaceService(user->getUsername(),zoo->getProcessDescriptionId());
+                      int pr=resource.prepareExec(confPep);
+                      if (0 != pr && pepStopOnError){
+                          std::string err{"eoepca: Can't prepare 'prepareExec'."};
+                          setStatus(conf, "failed", err.c_str());
+                          updateStatus(conf, 100, err.c_str());
+                          return SERVICE_FAILED;
+                      }
+
+                      if ( pr==0 && 0 != pepRegisterResources->pepSave(resource) && pepStopOnError){
+                          std::string err{"eoepca: pepresource.so regiester service error"};
+                          setStatus(conf, "failed", err.c_str());
+                          updateStatus(conf, 100, err.c_str());
+                          return SERVICE_FAILED;
+                      }
+
+
+                  }
                   sleep(2);
                 }
 

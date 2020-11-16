@@ -8,6 +8,7 @@
 #include <string>
 
 #include <list>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -61,8 +62,50 @@ namespace mods {
 #endif
 
 class PepResource{
+    std::string jwt_="";
+    std::string name_="";
+    std::string icon_uri_="";
+    std::list<std::string> scopes_={};
+
+    std::string service_="";
+    std::string workspace_="";
+
 public:
+
+    int prepareExec(const std::map<std::string, std::string>& conf){
+
+
+        return 0;
+    }
+
+
+    void setWorkspaceService(std::string workspace, std::string service){
+        reset();
+        this->workspace_ = std::move(workspace);
+        this->service_ = std::move(service);
+    }
+
+    bool jwt_empty(){
+        return jwt_.empty();
+    }
+
+    void setJwt(std::string jwt){
+        this->jwt_=std::move(jwt);
+    }
+
     PepResource(){}
+    void reset(){
+        scopes_.clear();
+        icon_uri_.clear();
+        name_.clear();
+        service_.clear();
+        workspace_.clear();
+    }
+
+    void resetAll(){
+        reset();
+        jwt_.clear();
+    }
 };
 
 

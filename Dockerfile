@@ -45,7 +45,7 @@ RUN mkdir -p /opt/t2libs && cp /project/src/templates/libinterface.so /opt/t2lib
 RUN cp /project/build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
 
 RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
-RUN cp /project/build/libpep_resource.so /opt/t2service/libpep_resource.so
+RUN cp /project/build/libworkflow_executor.so /opt/t2service/libpep_resource.so
 RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
