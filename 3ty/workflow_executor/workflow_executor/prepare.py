@@ -10,9 +10,10 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-
-def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
-    print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
+def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_name=None,
+        state=None):
+    print(
+        f"Preparing {namespace}  inputVolumeSize: {inputVolumeSize}  tmpVolumeSize: {tmpVolumeSize} outputVolumeSize: {outputVolumeSize}  volumeName: {volumeName}")
 
     config.load_kube_config()
     api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
@@ -42,17 +43,11 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
         raise e
 
-    ### Configuring storage_class and creating kubernetes secrets for stageout
-    storage_class_name = ""
-    if workflow_config != None:
-        storage_class_name = workflow_config["storageclass"]
-
-
     #### Creating pod manager role
     print("####################################")
     print("######### Creating pod_manager_role")
     metadata = client.V1ObjectMeta(name='pod-manager-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods', 'pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     rules = []
     rules.append(rule)
@@ -70,7 +65,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("####################################")
     print("######### Creating log-reader-role")
     metadata = client.V1ObjectMeta(name='log-reader-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods', 'pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     # verbs=['get', 'list'])
     rules = []
@@ -123,7 +118,6 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
         raise e
 
-
     print("####################################")
     print("######### Creating cluster-role-binding")
     metadata = client.V1ObjectMeta(name=f"{namespace}-rbac", namespace=namespace)
@@ -146,7 +140,6 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
             print("Exception when creating cluster-role-binding: %s\n" % e, file=sys.stderr)
             raise e
 
-
     print("####################################")
     print("######### Creating Persistent Volume Claims")
 
@@ -156,7 +149,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         # access_modes=["ReadWriteOnce", "ReadOnlyMany"],
         access_modes=["ReadWriteMany"],
         resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
+            requests={"storage": inputVolumeSize}
         )
     )
 
@@ -169,7 +162,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     spec2 = client.V1PersistentVolumeClaimSpec(
         access_modes=["ReadWriteMany"],
         resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
+            requests={"storage": tmpVolumeSize}
         )
     )
     if storage_class_name:
@@ -182,7 +175,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     spec3 = client.V1PersistentVolumeClaimSpec(
         access_modes=["ReadWriteMany"],
         resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
+            requests={"storage": outputVolumeSize}
         )
     )
     if storage_class_name:

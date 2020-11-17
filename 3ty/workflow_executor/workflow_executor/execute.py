@@ -19,7 +19,6 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     print(job_input_json_file)
     job_input_json = json.load(open(job_input_json_file))
 
-    
     print("parsing cwl")
     with open(cwl_document, 'r') as stream:
         try:
@@ -36,7 +35,6 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     inputs = {}
     for k, v in workflow['inputs'].items():
 
-
         for input in job_input_json["inputs"]:
 
             if input['id'] == k:
@@ -45,11 +43,11 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
                 if "[]" in type:
                     if k not in inputs.keys():
                         inputs[k] = []
-                    #inputs[k].append(input['input']['value'])
+                    # inputs[k].append(input['input']['value'])
                     inputs[k].append(input['value'])
                 else:
                     inputs[k] = {}
-                    #inputs[k] = input['input']['value']
+                    # inputs[k] = input['input']['value']
                     inputs[k] = input['value']
 
     print("Input json to pass to the cwl runner: ")
@@ -57,24 +55,24 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     return inputs
 
 
-def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name,cleanJob=True, max_ram="4G",max_cores="2",cwl_wrapper_config=None, state=None):
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, cleanJob=True,
+        max_ram="4G", max_cores="2", cwl_wrapper_config=None, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
     tmpout_volume_name = volume_name_prefix + "-tmpout"
 
-
     # cwl-wrapper
-    wrapped_cwl_document=wrapcwl(cwl_document,cwl_wrapper_config)
+    wrapped_cwl_document = wrapcwl(cwl_document, cwl_wrapper_config)
 
     # remove std.out and std.err lines to let calrissian take care of it
-    delete_line_by_full_match(wrapped_cwl_document,"  stderr: std.err")
-    delete_line_by_full_match(wrapped_cwl_document,"  stdout: std.out")
+    delete_line_by_full_match(wrapped_cwl_document, "  stderr: std.err")
+    delete_line_by_full_match(wrapped_cwl_document, "  stdout: std.out")
 
     workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json, volume_name_prefix,
-                                    path.join(mount_folder, "input-data",workflow_name), namespace, state=state)
+                                    path.join(mount_folder, "input-data", workflow_name), namespace, state=state)
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
@@ -84,8 +82,10 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
-    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath], targetFolder=path.join(mount_folder,workflow_name), mountFolder=mount_folder,
-                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state, workflow_name=workflow_name)
+    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath],
+                                 targetFolder=path.join(mount_folder, workflow_name), mountFolder=mount_folder,
+                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state,
+                                 workflow_name=workflow_name)
 
     os.remove(tmppath)
 
@@ -101,32 +101,29 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
 
         print(f"Customizing stage-in job using the template {yamlFileTemplate} ")
 
-        
         # for the moment these 2 variables are hardcoded
         # TODO make these 2 variables configurable
-    
 
         template = Template(f.read())
-        variables= {"jobname" : workflow_name,
-                    "stdout"  : path.join(mount_folder,"output-data",workflow_name,f"{workflow_id}-output.json"),
-                    "stderr"  : path.join(mount_folder,"output-data",workflow_name,f"{workflow_id}-stderr.log"),
-                    "max_ram" : max_ram,
-                    "max_cores": max_cores,
-                    "tmp_outdir_prefix" : f"{path.join(mount_folder,'tmpout',workflow_name)}/",
-                    "tmpdir_prefix" : f"{path.join(mount_folder,'tmpout',workflow_name)}/",
-                    "outdir": f"{path.join(mount_folder,'output-data',workflow_name)}/",
-                    "argument1": path.join(mount_folder, "input-data",workflow_name,f"{cwlDocumentFilename}#{workflow_id}"),
-                    "argument2": path.join(mount_folder, "input-data",workflow_name, jsonInputFilename),
-                    "volumemount_input_data_mount_path":path.join(mount_folder, "input-data"),
-                    "volumemount_input_data_name": input_volume_name,
-                    "volumemount_tmpout_mount_path":path.join(mount_folder, "tmpout"),
-                    "volumemount_tmpout_name": tmpout_volume_name,
-                    "volumemount_output_data_mount_path":path.join(mount_folder, "output-data"),
-                    "volumemount_output_data_name": output_volume_name}
+        variables = {"jobname": workflow_name,
+                     "stdout": path.join(mount_folder, "output-data", workflow_name, f"{workflow_id}-output.json"),
+                     "stderr": path.join(mount_folder, "output-data", workflow_name, f"{workflow_id}-stderr.log"),
+                     "max_ram": max_ram,
+                     "max_cores": max_cores,
+                     "tmp_outdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
+                     "tmpdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
+                     "outdir": f"{path.join(mount_folder, 'output-data', workflow_name)}/",
+                     "argument1": path.join(mount_folder, "input-data", workflow_name,
+                                            f"{cwlDocumentFilename}#{workflow_id}"),
+                     "argument2": path.join(mount_folder, "input-data", workflow_name, jsonInputFilename),
+                     "volumemount_input_data_mount_path": path.join(mount_folder, "input-data"),
+                     "volumemount_input_data_name": input_volume_name,
+                     "volumemount_tmpout_mount_path": path.join(mount_folder, "tmpout"),
+                     "volumemount_tmpout_name": tmpout_volume_name,
+                     "volumemount_output_data_mount_path": path.join(mount_folder, "output-data"),
+                     "volumemount_output_data_name": output_volume_name}
 
         yaml_modified = template.render(variables)
-
-
 
         body = yaml.safe_load(yaml_modified)
         pprint(body)
@@ -139,17 +136,14 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
             return e
 
 
+def wrapcwl(cwl_document, cwl_wrapper_config=None):
+    directory = os.path.dirname(cwl_document)
 
-def wrapcwl(cwl_document,cwl_wrapper_config=None):
+    filename = os.path.basename(cwl_document)
+    filename_wo_extension = os.path.splitext(filename)[0]
 
-    directory=os.path.dirname(cwl_document)
-
-    filename=os.path.basename(cwl_document)
-    filename_wo_extension=os.path.splitext(filename)[0]
-    
     # default cwl_wrapper_configs
-    wrappedcwl=os.path.join(directory,f"{filename_wo_extension}_wrapped.cwl")
-
+    wrappedcwl = os.path.join(directory, f"{filename_wo_extension}_wrapped.cwl")
 
     if cwl_wrapper_config:
         k = dict()
@@ -175,8 +169,9 @@ def wrapcwl(cwl_document,cwl_wrapper_config=None):
         print("# WRAPPED CWL")
         print(f.read())
         print("# END WRAPPED CWL")
-        
+
     return wrappedcwl
+
 
 def delete_line_by_full_match(original_file, line_to_delete):
     """ In a file, delete the lines at line number in given list"""
