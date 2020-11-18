@@ -421,6 +421,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       wfpm->runID = lenv["uusid"];
       wfpm->perc = -1;
       wfpm->message = "";
+      wfpm->cwl=cwlBuffer.str();
 
       std::string prepareID;
       std::cerr << "workflowExecutor->webPrepare init\n";
@@ -437,7 +438,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       }
       std::cerr << "workflowExecutor->webGetPrepare end\n";
 
-      wfpm->cwl=cwlBuffer.str();
       wfpm->inputs=jParams;
 
       std::cerr << "workflowExecutor->webExecute init\n";
