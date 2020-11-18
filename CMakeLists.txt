@@ -35,7 +35,7 @@ set(LIB_SRC src/templates/exec.cpp src/templates/workflow_executor.hpp src/templ
 add_library(workflow_executor SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(workflow_executor ${MODS_LIBS})
 
-set(LIB_SRC_PEP src/templates/exec.cpp src/templates/pepresources.hpp src/templates/pepresources.cpp)
+set(LIB_SRC_PEP src/templates/pepresources.hpp src/templates/pepresources.cpp)
 add_library(pep_resource SHARED ${LIB_SRC_PEP})
 TARGET_LINK_LIBRARIES(pep_resource ${MODS_LIBS})
 

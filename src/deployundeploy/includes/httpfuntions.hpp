@@ -4,6 +4,8 @@
 
 #include <curl/curl.h>
 #include <string>
+#include <list>
+
 
 size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size,
                                         size_t nmemb, std::string *s) {
@@ -18,8 +20,7 @@ size_t CurlWrite_CallbackFunc_StdString(void *contents, size_t size,
 }
 
 
-
-long postputToWeb(std::string &buffer,const std::string& content, const char *path,const char* method/*POST/PUT*/ ){
+long postputToWeb(std::string &buffer,const std::string& content, const char *path,const char* method/*POST/PUT*/,std::list<std::string>* headers= nullptr){
 
 
   long response_code;
@@ -41,6 +42,13 @@ long postputToWeb(std::string &buffer,const std::string& content, const char *pa
 
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, content.c_str());
 
+    struct curl_slist *chunk = NULL;
+    if (headers!= nullptr){
+        for(auto&s:*headers){
+            chunk = curl_slist_append(chunk, s.c_str());
+        }
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+    }
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
@@ -49,20 +57,14 @@ long postputToWeb(std::string &buffer,const std::string& content, const char *pa
     }
 
     curl_easy_cleanup(curl);
+    curl_slist_free_all(chunk);
   }
 
   return response_code;
-
-
-
-
 }
 
 
-
-
-
-long getFromWeb(std::string &buffer, const char *path) {
+long getFromWeb(std::string &buffer, const char *path,std::list<std::string>* headers= nullptr) {
   long response_code;
   CURL *curl;
   CURLcode res;
@@ -78,6 +80,15 @@ long getFromWeb(std::string &buffer, const char *path) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
                      CurlWrite_CallbackFunc_StdString);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+
+      struct curl_slist *chunk = NULL;
+      if (headers!= NULL){
+          for(auto&s:*headers){
+              chunk = curl_slist_append(chunk, s.c_str());
+          }
+          curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+      }
+
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
     } else {
@@ -85,6 +96,7 @@ long getFromWeb(std::string &buffer, const char *path) {
     }
 
     curl_easy_cleanup(curl);
+    curl_slist_free_all(chunk);
   }
 
   return response_code;

@@ -253,6 +253,11 @@ public:
         }
         fprintf(stderr,"setBasePath: %s\n",basePath_.c_str());
     }
+
+    std::string getUsername(){
+        return this->username_;
+    }
+
     std::string getPath(){
         return  basePath_+username_ + "/";
     }
@@ -280,7 +285,38 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     getT2ConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
     std::string buildPath=confEoepca["buildPath"];
 
+    std::map<std::string, std::string> confPep;
+    getT2ConfigurationFromZooMapConfig(conf, "pep", confPep);
+    bool usepep=confPep["usepep"]=="true";
+    bool pepStopOnError=confPep["stopOnError"]=="true";
+    std::string pephost = confPep["pephost"];
+    std::unique_ptr<mods::PepRegisterResources> pepRegisterResources= nullptr;
+    std::unique_ptr<mods::PepResource> resource = nullptr;
 
+    if (usepep){
+        pepRegisterResources=std::make_unique<mods::PepRegisterResources>(confPep["pepresource"]);
+        if (!pepRegisterResources->IsValid()){
+            std::string err{"eoepca pepresource.so is not valid"};
+            setStatus(conf, "failed", err.c_str());
+            updateStatus(conf, 100, err.c_str());
+            return SERVICE_FAILED;
+        }
+        resource = std::make_unique<mods::PepResource>();
+    }
+
+
+    if (usepep){
+        resource->setJwt(authorizationBearer(conf));
+        if (resource->jwt_empty()) {
+            std::string err{"eoepca pepresource.so jwt is empty"};
+            setStatus(conf, "failed", err.c_str());
+            updateStatus(conf, 100, err.c_str());
+            return SERVICE_FAILED;
+        }
+    }
+
+    int steps = 0;
+    std::cerr<< "\nstep: " << ++steps << "\n";
     std::map<std::string, std::string> confMain;
     getT2ConfigurationFromZooMapConfig(conf, "main", confMain);
 
@@ -291,24 +327,25 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         return setZooError(conf, message, "NoApplicableCode");
     }
 
+    std::cerr<< "\nstep: " << ++steps << "\n";
     if (confMain["servicePath"].empty()) {
         std::string message{"zoo servicePath empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     if (confEoepca["userworkspace"].empty()) {
         std::string message{"zoo userworkspace empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     if (*confEoepca["userworkspace"].rbegin() != '/') {
         confEoepca["userworkspace"].append("/");
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     std::map<std::string, std::string> userEoepca;
     getT2ConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
 
@@ -325,7 +362,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     for(auto& [k,q]:userEoepca){
         fprintf(stderr, "-----> %s,%s  \n",k.c_str(),q.c_str());
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     if (userEoepca["grant"].empty()) {
         std::string message{"Grants for this user are not  defined"};
         setStatus(conf, "failed", message.c_str());
@@ -341,7 +378,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             updateStatus(conf, 100, message.c_str());
             return setZooError(conf, message, "NoApplicableCode");
         }
-
+        std::cerr<< "\nstep: " << ++steps << "\n";
         std::cerr << "user: "<< userEoepca["user"] << " grants: "  << grant << "\n";
 
         if(grant.at(2) == '-'){
@@ -353,7 +390,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         }
 
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     auto resU=user->prepareUserWorkspace();
     if (!resU.empty()){
         std::string message{resU};
@@ -375,7 +412,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     if (applicationPackageZooMimeTypeMap){
         theMimeType=applicationPackageZooMimeTypeMap->value;
     }
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     if (!applicationPackageZooMap && !applicationPackageZooMapHref) {
         return setZooError(conf, "applicationPackage empty()", "NoApplicableCode");
     }
@@ -388,7 +425,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     if (applicationPackageZooMapHref)
         owsOri=applicationPackageZooMapHref->value;
 
-
+    std::cerr<< "\nstep: " << ++steps << "\n";
     try {
 
         if (operation == Operation::UNDEPLOY) {
@@ -523,6 +560,34 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
                                         std::cerr << "***" << COMPILE << "\n";
                                         int COMPILERES = system((char *)COMPILE.c_str());
+
+                                        if (usepep){
+
+                                            resource->dump();
+
+                                            resource->setWorkspaceService(user->getUsername(),zoo->getIdentifier());
+                                            int pr=resource->prepareExec(confPep);
+                                            if (0 != pr && pepStopOnError){
+                                                std::string err{"eoepca: Can't prepare 'prepareExec'."};
+                                                setStatus(conf, "failed", err.c_str());
+                                                updateStatus(conf, 100, err.c_str());
+                                                return SERVICE_FAILED;
+                                            }
+
+
+                                            if (pr==0){
+
+                                                long  retCode = pepRegisterResources->pepSave(*(resource.get()));
+                                                if (200 != retCode  && pepStopOnError) {
+                                                    std::string err{
+                                                            "eoepca: pepresource.so regiester service error return code: "};
+                                                    err.append(std::to_string(retCode));
+                                                    setStatus(conf, "failed", err.c_str());
+                                                    updateStatus(conf, 100, err.c_str());
+                                                    return SERVICE_FAILED;
+                                                }
+                                            }
+                                        }
                                         sleep(2);
                                     }
 

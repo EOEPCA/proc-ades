@@ -7,10 +7,13 @@
 #include <stdexcept>
 #include <string>
 
-#include <list>
+#include <vector>
 #include <map>
 #include <memory>
 #include <utility>
+#include <sstream>
+#include <cstring>
+
 
 namespace mods {
 #ifndef T2CWL_IMOD_HPP
@@ -62,50 +65,180 @@ namespace mods {
 #endif
 
 class PepResource{
-    std::string jwt_="";
-    std::string name_="";
-    std::string icon_uri_="";
-    std::list<std::string> scopes_={};
+    std::string uri_;
 
-    std::string service_="";
-    std::string workspace_="";
+    std::string jwt_;
+    std::string name_;
+    std::string icon_uri_;
+    std::vector<std::string> scopes_={};
 
+    std::string service_;
+    std::string workspace_;
 public:
 
-    int prepareExec(const std::map<std::string, std::string>& conf){
+    std::string getUri() const {
+        return uri_;
+    }
 
+    std::string getName() const {
+        return name_;
+    }
+
+    std::string getIconUri() const {
+        return icon_uri_;
+    }
+
+    const std::vector<std::string> &getScopes() const {
+        return scopes_;
+    }
+
+    std::string getJwt(){
+        return jwt_;
+    }
+
+
+    void setName(const std::string &name) {
+        name_ = name;
+    }
+
+    void setIconUri(const std::string &iconUri) {
+        icon_uri_ = iconUri;
+    }
+
+    void setScopes(const std::vector<std::string> &scopes) {
+
+        for(auto&s:scopes)
+            scopes_.push_back(s);
+    }
+
+protected:
+
+    template <typename... Args>
+    static std::string string_format(const std::string &format, Args... args) {
+        size_t size = std::snprintf(nullptr, 0, format.c_str(), args...) +
+                      1;  // Extra space for '\0'
+        std::unique_ptr<char[]> buf(new char[size]);
+        std::snprintf(buf.get(), size, format.c_str(), args...);
+        return std::string(buf.get(),
+                           buf.get() + size - 1);  // We don't want the '\0' inside
+    }
+
+    template <typename Out>
+    static void split(const std::string &s, char delim, Out result) {
+        std::stringstream ss;
+        ss.str(s);
+        std::string item;
+        while (std::getline(ss, item, delim)) {
+            *(result++) = item;
+        }
+    }
+
+    static std::vector<std::string> split(const std::string &s, char delim) {
+        std::vector<std::string> elems;
+        split(s, delim, std::back_inserter(elems));
+        return elems;
+    }
+
+public:
+    int prepareExec(std::map<std::string, std::string>& conf){
+        name_ = service_;
+        std::string pathExec = conf["pathExec"];
+        std::string sScoops = conf["scopes"];
+        if (pathExec.empty()){
+            pathExec="/%s/wps3/processes/%s";
+        }
+
+        if (sScoops.empty()){
+            sScoops="public";
+        }
+
+        std::vector<std::string> scoops = split(sScoops,'|');
+        for(auto&s: scoops){
+            scopes_.push_back(s);
+        }
+
+        std::cerr << "\npathExec: " << pathExec << "\n";
+
+        auto co=std::make_unique<char[]>(1024*3);
+        std::memset(co.get(),0,1024*3);
+        std::strcpy(co.get(),pathExec.c_str());
+
+        std::snprintf(co.get(), (1024*3)-1, pathExec.c_str(),workspace_.c_str(),service_.c_str() );
+        icon_uri_ = std::string(co.get());
+        std::cerr << "\nicon_uri_: " << icon_uri_ << "\n";
+
+        this->uri_ = conf["pephost"];
+        this->uri_.append("/resources");
 
         return 0;
-    }
-
-
-    void setWorkspaceService(std::string workspace, std::string service){
-        reset();
-        this->workspace_ = std::move(workspace);
-        this->service_ = std::move(service);
-    }
-
-    bool jwt_empty(){
-        return jwt_.empty();
     }
 
     void setJwt(std::string jwt){
         this->jwt_=std::move(jwt);
     }
 
-    PepResource(){}
-    void reset(){
-        scopes_.clear();
-        icon_uri_.clear();
-        name_.clear();
-        service_.clear();
-        workspace_.clear();
+    bool jwt_empty(){
+        return jwt_.empty();
     }
 
-    void resetAll(){
+    virtual void dump(){
+        std::cerr << "jwt_: " << jwt_ << " name_: " << name_ << " icon_uri_: " << icon_uri_
+                  << " scopes_: " << " service_: " << service_ << " workspace_: "
+                  << workspace_ << " scopes: ";
+        for(auto&s:scopes_){
+            std::cerr << s << "| ";
+        }
+        std::cerr<<"\n";
+    }
+
+
+    virtual void resetAll(){
         reset();
         jwt_.clear();
     }
+
+    virtual void reset(){
+        scopes_.clear();
+        icon_uri_="";
+        name_="";
+        service_="";
+        workspace_="";
+        uri_="";
+    }
+
+    void setWorkspaceService(std::string workspace, std::string service){
+        reset();
+        this->workspace_ = std::move(workspace);
+        this->service_ = std::move(service);
+        std::cerr << "------------ssss-----------------\n";
+
+    }
+};
+
+class PepResourceResponce: public PepResource{
+    std::string ownership_id_;
+    std::string id_;
+public:
+
+    void setOwnershipId(const std::string &ownershipId) {
+        ownership_id_ = ownershipId;
+    }
+
+    void setId(const std::string &id) {
+        id_ = id;
+    }
+
+    void reset() override{
+        PepResource::reset();
+        id_.clear();
+        ownership_id_.clear();
+    }
+
+    void dump() override{
+        PepResource::dump();
+        std::cerr << "ownership_id_: " << ownership_id_ << " id_: " << id_ << "\n";
+    }
+
 };
 
 
@@ -116,7 +249,9 @@ public:
             : mods::IModInterface(path) {
         setValid(true);
 
-        pepSave = (int (*)(PepResource& resource ))dlsym(handle, "pepSave");
+//        std::cerr<< "\nPepRegisterResources: path" << path << "\n";
+
+        pepSave = (int (*)(PepResource& resource))dlsym(handle, "pepSave");
         if(!pepSave){
             std::cerr << "can't load 'PepRegisterResources.pepSave' function\n";
             setValid(false);
