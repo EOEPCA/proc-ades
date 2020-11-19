@@ -296,24 +296,36 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     if (usepep){
         pepRegisterResources=std::make_unique<mods::PepRegisterResources>(confPep["pepresource"]);
         if (!pepRegisterResources->IsValid()){
-            std::string err{"eoepca pepresource.so is not valid"};
-            setStatus(conf, "failed", err.c_str());
-            updateStatus(conf, 100, err.c_str());
-            return SERVICE_FAILED;
+
+            if (pepStopOnError){
+                std::string err{"eoepca pepresource.so is not valid"};
+                setStatus(conf, "failed", err.c_str());
+                updateStatus(conf, 100, err.c_str());
+                return SERVICE_FAILED;
+            }else{
+                usepep = false;
+            }
         }
-        resource = std::make_unique<mods::PepResource>();
+        if(usepep)
+            resource = std::make_unique<mods::PepResource>();
     }
 
 
     if (usepep){
         resource->setJwt(authorizationBearer(conf));
         if (resource->jwt_empty()) {
-            std::string err{"eoepca pepresource.so jwt is empty"};
-            setStatus(conf, "failed", err.c_str());
-            updateStatus(conf, 100, err.c_str());
-            return SERVICE_FAILED;
+            if (pepStopOnError) {
+                std::string err{"eoepca pepresource.so jwt is empty"};
+                setStatus(conf, "failed", err.c_str());
+                updateStatus(conf, 100, err.c_str());
+                return SERVICE_FAILED;
+            } else{
+                usepep = false;
+            }
         }
     }
+
+
 
     int steps = 0;
     std::cerr<< "\nstep: " << ++steps << "\n";
@@ -445,6 +457,12 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                 finalPath.append(owsOri);
                 fprintf(stderr,"finalPath=%s, getPath=%s",finalPath.c_str(),user->getPath().c_str() );
 
+                if (usepep && resource.get() && pepRegisterResources.get()){
+                    resource->setWorkspaceService( user->getUsername(),owsOri);
+                    resource->prepareBase(confPep);
+                    long  retCode = pepRegisterResources->pepSave(*(resource.get()));
+                    resource->dump();
+                }
                 return simpleRemove(finalPath, owsOri, conf, inputs, outputs);
             }
         }
@@ -627,7 +645,12 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                 case Operation::UNDEPLOY: {
                                     finalPath.append(".zcfg");
                                     xml->startElement("status");
-
+                                    if (usepep && resource.get() && pepRegisterResources.get()){
+                                        resource->setWorkspaceService( user->getUsername(),zoo->getIdentifier());
+                                        resource->prepareBase(confPep);
+                                        long  retCode = pepRegisterResources->pepSave(*(resource.get()));
+                                        resource->dump();
+                                    }
                                     if (fileExist(finalPath.c_str()) &&
                                         removeFile(finalPath.c_str())) {
                                         xml->writeAttribute("err", "4");

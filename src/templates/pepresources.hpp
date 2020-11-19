@@ -284,7 +284,7 @@ public:
             : mods::IModInterface(path) {
         setValid(true);
 
-        pepSave = (int (*)(PepResource& resource))dlsym(handle, "pepSave");
+        pepSave = (long (*)(PepResource& resource))dlsym(handle, "pepSave");
         if(!pepSave){
             std::cerr << "can't load 'PepRegisterResources.pepSave' function\n";
             setValid(false);
@@ -293,7 +293,7 @@ public:
         }
 
         if (isValid()) {
-            pepGets = (int (*)())dlsym(handle, "pepGets");
+            pepGets = (long (*)(PepResource& resource))dlsym(handle, "pepGets");
             if(!pepGets){
                 std::cerr << "can't load 'PepRegisterResources.pepGets' function\n";
                 setValid(false);
@@ -303,7 +303,7 @@ public:
         }
 
         if (isValid()) {
-            pepGet = (int (*)(const std::string& id))dlsym(handle, "pepGet");
+            pepGet = (long (*)(const std::string& id,PepResource& resource))dlsym(handle, "pepGet");
             if(!pepGet){
                 std::cerr << "can't load 'PepRegisterResources.pepGet' function\n";
                 setValid(false);
@@ -314,7 +314,7 @@ public:
 
 
         if (isValid()) {
-            pepRemove = (int (*)(const std::string& id,PepResource& resource))dlsym(handle, "pepRemove");
+            pepRemove = (long (*)(const std::string& id,PepResource& resource))dlsym(handle, "pepRemove");
             if(!pepRemove){
                 std::cerr << "can't load 'PepRegisterResources.pepRemove' function\n";
                 setValid(false);
@@ -324,7 +324,7 @@ public:
         }
 
         if (isValid()) {
-            pepUpdate = (int (*)(const std::string& id))dlsym(handle, "pepUpdate");
+            pepUpdate = (long (*)(const std::string& id,PepResource& resource))dlsym(handle, "pepUpdate");
             if(!pepUpdate){
                 std::cerr << "can't load 'PepRegisterResources.pepUpdate' function\n";
                 setValid(false);
@@ -341,11 +341,11 @@ public:
         return std::move(std::string(this->getLastError()));
     };
 
-    int (*pepSave)(PepResource& resource);
-    int (*pepGets)();
-    int (*pepGet)(const std::string& id);
-    int (*pepRemove)(const std::string& id,PepResource& resource);
-    int (*pepUpdate)(const std::string& id);
+    long (*pepSave)(PepResource& resource);
+    long (*pepGets)(PepResource& resource);
+    long (*pepGet)(const std::string& id,PepResource& resource);
+    long (*pepRemove)(const std::string& id,PepResource& resource);
+    long (*pepUpdate)(const std::string& id,PepResource& resource);
 };
 
 

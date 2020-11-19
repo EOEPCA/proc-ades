@@ -59,7 +59,23 @@ namespace nlohmann {
     }
 }
 
-extern "C" int pepSave(mods::PepResource& resource){
+extern "C" long pepRemoveFromZoo(const char* id,const char* host,char* jwt){
+    std::cerr << "pepRemoveFromZoo(const std::string& id,const char* host)\n";
+
+    std::string auth{"Authorization: Bearer "};
+    auth.append(std::string(jwt));
+
+    std::list<std::string> list;
+    list.push_back(auth);
+    std::string buffer;
+
+
+
+    return 0;
+}
+
+
+extern "C" long pepSave(mods::PepResource& resource){
     std::cerr << "int (*save)(PepResource& resource);\n";
 
     resource.dump();
@@ -95,22 +111,50 @@ extern "C" int pepSave(mods::PepResource& resource){
 }
 
 
-extern "C" int pepGets(){
+extern "C" long pepGets(mods::PepResource& resource){
     std::cerr << "int (*pepGets)(void);\n";
-    return 0;
+
+    std::string auth{"Authorization: Bearer "};
+    auth.append(resource.getJwt());
+
+    std::list<std::string> list;
+    list.push_back(auth);
+    std::string buffer;
+
+    long ret = getFromWeb(buffer, resource.getUri().c_str() ,&list);
+    switch (ret) {
+        case 200:{
+            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
+            std::vector<mods::PepResourceResponce> msgWeb= nlohmann::json::parse(buffer);
+            for(auto&a:msgWeb){
+                a.dump();
+            }
+        }
+            break;
+        case 401:
+        case 404:
+        default:
+            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
+            break;
+    }
+
+    return ret;
 }
 
-extern "C" int pepGet(const std::string& id){
+extern "C" long pepGet(const std::string& id,mods::PepResource& resource){
     std::cerr << "int (*pepGet)(const std::string& id);\n";
     return 0;
 }
 
-extern "C" int pepRemove(const std::string& id,mods::PepResource& resource){
+extern "C" long pepRemove(const std::string& id,mods::PepResource& resource){
     std::cerr << "int (*pepRemove)(const std::string& id,PepResource& resource);\n";
+
     return 0;
 }
 
-extern "C" int pepUpdate(const std::string& id){
+
+
+extern "C" long pepUpdate(const std::string& id,mods::PepResource& resource){
     std::cerr << "int (*pepUpdate)(const std::string& id,PepResource& resource);\n";
     return 0;
 }
