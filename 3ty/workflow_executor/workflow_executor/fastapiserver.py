@@ -82,7 +82,7 @@ def read_prepare(content: PrepareContent, response: Response):
     tmpVolumeSize = os.getenv('VOLUME_TMP_SIZE', default_tmpVolumeSize)
     outputVolumeSize = os.getenv('VOLUME_OUTPUT_SIZE', default_outputVolumeSize)
 
-    volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
+    volumeName = sanitize_k8_parameters(f"{content.serviceID}-volume")
     storage_class_name = os.getenv('STORAGE_CLASS', None)
     cwlResourceRequirement = helpers.getCwlResourceRequirement(content.cwl)
 
