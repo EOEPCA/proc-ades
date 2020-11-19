@@ -17,6 +17,8 @@
 #include <json.h>
 #include "workflow_executor.hpp"
 
+#include "pepresources.hpp"
+
 //https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
 struct InputParameter{
   std::string id{""};
@@ -48,6 +50,20 @@ public:
 };
 
 #define LOGTEST (std::cerr)
+
+std::string authorizationBearer(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
+    if (eoUserMap){
+        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
+        if (userServicePathMap){
+            char* baseS=strchr(userServicePathMap->value,' ');
+            if (baseS){
+                return std::string(++baseS);
+            }
+        }
+    }
+    return  "";
+}
 
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
   std::ifstream infile(filePath);
@@ -305,7 +321,54 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
     }
     //==================================GET CONFIGURATION
 
-    //==================================GET PARAMETERS
+
+    //================ PEP
+      std::map<std::string, std::string> confPep;
+      getConfigurationFromZooMapConfig(conf, "pep", confPep);
+      bool usepep=confPep["usepep"]=="true";
+      bool pepStopOnError=confPep["stopOnError"]=="true";
+      std::string pephost = confPep["pephost"];
+      std::unique_ptr<mods::PepRegisterResources> pepRegisterResources= nullptr;
+      std::unique_ptr<mods::PepResource> resource = nullptr;
+
+      if (usepep){
+          pepRegisterResources=std::make_unique<mods::PepRegisterResources>(confPep["pepresource"]);
+          if (!pepRegisterResources->IsValid()){
+              if (pepStopOnError) {
+                  std::string err{"eoepca pepresource.so is not valid"};
+                  setStatus(conf, "failed", err.c_str());
+                  updateStatus(conf, 100, err.c_str());
+                  return SERVICE_FAILED;
+              }else{
+                  std::cerr << "\npepStopOnError = false, eoepca pepresource.so is not valid\n";
+                  usepep = false;
+              }
+          }
+          resource = std::make_unique<mods::PepResource>();
+      }
+
+
+      if (usepep){
+          resource->setJwt(authorizationBearer(conf));
+          if (resource->jwt_empty()) {
+              if (pepStopOnError){
+                  std::string err{"eoepca pepresource.so jwt is empty"};
+                  setStatus(conf, "failed", err.c_str());
+                  updateStatus(conf, 100, err.c_str());
+                  return SERVICE_FAILED;
+              }else{
+                  std::cerr << "\npepStopOnError = false, eoepca pepresource.so jwt is empty\n";
+                  usepep = false;
+              }
+          }
+      }
+    //================ PEP
+
+      dumpMaps(inputs);
+      dumpMaps(conf);
+
+
+      //==================================GET PARAMETERS
 
     std::list<InputParameter> params;
     getT2InputConf(inputs, params);
@@ -421,12 +484,40 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       wfpm->runID = lenv["uusid"];
       wfpm->perc = -1;
       wfpm->message = "";
+      wfpm->cwl=cwlBuffer.str();
+
+      //==========PEP
+      //register get Status and Get Results
+      if (usepep && resource.get() && pepRegisterResources.get()){
+          resource->dump();
+          resource->setWorkspaceService( userEoepca["user"],wfpm->serviceID);
+
+          std::cerr << "send pep prepareStatus \n";
+          resource->prepareStatus(confPep,wfpm->runID);
+          long retCodePep = pepRegisterResources->pepSave(*(resource.get()));
+          if (200 != retCodePep) {
+
+              if (pepStopOnError) {
+                  std::string err{
+                          "eoepca: pepresource.so service error return code: "};
+                  err.append(std::to_string(retCodePep));
+                  err.append(" on ").append(resource->getIconUri()).append(" ");
+                  setStatus(conf, "failed", err.c_str());
+                  updateStatus(conf, 100, err.c_str());
+                  return SERVICE_FAILED;
+              }else{
+                  usepep = false;
+              }
+
+          }
+      }
+      //register get Status and Get Results
+      //==========PEP
 
       std::string prepareID;
       std::cerr << "workflowExecutor->webPrepare init\n";
       auto retWeb=workflowExecutor->webPrepare(*wfpm);
       std::cerr << "workflowExecutor->webPrepare done\n";
-
 
       std::cerr << "workflowExecutor->webGetPrepare init\n";
       int w8for=std::stoi(serviceConf["sleepGetPrepare"]);
@@ -437,7 +528,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       }
       std::cerr << "workflowExecutor->webGetPrepare end\n";
 
-      wfpm->cwl=cwlBuffer.str();
+
       wfpm->inputs=jParams;
 
       std::cerr << "workflowExecutor->webExecute init\n";
@@ -458,6 +549,23 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
       }
       std::cerr << "workflowExecutor->end init\n";
 
+
+        if (usepep && resource.get() && pepRegisterResources.get()){
+            std::cerr << "send pep prepareResults \n";
+            resource->prepareResults(confPep,wfpm->runID);
+            long retCodePep=pepRegisterResources->pepSave(*(resource.get()));
+            if (200 != retCodePep && pepStopOnError) {
+                std::string err{
+                        "eoepca: pepresource.so service error return code: "};
+                err.append(std::to_string(retCodePep));
+                err.append(" on ").append(resource->getIconUri()).append(" ");
+                setStatus(conf, "failed", err.c_str());
+                updateStatus(conf, 100, err.c_str());
+                return SERVICE_FAILED;
+            }
+        }
+
+
       //waiting for results
       w8for=std::stoi(serviceConf["sleepBeforeRes"]);
       updateStatus(conf, 99, "waiting for results");
@@ -475,15 +583,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         setMapInMaps(outputs, k.c_str(), "value", p.c_str());
       }
       std::cerr << "mapping results" << std::endl;
-
-
-
     }else{
       //error
-
-
-
-
     }
 
 

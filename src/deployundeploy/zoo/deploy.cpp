@@ -566,9 +566,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             resource->dump();
 
                                             resource->setWorkspaceService(user->getUsername(),zoo->getIdentifier());
-                                            int pr=resource->prepareExec(confPep);
+                                            int pr=resource->prepareBase(confPep);
                                             if (0 != pr && pepStopOnError){
-                                                std::string err{"eoepca: Can't prepare 'prepareExec'."};
+                                                std::string err{"eoepca: Can't prepare 'prepareBase'."};
                                                 setStatus(conf, "failed", err.c_str());
                                                 updateStatus(conf, 100, err.c_str());
                                                 return SERVICE_FAILED;
@@ -580,8 +580,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                                 long  retCode = pepRegisterResources->pepSave(*(resource.get()));
                                                 if (200 != retCode  && pepStopOnError) {
                                                     std::string err{
-                                                            "eoepca: pepresource.so regiester service error return code: "};
+                                                            "eoepca: pepresource.so service error return code: "};
                                                     err.append(std::to_string(retCode));
+                                                    err.append(" on ").append(resource->getIconUri()).append(" ");
                                                     setStatus(conf, "failed", err.c_str());
                                                     updateStatus(conf, 100, err.c_str());
                                                     return SERVICE_FAILED;

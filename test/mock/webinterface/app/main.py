@@ -33,7 +33,7 @@ class Error:
 class PrepareContent(BaseModel):
     serviceID: str
     runID: str
-#    cwl: str
+    cwl: str
 
 
 class ExecuteContent(PrepareContent):

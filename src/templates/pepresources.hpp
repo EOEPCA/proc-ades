@@ -13,7 +13,7 @@
 #include <utility>
 #include <sstream>
 #include <cstring>
-
+#include <cstdarg>
 
 namespace mods {
 #ifndef T2CWL_IMOD_HPP
@@ -113,14 +113,17 @@ public:
 
 protected:
 
+
+    int add_nums(char* budder,int count, ...){
+
+    }
+
     template <typename... Args>
     static std::string string_format(const std::string &format, Args... args) {
-        size_t size = std::snprintf(nullptr, 0, format.c_str(), args...) +
-                      1;  // Extra space for '\0'
+        size_t size = std::snprintf(nullptr, 0, format.c_str(), args...) +1;
         std::unique_ptr<char[]> buf(new char[size]);
         std::snprintf(buf.get(), size, format.c_str(), args...);
-        return std::string(buf.get(),
-                           buf.get() + size - 1);  // We don't want the '\0' inside
+        return std::string(buf.get(),buf.get() + size - 1);
     }
 
     template <typename Out>
@@ -139,15 +142,16 @@ protected:
         return elems;
     }
 
-public:
-    int prepareExec(std::map<std::string, std::string>& conf){
-        name_ = service_;
-        std::string pathExec = conf["pathExec"];
-        std::string sScoops = conf["scopes"];
-        if (pathExec.empty()){
-            pathExec="/%s/wps3/processes/%s";
-        }
 
+    std::unique_ptr<char[]>  prepareMem(int size){
+        auto rt = std::make_unique<char[]>(size);
+        std::memset(rt.get(),0,size);
+        return rt;
+    }
+
+    void addScopes(std::map<std::string, std::string>& conf){
+
+        std::string sScoops = conf["scopes"];
         if (sScoops.empty()){
             sScoops="public";
         }
@@ -156,14 +160,49 @@ public:
         for(auto&s: scoops){
             scopes_.push_back(s);
         }
+    }
 
-        std::cerr << "\npathExec: " << pathExec << "\n";
+    int prepareStatusResult(std::map<std::string, std::string>& conf, std::string formatter,std::string id){
+        reset();
 
-        auto co=std::make_unique<char[]>(1024*3);
-        std::memset(co.get(),0,1024*3);
-        std::strcpy(co.get(),pathExec.c_str());
+        name_ = service_;
+        std::string pathBase = conf[formatter];
+        addScopes(conf);
 
-        std::snprintf(co.get(), (1024*3)-1, pathExec.c_str(),workspace_.c_str(),service_.c_str() );
+        int max{1024*3};
+        std::cerr << "\npathBase: " << pathBase << "\n";
+        auto co=prepareMem(max);
+        std::snprintf(co.get(), max-1, pathBase.c_str(),workspace_.c_str(),service_.c_str(),id.c_str());
+        icon_uri_ = std::string(co.get());
+        std::cerr << "\nicon_uri_: " << icon_uri_ << "\n";
+
+        this->uri_ = conf["pephost"];
+        this->uri_.append("/resources");
+
+        return 0;
+    }
+
+
+public:
+
+    int prepareStatus(std::map<std::string, std::string>& conf,std::string id){
+        return prepareStatusResult(conf,"pathStatus",std::move(id));
+    }
+
+    int prepareResults(std::map<std::string, std::string>& conf,std::string id){
+        return prepareStatusResult(conf,"pathResult",std::move(id));
+    }
+
+    int prepareBase(std::map<std::string, std::string>& conf){
+        reset();
+        name_ = service_;
+        std::string pathBase = conf["pathBase"];
+        addScopes(conf);
+
+        int max{1024*3};
+        std::cerr << "\npathBase: " << pathBase << "\n";
+        auto co=prepareMem(max);
+        std::snprintf(co.get(), max-1, pathBase.c_str(),workspace_.c_str(),service_.c_str() );
         icon_uri_ = std::string(co.get());
         std::cerr << "\nicon_uri_: " << icon_uri_ << "\n";
 
@@ -191,23 +230,21 @@ public:
         std::cerr<<"\n";
     }
 
-
     virtual void resetAll(){
         reset();
         jwt_.clear();
+        service_.clear();
+        workspace_.clear();
     }
 
     virtual void reset(){
         scopes_.clear();
-        icon_uri_="";
-        name_="";
-        service_="";
-        workspace_="";
-        uri_="";
+        icon_uri_.clear();
+        name_.clear();
+        uri_.clear();
     }
 
     void setWorkspaceService(std::string workspace, std::string service){
-        reset();
         this->workspace_ = std::move(workspace);
         this->service_ = std::move(service);
         std::cerr << "------------ssss-----------------\n";
@@ -238,9 +275,7 @@ public:
         PepResource::dump();
         std::cerr << "ownership_id_: " << ownership_id_ << " id_: " << id_ << "\n";
     }
-
 };
-
 
 class PepRegisterResources: protected mods::IModInterface {
 public:
@@ -249,8 +284,6 @@ public:
             : mods::IModInterface(path) {
         setValid(true);
 
-//        std::cerr<< "\nPepRegisterResources: path" << path << "\n";
-
         pepSave = (int (*)(PepResource& resource))dlsym(handle, "pepSave");
         if(!pepSave){
             std::cerr << "can't load 'PepRegisterResources.pepSave' function\n";
@@ -258,7 +291,6 @@ public:
             setLastError("can't load 'PepRegisterResources.pepSave' function");
             return;
         }
-
 
         if (isValid()) {
             pepGets = (int (*)())dlsym(handle, "pepGets");
@@ -269,7 +301,6 @@ public:
                 return;
             }
         }
-
 
         if (isValid()) {
             pepGet = (int (*)(const std::string& id))dlsym(handle, "pepGet");
@@ -311,7 +342,7 @@ public:
     };
 
     int (*pepSave)(PepResource& resource);
-    int (*pepGets)(void);
+    int (*pepGets)();
     int (*pepGet)(const std::string& id);
     int (*pepRemove)(const std::string& id,PepResource& resource);
     int (*pepUpdate)(const std::string& id);
