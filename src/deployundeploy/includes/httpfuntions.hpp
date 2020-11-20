@@ -36,11 +36,13 @@ long postputToWeb(std::string &buffer,const std::string& content, const char *pa
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);  // only for https
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);  // only for https
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
-                     CurlWrite_CallbackFunc_StdString);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, content.c_str());
+    if (!content.empty()){
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
+                         CurlWrite_CallbackFunc_StdString);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, content.c_str());
+    }
 
     struct curl_slist *chunk = NULL;
     if (headers!= nullptr){

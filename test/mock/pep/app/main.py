@@ -70,5 +70,11 @@ def read_root(prepare_id: str):
 
 
 @app.delete("/resources/{resource_id}")
-def read_root(prepare_id: str):
-    return {"mock": f'delete: /resources/{prepare_id}'}
+def read_root(resource_id: str,authorization: Optional[str] = Header(None)):
+    print('\n'*2)
+    print("entry: delete /resources")
+    print(str(authorization))
+    print(resource_id)
+
+    return {"mock": f'delete: /resources/{resource_id}'}
+

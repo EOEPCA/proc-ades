@@ -8,6 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <regex>
+#include <memory>
 #include <list>
 
 namespace PEP {
@@ -59,23 +60,25 @@ namespace nlohmann {
     }
 }
 
-extern "C" long pepRemoveFromZoo(const char* id,const char* host,char* jwt){
-    std::cerr << "pepRemoveFromZoo(const std::string& id,const char* host)\n";
+
+long pepDelete_(mods::PepResourceResponce& resourceResponce){
 
     std::string auth{"Authorization: Bearer "};
-    auth.append(std::string(jwt));
+    auth.append(resourceResponce.getJwt());
 
     std::list<std::string> list;
     list.push_back(auth);
     std::string buffer;
 
+    std::cerr <<"DELETE: " << resourceResponce.getUri().c_str() <<"\n";
+    long ret = postputToWeb(buffer, std::string(), resourceResponce.getUri().c_str(), "DELETE",&list);
 
+    std::cerr << "pepSave:\treturn: " << ret << " buffer:" << buffer <<"\n";
 
-    return 0;
+    return ret;
 }
 
-
-extern "C" long pepSave(mods::PepResource& resource){
+long pepSave_(mods::PepResource& resource){
     std::cerr << "int (*save)(PepResource& resource);\n";
 
     resource.dump();
@@ -95,10 +98,10 @@ extern "C" long pepSave(mods::PepResource& resource){
 
     switch (ret) {
         case 200:{
-                std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
-                mods::PepResourceResponce msgWeb= nlohmann::json::parse(buffer);
-                msgWeb.dump();
-            }
+            std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+            mods::PepResourceResponce msgWeb= nlohmann::json::parse(buffer);
+            msgWeb.dump();
+        }
             break;
         case 401:
         case 404:
@@ -111,7 +114,8 @@ extern "C" long pepSave(mods::PepResource& resource){
 }
 
 
-extern "C" long pepGets(mods::PepResource& resource){
+long pepGets_(mods::PepResource& resource, std::list<std::unique_ptr<mods::PepResourceResponce>>* resources=nullptr){
+
     std::cerr << "int (*pepGets)(void);\n";
 
     std::string auth{"Authorization: Bearer "};
@@ -126,9 +130,13 @@ extern "C" long pepGets(mods::PepResource& resource){
         case 200:{
             std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
             std::vector<mods::PepResourceResponce> msgWeb= nlohmann::json::parse(buffer);
-            for(auto&a:msgWeb){
-                a.dump();
-            }
+            if (resources)
+                for(auto&a:msgWeb){
+                    auto v = std::make_unique<mods::PepResourceResponce>();
+                    *v = a;
+                    resources->push_back(std::move(v));
+//                    a.dump();
+                }
         }
             break;
         case 401:
@@ -139,6 +147,15 @@ extern "C" long pepGets(mods::PepResource& resource){
     }
 
     return ret;
+}
+
+extern "C" long pepSave(mods::PepResource& resource){
+    return pepSave_(resource);
+}
+
+
+extern "C" long pepGets(mods::PepResource& resource){
+    return pepGets_(resource);
 }
 
 extern "C" long pepGet(const std::string& id,mods::PepResource& resource){
@@ -152,7 +169,49 @@ extern "C" long pepRemove(const std::string& id,mods::PepResource& resource){
     return 0;
 }
 
+extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError){
+    std::cerr << "pepRemoveFromZoo(const std::string& id,const char* host)\n";
 
+    std::string sPath{path};
+    std::string baseUri(host);
+    std::string auth{"Authorization: Bearer "};
+    auth.append(std::string(jwt));
+
+    std::list<std::string> list;
+    list.push_back(auth);
+    std::string buffer;
+
+    mods::PepResource resource;
+    resource.setUri(baseUri + "/resources");
+    resource.setJwt(std::string(jwt));
+
+    std::list<std::unique_ptr<mods::PepResourceResponce>> resources{};
+
+    long ret = pepGets_(resource,&resources);
+    if (ret!=200){
+        if (stopOnError)
+            return ret;
+        else
+            return 200;
+    }
+
+    std::cerr << "*pepRemoveFromZoo* \n";
+    for(auto&r:resources){
+        r->dump();
+        if (r->getIconUri() == sPath){
+            r->setUri(baseUri + "/resources/" + r->getId() );
+            r->setJwt(std::string(jwt));
+            long retDel=pepDelete_(*r);
+            if (retDel!=200){
+                if(stopOnError){
+                    return retDel;
+                }
+            }
+        }
+        std::cerr << "\n";
+    }
+    return 200;
+}
 
 extern "C" long pepUpdate(const std::string& id,mods::PepResource& resource){
     std::cerr << "int (*pepUpdate)(const std::string& id,PepResource& resource);\n";

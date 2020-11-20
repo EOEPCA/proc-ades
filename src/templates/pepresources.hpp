@@ -76,6 +76,13 @@ class PepResource{
     std::string workspace_;
 public:
 
+    PepResource()=default;
+    virtual ~PepResource()=default;
+
+    void setUri(std::string  uri){
+        this->uri_ = std::move(uri);
+    }
+
     std::string getUri() const {
         return uri_;
     }
@@ -250,6 +257,24 @@ public:
         std::cerr << "------------ssss-----------------\n";
 
     }
+
+    PepResource& operator=(const PepResource& other) {
+        if (this == &other)
+            return *this;
+
+        for(auto&o:other.scopes_){
+            this->scopes_.push_back(o);
+        }
+        this->icon_uri_ = other.icon_uri_;
+        this->name_= other.name_ ;
+        this->uri_ = other.uri_;
+        this->jwt_ = other.jwt_;
+        this->service_ = other.service_;
+        this->workspace_ = other.workspace_;
+
+        return *this;
+    }
+
 };
 
 class PepResourceResponce: public PepResource{
@@ -257,12 +282,19 @@ class PepResourceResponce: public PepResource{
     std::string id_;
 public:
 
+    PepResourceResponce():PepResource() {}
+    ~PepResourceResponce()  override = default;
+
     void setOwnershipId(const std::string &ownershipId) {
         ownership_id_ = ownershipId;
     }
 
     void setId(const std::string &id) {
         id_ = id;
+    }
+
+    std::string getId(){
+        return this->id_;
     }
 
     void reset() override{

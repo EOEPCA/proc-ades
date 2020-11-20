@@ -5,18 +5,26 @@
 
 #include "pepresources.hpp"
 
+int zooF(std::map<std::string, std::string>& confPep){
+    void *handle{nullptr};
+    handle = dlopen("./libpep_resource.so", RTLD_LAZY);
+    if (!handle) {
+        return 1;
+    }
+
+    long (*pepRemoveFromZoo)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError) =
+            (long (*)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError))dlsym(handle, "pepRemoveFromZoo");
+    if(!pepRemoveFromZoo){
+        return 2;
+    }
+
+    long a = pepRemoveFromZoo("/rdirienzo/wps3/processes/testC","http://mock-pep","JwtsetJwt.setJwtsetJwtsetJwtsetJwtsetJwtset.JwtsetJwtsetJwtsetJwt",
+                              false);
+
+}
+
+
 int main(int a,char** b){
-//    void *handle{nullptr};
-//    handle = dlopen(path_.data(), RTLD_LAZY);
-//    if (!handle) {
-//        return 1;
-//    }
-//    int (*pepRemoveFromZoo)(const char* id,const char* host) =
-//            (int (*)(const char* id,const char* host))dlsym(handle, "pepRemoveFromZoo");
-//    if(!pepRemoveFromZoo){
-//        return 2;
-//    }
-//    pepRemoveFromZoo("casca","plooo");
 
    auto pepRegisterResources=std::make_unique<mods::PepRegisterResources>("./libpep_resource.so");
    auto resource = std::make_unique<mods::PepResource>();
@@ -34,12 +42,13 @@ int main(int a,char** b){
 
     resource->setWorkspaceService( "rdirienzo","vegetation");
     resource->prepareStatus(confPep,"wfpm->runID");
-    long retCodePep = pepRegisterResources->pepSave(*(resource.get()));
+    long retCodePep = pepRegisterResources->pepSave(*resource);
 
     std::cout << "---------------\n";
+//    pepRegisterResources->pepGets(*resource);
+    std::cout << "\n=============\n\n";
 
-    pepRegisterResources->pepGets(*(resource.get()));
-
+    zooF(confPep);
 
     return 0;
 }
