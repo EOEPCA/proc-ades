@@ -2,8 +2,8 @@
 
 The workflow executor test uses the following python libraries:
 - [**FastApi TestClient**](https://fastapi.tiangolo.com/tutorial/testing/) a test client for FastApi 
-- [**pytest-kind**](https://codeberg.org/hjacobs/pytest-kind/src/branch/main/tests/test_cluster.py
-) which is a python package of [KIND](https://kind.sigs.k8s.io/) a *tool for running local Kubernetes clusters using Docker container “nodes”*.
+- [**pytest-kind**](https://pypi.org/project/pytest-kind/)
+ which is a python package of [KIND](https://kind.sigs.k8s.io/) a *tool for running local Kubernetes clusters using Docker container “nodes”*.
 
 The test consists on creating a lightweight kubernetes cluster using KIND and interacting with the Workflow Executor API using the FastApi TestClient.
 
