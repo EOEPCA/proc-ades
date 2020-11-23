@@ -415,11 +415,17 @@ int removeService(maps* conf,char* service=NULL){
           map* usepep=getMap(pepMap->content,"usepep");
           map* pepresource=getMap(pepMap->content,"pepresource");
           map* pephost=getMap(pepMap->content,"pephost");
-          map* stopOnError=getMap(pepMap->content,"stopOnError");
+          map* onError=getMap(pepMap->content,"stopOnError");
           map* pathBase=getMap(pepMap->content,"pathBase");
 
           int usePep= pepresource && pepresource->value && pephost && pephost->value && pathBase && pathBase->value  ?1:0;
           usePep  = usePep && strcmp(anonymousUser,username)!=0;
+
+          int stopOnError=0;
+          if (onError && onError->value && strcmp(onError->value,"true")==0 ){
+              stopOnError=1;
+          }
+
 
           if (usepep && usepep->value && strcmp(usepep->value,"true")==0 ){
               if (usePep){
@@ -427,8 +433,8 @@ int removeService(maps* conf,char* service=NULL){
                   handle = dlopen(pepresource->value, RTLD_LAZY);
                   fprintf(stderr,"-->pepresource: %s \n", pepresource->value );
                   if (handle) {
-                      long (*pepRemoveFromZoo)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError) =
-                      (long (*)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError))dlsym(handle, "pepRemoveFromZoo");
+                      long (*pepRemoveFromZoo)(const char*,const char*,char* jwt,int ) =
+                      (long (*)(const char* ,const char* /*base uri*/,char* jwt,int ))dlsym(handle, "pepRemoveFromZoo");
 
                       if(pepRemoveFromZoo){
                           fprintf(stderr,"-->pep SEND REMOVE!!!\n");
@@ -437,9 +443,17 @@ int removeService(maps* conf,char* service=NULL){
                           snprintf(serviceToDelete,2047,pathBase->value,username,service);
                           fprintf(stderr,"jwt:%s\n user: %s\n service: %s\npath: %s\n",JWT,username,service,serviceToDelete);
 
-                          long a = pepRemoveFromZoo(serviceToDelete,pephost->value,JWT,0);
+                          long a = pepRemoveFromZoo(serviceToDelete,pephost->value,JWT,stopOnError);
                           fprintf(stderr,"-->pep END REMOVE!!!\n");
                           free(serviceToDelete);
+                          if (a!=200 && stopOnError){
+                              memset(serviceToDelete,0,2048);
+                              snprintf(serviceToDelete,2047,"PEP result: %l on service: %s",a,service);
+                              errorException (conf, _("pepRemoveFromZoo"),serviceToDelete, NULL);
+                              free(serviceToDelete);
+                              serviceToDelete=NULL;
+                              return a;
+                          }
 
                       }else{
                           fprintf(stderr,"-->can't bind libs: %s on %s  \n", pepresource->value,"pepRemoveFromZoo");
