@@ -77,6 +77,10 @@ spec:
               mountPath: /var/www/html/res
             - name: ades-processing-services
               mountPath: /opt/zooservices_user
+            - name: ades-config
+              mountPath: /zooservices/main.cfg
+              subPath: main.cfg
+
       volumes:
         - name: ades-config
           configMap:

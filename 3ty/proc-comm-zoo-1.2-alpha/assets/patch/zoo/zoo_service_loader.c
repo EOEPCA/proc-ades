@@ -392,6 +392,26 @@ int removeService(maps* conf,char* service=NULL){
         userServicePath=zStrdup(userServicePathMap->value);
       }
 
+//      dumpMaps(conf);
+      fprintf(stderr,"--> %s \n", service );
+
+      maps* pepMap=getMaps(conf,"pep");
+      if (pepMap){
+          map* usepep=getMap(pepMap->content,"usepep");
+          map* pepresource=getMap(pepMap->content,"pepresource");
+          map* pephost=getMap(pepMap->content,"pephost");
+          map* stopOnError=getMap(pepMap->content,"stopOnError");
+
+          if (usepep && usepep->value && strcmp(usepep->value,"true")==0 ){
+
+              if (pepresource){
+                  char* pathPepresource=zStrdup(pepresource->value);
+                  fprintf(stderr,"--> %s \n", pathPepresource );
+              }
+          }
+      }
+
+
 
       map* deleteScriptMap=getMap(eoepcaMap->content,"removeServiceScript");
       if (deleteScriptMap){
