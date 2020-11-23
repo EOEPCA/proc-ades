@@ -377,9 +377,22 @@ int removeService(maps* conf,char* service=NULL){
   char* anonymousUser=NULL;
   char* userServicePath=NULL;
   char* deleteScript=NULL;
+  char* JWT = NULL;
 
   if (conf && service){
+
+    dumpMaps(conf);
     maps* eoepcaMap=getMaps(conf,"eoepca");
+
+
+      maps* userMap=getMaps(conf,"eoepcaUser");
+      if (userMap){
+          map* theUser=getMap(userMap->content,"user");
+          if (theUser){
+              username=zStrdup(theUser->value);
+          }
+      }
+
     if (eoepcaMap){
       map* defaultUser=getMap(eoepcaMap->content,"defaultUser");
       if (defaultUser){
@@ -392,8 +405,10 @@ int removeService(maps* conf,char* service=NULL){
         userServicePath=zStrdup(userServicePathMap->value);
       }
 
-//      dumpMaps(conf);
-      fprintf(stderr,"--> %s \n", service );
+      map* aa=getMap(userMap->content,"jwt");
+      if (aa)
+          JWT = aa->value;
+
 
       maps* pepMap=getMaps(conf,"pep");
       if (pepMap){
@@ -401,17 +416,43 @@ int removeService(maps* conf,char* service=NULL){
           map* pepresource=getMap(pepMap->content,"pepresource");
           map* pephost=getMap(pepMap->content,"pephost");
           map* stopOnError=getMap(pepMap->content,"stopOnError");
+          map* pathBase=getMap(pepMap->content,"pathBase");
+
+          int usePep= pepresource && pepresource->value && pephost && pephost->value && pathBase && pathBase->value  ?1:0;
+          usePep  = usePep && strcmp(anonymousUser,username)!=0;
 
           if (usepep && usepep->value && strcmp(usepep->value,"true")==0 ){
+              if (usePep){
+                  void *handle=NULL;
+                  handle = dlopen(pepresource->value, RTLD_LAZY);
+                  fprintf(stderr,"-->pepresource: %s \n", pepresource->value );
+                  if (handle) {
+                      long (*pepRemoveFromZoo)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError) =
+                      (long (*)(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError))dlsym(handle, "pepRemoveFromZoo");
 
-              if (pepresource){
-                  char* pathPepresource=zStrdup(pepresource->value);
-                  fprintf(stderr,"--> %s \n", pathPepresource );
+                      if(pepRemoveFromZoo){
+                          fprintf(stderr,"-->pep SEND REMOVE!!!\n");
+                          char* serviceToDelete = (char*)malloc(2048);
+                          memset(serviceToDelete,0,2048);
+                          snprintf(serviceToDelete,2047,pathBase->value,username,service);
+                          fprintf(stderr,"jwt:%s\n user: %s\n service: %s\npath: %s\n",JWT,username,service,serviceToDelete);
+
+                          long a = pepRemoveFromZoo(serviceToDelete,pephost->value,JWT,0);
+                          fprintf(stderr,"-->pep END REMOVE!!!\n");
+                          free(serviceToDelete);
+
+                      }else{
+                          fprintf(stderr,"-->can't bind libs: %s on %s  \n", pepresource->value,"pepRemoveFromZoo");
+                      }
+                  }else{
+                      fprintf(stderr,"-->can't open libs: %s \n", pepresource->value );
+                  }
+                  if(handle){
+                      dlclose(handle);
+                  }
               }
           }
       }
-
-
 
       map* deleteScriptMap=getMap(eoepcaMap->content,"removeServiceScript");
       if (deleteScriptMap){
@@ -419,13 +460,13 @@ int removeService(maps* conf,char* service=NULL){
       }
     }
 
-    maps* userMap=getMaps(conf,"eoepcaUser");
-    if (userMap){
-      map* theUser=getMap(userMap->content,"user");
-      if (theUser){
-        username=zStrdup(theUser->value);
-      }
-    }
+//    maps* userMap=getMaps(conf,"eoepcaUser");
+//    if (userMap){
+//      map* theUser=getMap(userMap->content,"user");
+//      if (theUser){
+//        username=zStrdup(theUser->value);
+//      }
+//    }
 
     if( strcmp(anonymousUser,username)!=0 && deleteScript!=NULL ) {
       if(
@@ -465,6 +506,7 @@ addUserToMap(maps* conf){
   char **orig = environ;
   char *s=*orig;
   char* username=NULL;
+  char* JWT=NULL;
 
   char* anonymousUser=NULL;
 
@@ -514,6 +556,26 @@ addUserToMap(maps* conf){
           }
         }
 
+
+        if(strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL) {
+            char *baseU = strchr(s, '=');
+            if (baseU) {
+                char *baseS = strchr(++baseU, ' ');
+                if (baseS) {
+                    *baseS = '\0';
+                    fprintf(stderr, "**** %s\n", baseU);
+                    if (strcmp(baseU, "Bearer") == 0) {
+                        canContinue = true;
+                    }
+                    *baseS = ' ';
+                    if (canContinue) {
+                        while (*(++baseS) == ' ');
+                        fprintf(stderr, ">%s<\n", baseS);
+                        JWT = zStrdup(baseS);
+                    }
+                }
+            }
+        }
 
         if(false && strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
           // fprintf(stderr,"--> %s=%s \n", tmpName1, tmpValue );
@@ -641,6 +703,13 @@ addUserToMap(maps* conf){
     username=zStrdup( anonymousUser?anonymousUser:"anonymous" );
   }
 
+    if(userMap && ret==0) {
+        if (JWT){
+            map *theYWT = createMap("jwt",zStrdup(JWT));
+            addMapToMap(&userMap->content,theYWT);
+        }
+    }
+
   int sc=createUserSpace(conf,username);
 
   if(username){
@@ -649,6 +718,10 @@ addUserToMap(maps* conf){
 
   if(anonymousUser){
     free(anonymousUser);
+  }
+
+  if (JWT){
+      free(JWT);
   }
 
   return ret;
@@ -2451,8 +2524,15 @@ runRequest (map ** inputs)
         }
 
         fprintf(stderr,"%s\n",orig);
-        removeService(m,orig);
+
+
+
+        int y=removeService(m,orig);
         free (orig);
+        if (y){
+            //                      errorException (conf, _("Unable to allocate memory"),"InternalError", NULL);
+            return 1;
+        }
 
       }
 

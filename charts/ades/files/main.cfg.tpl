@@ -53,9 +53,9 @@ cert1=
 cert2=
 
 [serviceConf]
-sleepGetStatus=1
-sleepGetPrepare=1
-sleepBeforeRes=1
+sleepGetStatus=30
+sleepGetPrepare=30
+sleepBeforeRes=30
 
 [pep]
 pepresource=/opt/t2service/libpep_resource.so
@@ -72,7 +72,7 @@ stopOnError=true
 owsparser=/opt/t2libs/libeoepcaows.so
 buildPath=/opt/t2template/
 
-WorkflowExecutorHost=http://mock-wf-exe
+WorkflowExecutorHost=http://localhost:8000
 WorkflowExecutorConfig=/opt/t2config/workflowwxecutorconfig.json
 libWorkflowExecutor=/opt/t2service/libworkflow_executor.so
 

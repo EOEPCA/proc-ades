@@ -18,8 +18,7 @@ int zooF(std::map<std::string, std::string>& confPep){
         return 2;
     }
 
-    long a = pepRemoveFromZoo("/rdirienzo/wps3/processes/testC","http://mock-pep","JwtsetJwt.setJwtsetJwtsetJwtsetJwtsetJwtset.JwtsetJwtsetJwtsetJwt",
-                              false);
+    long a = pepRemoveFromZoo("/rdirienzo/wps3/processes/vegetation_index_","http://mock-pep",(char *)("JwtsetJwt.setJwtsetJwtsetJwtsetJwtsetJwtset.JwtsetJwtsetJwtsetJwt"),0);
 
 }
 
@@ -42,7 +41,7 @@ int main(int a,char** b){
 
     resource->setWorkspaceService( "rdirienzo","vegetation");
     resource->prepareStatus(confPep,"wfpm->runID");
-    long retCodePep = pepRegisterResources->pepSave(*resource);
+//    long retCodePep = pepRegisterResources->pepSave(*resource);
 
     std::cout << "---------------\n";
 //    pepRegisterResources->pepGets(*resource);
@@ -54,6 +53,7 @@ int main(int a,char** b){
 }
 /*
 cp /work/test/mock/pep/app/main.cpp  /project/test/mock/pep/app/main.cpp
+cp /work/src/deployundeploy/includes/httpfuntions.hpp project/src/deployundeploy/includes/httpfuntions.hpp
 rsync -av  /work/src/templates/* /project/src/templates/
 make  pep_resource   pep_test
  */

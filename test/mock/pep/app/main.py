@@ -76,5 +76,7 @@ def read_root(resource_id: str,authorization: Optional[str] = Header(None)):
     print(str(authorization))
     print(resource_id)
 
-    return {"mock": f'delete: /resources/{resource_id}'}
+    c= f"delete: /resources/{resource_id}"
+
+    return {}
 

@@ -70,10 +70,16 @@ long pepDelete_(mods::PepResourceResponce& resourceResponce){
     list.push_back(auth);
     std::string buffer;
 
+    long ret = 0;
     std::cerr <<"DELETE: " << resourceResponce.getUri().c_str() <<"\n";
-    long ret = postputToWeb(buffer, std::string(), resourceResponce.getUri().c_str(), "DELETE",&list);
-
+    try{
+        ret = postputToWeb(buffer, ""/*std::string()*/, resourceResponce.getUri().c_str(), "DELETE",&list);
+//        ret = deleteToWeb(buffer, resourceResponce.getUri().c_str());
     std::cerr << "pepSave:\treturn: " << ret << " buffer:" << buffer <<"\n";
+    } catch (...) {
+        std::cerr << "Error ... \n";
+        ret = 199;
+    }
 
     return ret;
 }
@@ -93,8 +99,14 @@ long pepSave_(mods::PepResource& resource){
     list.push_back(auth);
     std::string buffer;
 
-    auto ret = postputToWeb(buffer, json.dump(), resource.getUri().c_str(), "POST",&list);
-    std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+    long ret = 0;
+    try{
+        ret = postputToWeb(buffer, json.dump(), resource.getUri().c_str(), "POST",&list);
+        std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+    } catch (...) {
+
+        return 199;
+    }
 
     switch (ret) {
         case 200:{
@@ -125,7 +137,13 @@ long pepGets_(mods::PepResource& resource, std::list<std::unique_ptr<mods::PepRe
     list.push_back(auth);
     std::string buffer;
 
-    long ret = getFromWeb(buffer, resource.getUri().c_str() ,&list);
+    long ret = 199;
+    try{
+        ret = getFromWeb(buffer, resource.getUri().c_str() ,&list);
+    } catch (...) {
+        return 199;
+    }
+
     switch (ret) {
         case 200:{
             std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
