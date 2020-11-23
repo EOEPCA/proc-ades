@@ -61,8 +61,12 @@ spec:
               value: {{ .Values.workflowExecutor.storageApiKey | quote }}
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
-            - name: VOLUME_SIZE
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+            - name: VOLUME_INPUT_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeInputSize | quote }}
+            - name: VOLUME_TMP_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeTmpSize | quote }}
+            - name: VOLUME_OUTPUT_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeOutputSize | quote }}
             - name: JOB_MAX_RAM
               value: {{ .Values.workflowExecutor.processingMaxRam | quote }}
             - name: JOB_MAX_CORES

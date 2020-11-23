@@ -6,7 +6,7 @@ from fastapi import FastAPI, Form, File, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
-from workflow_executor import prepare, client, result, clean
+from workflow_executor import prepare, client, result, clean, helpers
 from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
@@ -18,7 +18,6 @@ app = FastAPI(
     openapi_url="/api",
     docs_url="/api/docs", redoc_url="/api/redoc"
 )
-
 
 
 class Error:
@@ -42,6 +41,7 @@ class Error:
 class PrepareContent(BaseModel):
     serviceID: str
     runID: str
+    cwl: str
 
 
 class ExecuteContent(PrepareContent):
@@ -50,47 +50,61 @@ class ExecuteContent(PrepareContent):
     inputs: str
 
 
-
-
-
-
 def sanitize_k8_parameters(value: str):
     value = value.replace("_", "-").lower()
     while value.endswith("-"):
         value = value[:-1]
     return value
 
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
 
+
 """
 Executes namespace preparation
 """
+
+
 @app.post("/prepare", status_code=status.HTTP_201_CREATED)
 def read_prepare(content: PrepareContent, response: Response):
     state = client.State()
     print('Prepare POST')
 
-
     prepare_id = sanitize_k8_parameters(f"{content.serviceID}{content.runID}")
-    defaultVolumeSize=4
-    volumeSize = os.getenv('VOLUME_SIZE',defaultVolumeSize )
-    volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
+
+    default_inputVolumeSize = "500Mi"
+    default_tmpVolumeSize = "4Gi"
+    default_outputVolumeSize = "5Gi"
+
+    inputVolumeSize = os.getenv('VOLUME_INPUT_SIZE', default_inputVolumeSize)
+    tmpVolumeSize = os.getenv('VOLUME_TMP_SIZE', default_tmpVolumeSize)
+    outputVolumeSize = os.getenv('VOLUME_OUTPUT_SIZE', default_outputVolumeSize)
+
+    volumeName = sanitize_k8_parameters(f"{content.serviceID}-volume")
+    storage_class_name = os.getenv('STORAGE_CLASS', None)
+    cwlResourceRequirement = helpers.getCwlResourceRequirement(content.cwl)
+
+    if cwlResourceRequirement:
+        if cwlResourceRequirement["tmpdirMax"]:
+            print(f"setting tmpdirMax to {cwlResourceRequirement['tmpdirMax']} as specified in the CWL")
+            tmpVolumeSize = f"{cwlResourceRequirement['tmpdirMax']}Mi"
+        if cwlResourceRequirement["outdirMax"]:
+            print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
+            outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
     print('namespace: %s' % prepare_id)
-    print(f"volume_size: {volumeSize}")
+    print(f"inputVolumeSize: {inputVolumeSize}")
+    print(f"tmpVolumeSize: {tmpVolumeSize}")
+    print(f"outputVolumeSize: {outputVolumeSize}")
     print('volume_name: %s' % volumeName)
 
-    default_value = ""
-    workflow_config = {
-        "storageclass": os.getenv('STORAGE_CLASS', default_value),
-        "volumesize": os.getenv('VOLUME_SIZE', volumeSize)
-    }
-
     try:
-        resp_status = workflow_executor.prepare.run(namespace=prepare_id, volumeSize=volumeSize, volumeName=volumeName,
-                                                    state=state, workflow_config=workflow_config)
+        resp_status = workflow_executor.prepare.run(namespace=prepare_id, inputVolumeSize=inputVolumeSize,
+                                                    tmpVolumeSize=tmpVolumeSize, outputVolumeSize=outputVolumeSize,
+                                                    volumeName=volumeName, state=state,
+                                                    storage_class_name=storage_class_name)
     except ApiException as e:
         response.status_code = e.status
 
@@ -100,16 +114,17 @@ def read_prepare(content: PrepareContent, response: Response):
 """
 Returns prepare status
 """
+
+
 @app.get("/prepare/{prepare_id}", status_code=status.HTTP_200_OK)
 def read_prepare(prepare_id: str, response: Response):
-
     state = client.State()
     print('Prepare GET')
-    namespace=prepare_id
-    #volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
+    namespace = prepare_id
+    # volumeName = sanitize_k8_parameters(f"{content.serviceID}volume")
 
     try:
-        resp_status = workflow_executor.prepare.get(namespace=namespace,state=state)
+        resp_status = workflow_executor.prepare.get(namespace=namespace, state=state)
     except ApiException as e:
         response.status_code = e.status
 
@@ -121,9 +136,12 @@ def read_prepare(prepare_id: str, response: Response):
     # 100 ripassa dopo
     # 500 error
 
+
 """
 Executes workflow
 """
+
+
 @app.post("/execute", status_code=status.HTTP_201_CREATED)
 def read_execute(content: ExecuteContent, response: Response):
     # {"runID": "runID-123","serviceID": "service-id-123", "prepareID":"uuid" ,"cwl":".......","inputs":".........."}
@@ -138,36 +156,35 @@ def read_execute(content: ExecuteContent, response: Response):
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
-
     # cwl_wrapper config
-    cwl_wrapper_config=dict()
-    cwl_wrapper_config["maincwl"]=os.getenv('ADES_WFEXEC_MAINCWL', None)
-    cwl_wrapper_config["stagein"]=os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
-    cwl_wrapper_config["stageout"]=os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
-    cwl_wrapper_config["rulez"]=os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
+    cwl_wrapper_config = dict()
+    cwl_wrapper_config["maincwl"] = os.getenv('ADES_WFEXEC_MAINCWL', None)
+    cwl_wrapper_config["stagein"] = os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
+    cwl_wrapper_config["stageout"] = os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
+    cwl_wrapper_config["rulez"] = os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
     default_value = ""
 
     inputs_content["inputs"].append({
-        "id":"store_host",
+        "id": "store_host",
         "dataType": "string",
-        "value":os.getenv('STORAGE_HOST', default_value),
+        "value": os.getenv('STORAGE_HOST', default_value),
         "mimeType": "",
         "href": ""})
 
     inputs_content["inputs"].append({
-        "id":"store_username",
+        "id": "store_username",
         "dataType": "string",
-        "value":os.getenv('STORAGE_USERNAME', default_value),
+        "value": os.getenv('STORAGE_USERNAME', default_value),
         "mimeType": "",
         "href": ""})
 
     inputs_content["inputs"].append({
-        "id":"store_apikey",
+        "id": "store_apikey",
         "dataType": "string",
-        "value":os.getenv('STORAGE_APIKEY', default_value),
+        "value": os.getenv('STORAGE_APIKEY', default_value),
         "mimeType": "",
         "href": ""})
 
@@ -185,12 +202,22 @@ def read_execute(content: ExecuteContent, response: Response):
         "mimeType": "",
         "href": ""})
 
-    default_max_ram_value="4G"
-    default_max_cores_value="2"
-    max_ram=os.getenv('JOB_MAX_RAM', default_max_ram_value)
-    max_cores=os.getenv('JOB_MAX_CORES', default_max_cores_value)
+    default_max_ram_value = "4G"
+    default_max_cores_value = "2"
+    max_ram = os.getenv('JOB_MAX_RAM', default_max_ram_value)
+    max_cores = os.getenv('JOB_MAX_CORES', default_max_cores_value)
 
-    pprint(f"inputs_content {inputs_content}")
+    cwlResourceRequirement = helpers.getCwlResourceRequirement(cwl_content)
+    if cwlResourceRequirement:
+        if cwlResourceRequirement["ramMax"]:
+            print(f"setting ramMax to {cwlResourceRequirement['ramMax']}Mi as specified in the CWL")
+            max_ram = f"{cwlResourceRequirement['ramMax']}Mi"
+        if cwlResourceRequirement["coresMax"]:
+            print(f"setting coresMax to {cwlResourceRequirement['coresMax']} as specified in the CWL")
+            max_cores = str(cwlResourceRequirement["coresMax"])
+
+    print(f"inputs_content")
+    pprint(inputs_content)
     # inputcwlfile is input_json + cwl_file
     # create 2 temp files
     with tempfile.NamedTemporaryFile(mode="w") as cwl_file, tempfile.NamedTemporaryFile(mode="w") as input_json:
@@ -221,12 +248,14 @@ def read_execute(content: ExecuteContent, response: Response):
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
 
-    return {"jobID": workflow_name }
+    return {"jobID": workflow_name}
 
 
 """
 Returns workflow status
 """
+
+
 @app.get("/status/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
@@ -254,10 +283,10 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
 
     except ApiException as err:
-            e = Error()
-            e.set_error(12, err.body)
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return e
+        e = Error()
+        e.set_error(12, err.body)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return e
 
     return status
 
@@ -265,19 +294,19 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 """
 Returns workflow result
 """
+
+
 @app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = sanitize_k8_parameters(f"{service_id}volume")
     mount_folder = "/workflow"
-    outputfile=f"{workflow_name}.res"
+    outputfile = f"{workflow_name}.res"
 
     state = client.State()
     print('Result GET')
 
-
-        
     resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace,
@@ -289,29 +318,27 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
         print("getresult success")
         pprint(resp_status)
     except ApiException as err:
-            e = Error()
-            e.set_error(12, err.body)
-            print(err.body)
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return e
+        e = Error()
+        e.set_error(12, err.body)
+        print(err.body)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return e
 
     json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
     print("wf_output json: ")
     pprint(json_compatible_item_data)
     print("job success")
 
-
-    keepworkspaceString=os.getenv('JOB_KEEPWORKSPACE', "False")
-    keepworkspace= keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+    keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
+    keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
     if not keepworkspace:
         print('Removing Workspace')
-        clean_job_status=clean_job(namespace)
+        clean_job_status = clean_job(namespace)
         if isinstance(clean_job_status, Error):
             return clean_job_status
         else:
-            pprint(clean_job_status)    
+            pprint(clean_job_status)
         print('Removing Workspace Success')
-
 
     return JSONResponse(content=json_compatible_item_data)
 
@@ -319,16 +346,18 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 """
 Removes Kubernetes namespace
 """
-def clean_job(namespace: str):     
+
+
+def clean_job(namespace: str):
     clean_status = {}
     try:
         clean_status = workflow_executor.clean.run(namespace=namespace)
         return clean_status
     except ApiException as err:
-            e = Error()
-            e.set_error(12, err.body)
-            print(err.body)
-            return e
+        e = Error()
+        e.set_error(12, err.body)
+        print(err.body)
+        return e
 
 
 def main():
