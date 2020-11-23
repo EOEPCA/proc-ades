@@ -48,8 +48,8 @@ def read_root(authorization: Optional[str] = Header(None)):
 def read_root(content: adesRequest,authorization: Optional[str] = Header(None)):
     print('\n'*2)
     print("entry: POST /resources")
-    print(str(content))
-    print(str(authorization))
+    print(f"content: {str(content)}")
+    print(f"authorization: {str(authorization)}")
 
     return {
         "ownership_id": "d290f1ee-6c54-4b01-90e6-288571188183",
@@ -73,8 +73,8 @@ def read_root(prepare_id: str):
 def read_root(resource_id: str,authorization: Optional[str] = Header(None)):
     print('\n'*2)
     print("entry: delete /resources")
-    print(str(authorization))
-    print(resource_id)
+    print(f"authorization: {str(authorization)}")
+    print(f"resource_id: {resource_id}")
 
     c= f"delete: /resources/{resource_id}"
 
