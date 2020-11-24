@@ -36,8 +36,15 @@ def read_root(authorization: Optional[str] = Header(None)):
             "scopes": ['public']
         },
         {
+            "ownership_id": "d290f1ee-6c54-4b01-90e6-288571188aaa",
+            "id": "d290f1ee-6c54-4b01-90e6-d701748f0852",
+            "name": '/rdirienzo/watchjob/processes/vegetation_index_/jobs/717470c8-2a7e-11eb-b739-288571188aaa',
+            "icon_uri": '/rdirienzo/watchjob/processes/vegetation_index_/jobs/717470c8-2a7e-11eb-b739-288571188aaa',
+            "scopes": ['public']
+        },
+        {
             "ownership_id": "d290f1ee-6c54-4b01-90e6-288571188183",
-            "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "id": "d290f1ee-6c54-4b01-90e6-d701748f0853",
             "name": '/rdirienzo/watchjob/processes/vegetation_index_/jobs/717470c8-2a7e-11eb-b739-0242ac150004',
             "icon_uri": '/rdirienzo/wps3/processes/testC/jobs',
             "scopes": ['public']
