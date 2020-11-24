@@ -11,6 +11,18 @@
 #include <memory>
 #include <list>
 
+
+std::string replaceStr(std::string &str, const std::string &from,
+                         const std::string &to) {
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();
+    }
+    return str;
+}
+
+
 namespace PEP {
     using nlohmann::json;
 
@@ -216,7 +228,11 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     std::cerr << "*pepRemoveFromZoo* \n";
     for(auto&r:resources){
         r->dump();
-        if (r->getIconUri() == sPath){
+
+        std::string ns{sPath};
+        replaceStr(ns,"wps3","watchjob");
+
+        if (r->getIconUri().rfind(sPath, 0) == 0 /*r->getIconUri() == sPath*/){
             r->setUri(baseUri + "/resources/" + r->getId() );
             r->setJwt(std::string(jwt));
             long retDel=pepDelete_(*r);
@@ -226,6 +242,19 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
                 }
             }
         }
+
+        if (r->getIconUri().rfind(ns, 0) == 0){
+            r->setUri(baseUri + "/resources/" + r->getId() );
+            r->setJwt(std::string(jwt));
+            long retDel=pepDelete_(*r);
+            if (retDel!=200){
+                if(stopOnError){
+                    return retDel;
+                }
+            }
+        }
+
+
         std::cerr << "\n";
     }
     return 200;
