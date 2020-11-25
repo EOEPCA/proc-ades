@@ -35,7 +35,14 @@ set(LIB_SRC src/templates/exec.cpp src/templates/workflow_executor.hpp src/templ
 add_library(workflow_executor SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(workflow_executor ${MODS_LIBS})
 
-#add_executable(ades_main ${src_main})
+set(LIB_SRC_PEP src/templates/pepresources.hpp src/templates/pepresources.cpp)
+add_library(pep_resource SHARED ${LIB_SRC_PEP})
+TARGET_LINK_LIBRARIES(pep_resource ${MODS_LIBS})
+
+include_directories(src/templates)
+add_executable(pep_test test/mock/pep/app/main.cpp)
+TARGET_LINK_LIBRARIES(pep_test ${MODS_LIBS} ${CURL_LIBRARIES})
+#cp /work/test/mock/pep/app/main.cpp   /project/test/mock/pep/app/main.cpp  && make  pep_resource   pep_test
 #TARGET_LINK_LIBRARIES(ades_main ${MODS_LIBS})
 
 #add_subdirectory(src/deployundeploy/)

@@ -9,3 +9,4 @@ metadata:
     heritage: {{ .Release.Service }}
 data:
   kubeconfig: {{ tpl (.Files.Get .Values.workflowExecutor.kubeconfig) . | quote }}
+  maincfg: {{ tpl (.Files.Get .Values.wps.maincfgtpl) . | quote }}
