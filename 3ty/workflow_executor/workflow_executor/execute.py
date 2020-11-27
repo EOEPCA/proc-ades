@@ -93,8 +93,11 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     cwlDocumentFilename = ntpath.basename(wrapped_cwl_document)
 
     # # Setup K8 configs
-    config.load_kube_config()
-    api_instance = client.BatchV1Api(client.ApiClient())
+    apiclient = helpers.get_api_client()
+    api_instance = client.BatchV1Api(apiclient)
+
+
+
     yamlFileTemplate = "CalrissianJobTemplate.yaml"
 
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
