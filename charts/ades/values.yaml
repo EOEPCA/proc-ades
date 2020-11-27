@@ -73,6 +73,7 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 storageClassName: glusterfs-storage
+clusterAdminRoleName: cluster-admin
 
 nodeSelector: {}
 
@@ -80,8 +81,11 @@ tolerations: []
 
 affinity: {}
 
+useKubeProxy: true
+
 workflowExecutor:
-  kubeconfig: "files/kubeconfig"
+  # Necessary if useKubeProxy set to false
+  # kubeconfig: "files/kubeconfig"
   # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV)
   storageHost: "storageHost"
   # store username

@@ -24,7 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "ades.serviceAccountName" . }}
+      serviceAccountName: {{ .Release.Name }}-processing-manager
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -51,8 +51,13 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
+            {{- if .Values.useKubeProxy }}
+            - name: HTTP_PROXY
+              value: "http://localhost:8001"
+            {{- else }}
             - name: KUBECONFIG
               value: /var/etc/ades/kubeconfig
+            {{- end }}
             - name: STORAGE_HOST
               value: {{ .Values.workflowExecutor.storageHost | quote }}
             - name: STORAGE_USERNAME
@@ -63,14 +68,12 @@ spec:
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
             - name: VOLUME_SIZE
               value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
-            
             - name: JOB_MAX_RAM
               value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
             - name: JOB_MAX_CORES
               value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
             - name: JOB_KEEPWORKSPACE
               value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
-
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
@@ -78,6 +81,12 @@ spec:
               mountPath: /var/www/html/res
             - name: ades-processing-services
               mountPath: /opt/zooservices_user
+        {{- if .Values.useKubeProxy }}
+        - name: sidecar-proxy
+          image: linuxacademycontent/kubectl-proxy:latest
+          ports:
+            - containerPort: 8001
+        {{- end }}
       volumes:
         - name: ades-config
           configMap:

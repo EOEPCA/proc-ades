@@ -64,3 +64,4 @@ config/ades-config-*.env
 config/kubeconfig-*
 charts/ades/values.eoepca-dev.terradue.yaml
 
+charts/ades/values.eoepca-ref.terradue.yaml
