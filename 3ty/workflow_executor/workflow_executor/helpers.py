@@ -23,7 +23,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
 
     if workflow_name:
         pod_name = f"{workflow_name}-copy-pod"
-    else:    
+    else:
         pod_name = f"copy-pod"
     resp = None
     try:
@@ -150,9 +150,9 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
             break
 
 
-def getCwlWorkflowId(cwl_document):
-    print("parsing cwl")
-    with open(cwl_document, 'r') as stream:
+def getCwlWorkflowId(cwl_path):
+    print("parsing cwl to retrieve the Workflow Id")
+    with open(cwl_path, 'r') as stream:
         try:
             graph = yaml.load(stream, Loader=yaml.FullLoader)["$graph"]
         except yaml.YAMLError as exc:
@@ -161,3 +161,18 @@ def getCwlWorkflowId(cwl_document):
     for item in graph:
         if item.get('class') == "Workflow":
             return item.get('id')
+
+
+def getCwlResourceRequirement(cwl_content):
+    print("parsing cwl to retrieve the ResourceRequirements")
+    try:
+        graph = yaml.load(cwl_content, Loader=yaml.FullLoader)["$graph"]
+    except yaml.YAMLError as exc:
+        print(exc, file=sys.stderr)
+
+    for item in graph:
+        if item.get('class') == "CommandLineTool":
+            try:
+                return item["requirements"]["ResourceRequirement"]
+            except KeyError:
+                return None

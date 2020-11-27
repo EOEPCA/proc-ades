@@ -57,13 +57,12 @@ sleepGetStatus=30
 sleepGetPrepare=30
 sleepBeforeRes=30
 
-
 [pep]
 pepresource=/opt/t2service/libpep_resource.so
-usepep=true
-pephost=http://mock-pep
+usepep={{ .Values.wps.usePep }}
+pephost={{ .Values.wps.pepBaseUrl }}
 scopes=public
-pathBase=/%s/wps3/processes/%s/jobs
+pathBase=/%s/wps3/processes/%s
 pathStatus=/%s/watchjob/processes/%s/jobs/%s
 pathResult=/%s/watchjob/processes/%s/jobs/%s/result
 stopOnError=true

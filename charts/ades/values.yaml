@@ -94,14 +94,25 @@ workflowExecutor:
   storageApiKey: "storageApi"
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
   processingStorageClass: glusterfs-storage
-  # Size of the Kubernetes Volumes in gigabytes
-  processingVolumeSize: 10
+  # Size of the Kubernetes Input Volume 
+  processingVolumeInputSize: "500Mi"
+  # Size of the Kubernetes Tmp Volumes
+  processingVolumeTmpSize: "10Gi"
+  # Size of the Kubernetes Output Volumes
+  processingVolumeOutputSize: "10Gi"
   # Max ram to use for a job
   processingMaxRam: "4Gi"
   # Max number of CPU cores to use concurrently for a job
   processingMaxCores: "2"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: "False"
+
+wps:
+  pepBaseUrl: "http://mock-pep"
+  usePep: "false"
+
+  maincfgtpl: "files/main.cfg.tpl"
+
 
 persistence:
   enabled: true

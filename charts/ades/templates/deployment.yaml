@@ -66,14 +66,19 @@ spec:
               value: {{ .Values.workflowExecutor.storageApiKey | quote }}
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
-            - name: VOLUME_SIZE
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+            - name: VOLUME_INPUT_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeInputSize | quote }}
+            - name: VOLUME_TMP_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeTmpSize | quote }}
+            - name: VOLUME_OUTPUT_SIZE
+              value: {{ .Values.workflowExecutor.processingVolumeOutputSize | quote }}
             - name: JOB_MAX_RAM
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingMaxRam | quote }}
             - name: JOB_MAX_CORES
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingMaxCores | quote }}
             - name: JOB_KEEPWORKSPACE
-              value: {{ .Values.workflowExecutor.processingVolumeSize | quote }}
+              value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
+
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
@@ -81,6 +86,9 @@ spec:
               mountPath: /var/www/html/res
             - name: ades-processing-services
               mountPath: /opt/zooservices_user
+            - name: ades-config
+              mountPath: /zooservices/main.cfg
+              subPath: main.cfg
         {{- if .Values.useKubeProxy }}
         - name: sidecar-proxy
           image: linuxacademycontent/kubectl-proxy:latest
