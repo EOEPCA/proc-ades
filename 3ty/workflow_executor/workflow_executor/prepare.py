@@ -4,7 +4,7 @@ import sys
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from pprint import pprint
-
+from workflow_executor import helpers
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -15,9 +15,9 @@ def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName,
     print(
         f"Preparing {namespace}  inputVolumeSize: {inputVolumeSize}  tmpVolumeSize: {tmpVolumeSize} outputVolumeSize: {outputVolumeSize}  volumeName: {volumeName}")
 
-    config.load_kube_config()
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
-    v1 = client.CoreV1Api()
+    apiclient = helpers.get_api_client()
+    api_instance = client.RbacAuthorizationV1Api(apiclient)
+    v1 = client.CoreV1Api(api_client=apiclient)
 
     print("####################################")
     print("######### Checking if namespace already exists")
@@ -199,9 +199,8 @@ def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName,
 
 
 def get(namespace, state=None):
-    config.load_kube_config()
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
-    v1 = client.CoreV1Api()
+    apiclient = helpers.get_api_client()
+    v1 = client.CoreV1Api(api_client=apiclient)
 
     # Things to check:
     # namespace

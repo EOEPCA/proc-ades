@@ -4,6 +4,7 @@ from sys import path
 
 import yaml
 from kubernetes import client, config
+from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 import tarfile
@@ -14,11 +15,29 @@ from pprint import pprint
 import uuid
 
 
-def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None, workflow_name=None):
+def get_api_client():
+    proxy_url = os.getenv('HTTP_PROXY', None)
 
-    config.load_kube_config()
-    api_client = client.ApiClient()
-    api_instance = client.CoreV1Api(api_client)
+    if proxy_url:
+        print("Setting proxy: {}".format(proxy_url))
+        my_api_config = Configuration()
+        my_api_config.host = proxy_url
+        my_api_config = client.ApiClient(my_api_config)
+    else:
+        config.load_kube_config()
+        my_api_config = client.ApiClient()
+
+    return my_api_config
+
+
+
+
+def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namespace, targetFolder=None, state=None,
+                         workflow_name=None):
+
+    apiclient = get_api_client()
+    api_instance = client.CoreV1Api(api_client=apiclient)
+
 
 
     if workflow_name:
@@ -53,10 +72,12 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
         else:
             v1VolumeMount = client.V1VolumeMount(name="workdir", mount_path=mountFolder)
         v1VolumeMountList.append(v1VolumeMount)
-        v1container = client.V1Container(name="volumeaccessor", image="terradue/volumeaccessor:1.0", volume_mounts=v1VolumeMountList)
+        v1container = client.V1Container(name="volumeaccessor", image="terradue/volumeaccessor:1.0",
+                                         volume_mounts=v1VolumeMountList)
         containers.append(v1container)
         v1SecurityContext = client.V1SecurityContext(run_as_user=1000, run_as_group=3000)
-        v1PodSpec = client.V1PodSpec(volumes=volumeList, containers=containers, security_context=v1SecurityContext ,  host_network=True)
+        v1PodSpec = client.V1PodSpec(volumes=volumeList, containers=containers, security_context=v1SecurityContext,
+                                     host_network=True)
         metadata = client.V1ObjectMeta(name=pod_name, namespace=namespace)
         body = client.V1Pod(metadata=metadata, spec=v1PodSpec, kind="Pod")  # V1Pod |
 
@@ -70,7 +91,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
                 pod_status_response = api_instance.patch_namespaced_pod_status(pod_name, namespace, body, pretty=pretty)
                 pprint("Status is " + pod_status_response.status.phase + ". Waiting for pod to be created")
                 if pod_status_response.status.phase == "Running":
-                    #pprint(pod_status_response)
+                    # pprint(pod_status_response)
                     break
                 # retry every 2 seconds
                 time.sleep(2)
@@ -111,7 +132,7 @@ def copy_files_to_volume(sources, mountFolder, persistentVolumeClaimName, namesp
                     print("STDERR: %s" % resp.read_stderr())
                 if commands:
                     c = commands.pop(0)
-                   # print("Running command... %s\n" % c.decode())
+                    # print("Running command... %s\n" % c.decode())
                     resp.write_stdin(c)
                 else:
                     break

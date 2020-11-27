@@ -8,13 +8,15 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 import sys
 
+from workflow_executor import helpers
+
 
 def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, state=None):
     try:
 
         # create an instance of the API class
-        config.load_kube_config()
-        api_instance = client.CoreV1Api(client.ApiClient())
+        apiclient = helpers.get_api_client()
+        api_instance = client.CoreV1Api(api_client=apiclient)
 
         name = f"{workflowname}-copy-pod"
         resp = None
