@@ -54,10 +54,9 @@ spec:
             {{- if .Values.useKubeProxy }}
             - name: HTTP_PROXY
               value: "http://localhost:8001"
-            {{- else }}
+            {{- end }}
             - name: KUBECONFIG
               value: /var/etc/ades/kubeconfig
-            {{- end }}
             - name: STORAGE_HOST
               value: {{ .Values.workflowExecutor.storageHost | quote }}
             - name: STORAGE_USERNAME

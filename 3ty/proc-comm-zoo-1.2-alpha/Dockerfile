@@ -1,4 +1,4 @@
-FROM centos/devtoolset-7-toolchain-centos7
+FROM centos/devtoolset-7-toolchain-centos7 as builder
 USER root
 
 ARG addUserFeature
@@ -46,6 +46,11 @@ RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && autoconf && \
 
 RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && ls -ltr && make && make install
 
+# ------------------------------------------------------
+# Production Build
+# ------------------------------------------------------
+
+FROM centos
 ##install zoo
 RUN yum install -y vim httpd \
 	&& mkdir -p /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/_run/res/statusInfos \
