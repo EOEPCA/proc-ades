@@ -1,23 +1,11 @@
 FROM centos/devtoolset-7-toolchain-centos7 as builder
 USER root
 
-ARG addUserFeature
-ENV addUserFeature=$addUserFeature
-#ENV HOME /root
-
-#RUN ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
-
 RUN yum install -y epel-release
 RUN yum update -y
 RUN yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3
 
-
-RUN yum install -y     bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
-
-
-
-#COPY assets/libfcgi-2.4.0.orig.tar.gz /opt/libfcgi-2.4.0.orig.tar.gz
-#RUN cd /opt/ && gzip -d libfcgi-2.4.0.orig.tar.gz && tar -xvf /opt/libfcgi-2.4.0.orig.tar
+RUN yum install -y bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
 RUN yum install -y git
 
@@ -46,12 +34,29 @@ RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && autoconf && \
 
 RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && ls -ltr && make && make install
 
+RUN mkdir -p /opt/t2service /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/_run/res/statusInfos /var/www/t2dep/ /opt/watchjob/
+COPY src/* /opt/watchjob/
+
+RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make && cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && \
+    cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/ && cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl   /var/www/data/updateStatus.xsl && \
+    cd /opt/watchjob/ && make && make install
+
 # ------------------------------------------------------
 # Production Build
 # ------------------------------------------------------
 
 FROM centos
-##install zoo
+
+RUN yum install -y epel-release
+RUN yum update -y
+RUN yum install -y json-c libxml2 bison openssl wget unzip bzip2 make gcc-c++
+ENV PATH "$PATH:/usr/local/bin"
+
+##install built zoo
+COPY --from=builder /opt /opt
+COPY --from=builder /var/www/data /var/www/data
+COPY --from=builder /var/www/t2dep /var/www/t2dep
+
 RUN yum install -y vim httpd \
 	&& mkdir -p /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/_run/res/statusInfos \
 	&& mkdir -p /zooservices &&  chmod 777 /zooservices \
@@ -70,15 +75,8 @@ COPY assets/main.cfg /etc/zoo-project/main.cfg
 COPY assets/oas.cfg /etc/zoo-project/oas.cfg
 COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
-COPY src/* /opt/watchjob/
-
-RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make && cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && \
-    cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/ && cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl   /var/www/data/updateStatus.xsl && \
-    cd /opt/watchjob/ && make && make install
 
 COPY scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
-
-RUN echo "...$addUserFeature ..."
 
 CMD ["/opt/t2scripts/entrypoint.sh"]
 
