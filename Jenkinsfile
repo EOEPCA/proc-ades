@@ -6,15 +6,17 @@ pipeline {
   }
   stages {
     stage('Build ZOO') {
-      script {
-        def descriptor = readDescriptor()
-        def mType=getTypeOfVersion(env.BRANCH_NAME)
-        def testsuite = docker.build(descriptor.zoo_base_docker_image_name + ":${mType}" + descriptor.zoo_base_docker_image_version, "." )
-        testsuite.tag("${mType}latest")
-        // docker.withRegistry('https://docker.terradue.com', 'f7ea73e5-5715-4d47-b250-842d61825e34') {
-        //   testsuite.push("${mType}${env.VERSION_TOOL}")
-        //   testsuite.push("${mType}latest")
-        // }
+      steps {
+        script {
+          def descriptor = readDescriptor()
+          def mType=getTypeOfVersion(env.BRANCH_NAME)
+          def testsuite = docker.build(descriptor.zoo_base_docker_image_name + ":${mType}" + descriptor.zoo_base_docker_image_version, "." )
+          testsuite.tag("${mType}latest")
+          // docker.withRegistry('https://docker.terradue.com', 'f7ea73e5-5715-4d47-b250-842d61825e34') {
+          //   testsuite.push("${mType}${env.VERSION_TOOL}")
+          //   testsuite.push("${mType}latest")
+          // }
+        }
       }
     }
     // stage('Publish Artifacts') {
