@@ -94,7 +94,6 @@ COPY 3ty/workflow_executor /usr/local/workflow_executor
 
 RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
 ENV PATH="/opt/miniconda/bin:$PATH"
-RUN ls /opt/app-root/src
 RUN conda config --add channels eoepca
 RUN conda config --add channels conda-forge
 RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
