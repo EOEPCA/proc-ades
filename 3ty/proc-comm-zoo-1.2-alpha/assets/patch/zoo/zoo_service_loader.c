@@ -509,7 +509,27 @@ int removeService(maps* conf,char* service=NULL){
   return 0;
 }
 
+/**
+ *
+ * @param conf
+ * @param s
+ * @param req
+ * @return 0 async 1 sync
+ */
 
+#ifdef USE_JSON
+int parseJRequestMode(maps* conf, service* s,json_object* req){
+    json_object* the_mode=NULL;
+    char* c_the_mode=NULL;
+    if(json_object_object_get_ex(req,"mode",&the_mode)!=FALSE) {
+        int uLen=json_object_get_string_len(the_mode) * sizeof(char);
+        if (uLen>0) {
+            return strcasecmp(json_object_get_string(the_mode),"sync")==0?1:0;
+        }
+    }
+    return 0;
+}
+#endif
 
 //rdr
 int
@@ -2790,8 +2810,23 @@ runRequest (map ** inputs)
 	      // Success, use jobj here.
 	      maps* inputs_real_format=NULL, *outputs_real_format= NULL;
 	      parseJRequest(m,s1,jobj,&inputs_real_format,&outputs_real_format);
+#ifdef USE_JSON
+	      int request_type = parseJRequestMode(m,s1,jobj);
+	      switch(request_type){
+	          case 0:
+	              fprintf(stderr,"REQUEST_TYPE: async\n");
+	              break;
+	          case 1:
+	              fprintf(stderr,"REQUEST_TYPE: sync\n");
+	              break;
+	      }
+#endif
 	      map* preference=getMapFromMaps(m,"renv","HTTP_PREFER");
+#ifdef USE_JSON
+	      if(request_type==0){//async
+#else
 	      if(preference!=NULL && strcasecmp(preference->value,"respond-async")==0){
+#endif
 		fprintf(stderr,"Asynchronous call!\n");
 		char *fbkp, *fbkpid, *fbkpres, *fbkp1, *flog;
 		FILE *f0, *f1;
