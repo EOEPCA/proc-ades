@@ -78,7 +78,7 @@ COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_wps3 /var/www/_run/wp
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_watchjob /var/www/_run/watchjob/.htaccess
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess /var/www/_run/zoo/.htaccess
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/zoo.conf	/etc/httpd/conf.d/zoo.conf
-COPY 3ty/proc-comm-zoo-1.2-alpha/assets/main.cfg /etc/zoo-project/main.cfg
+#COPY 3ty/proc-comm-zoo-1.2-alpha/assets/main.cfg /etc/zoo-project/main.cfg
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/oas.cfg /etc/zoo-project/oas.cfg
 
 ## Build the base service interface
