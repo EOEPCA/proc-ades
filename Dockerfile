@@ -99,7 +99,7 @@ RUN conda config --add channels conda-forge
 RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
 RUN cd /usr/local/workflow_executor/ && python setup.py install
 
-COPY assets/main.cfg /opt/t2service/main.cfg
+# COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
 
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
