@@ -152,7 +152,7 @@ def read_execute(content: ExecuteContent, response: Response):
     namespace = content.prepareID
     cwl_content = content.cwl
     inputs_content = json.loads(content.inputs)
-    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}volume")
+    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}-volume")
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
