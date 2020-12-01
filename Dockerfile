@@ -123,5 +123,7 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
 RUN yum install mlocate -y
 
+CMD ["/opt/t2scripts/entrypoint.sh"]
+
 EXPOSE 80
 

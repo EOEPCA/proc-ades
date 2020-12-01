@@ -110,7 +110,6 @@ workflowExecutor:
 wps:
   pepBaseUrl: "http://mock-pep"
   usePep: "false"
-
   maincfgtpl: "files/main.cfg.tpl"
 
 
