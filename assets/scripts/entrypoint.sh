@@ -13,8 +13,15 @@ nohup /opt/app-root/src/miniconda3/bin/python -m workflow_executor.fastapiserver
 sleep 5
 echo "Workflow executor started"
 
+
+#rm -f /var/log/httpd/access_log
+#rm -f /var/log/httpd/error_log
+#
+#ln -snf /dev/stdout /var/log/httpd/access_log \
+#    && ln -snf /dev/stderr /var/log/httpd/error_log
+
 # Starting WPS ZOO
 echo "Starting WPS ZOO. Listening for request..."
 /usr/sbin/httpd -DBACKGROUND
-
-tail -f /dev/null
+sleep 2
+tail -f /var/log/httpd/error_log /var/log/httpd/access_log
