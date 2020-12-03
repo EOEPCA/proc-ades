@@ -241,7 +241,6 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
                                                         cwl_wrapper_config=cwl_wrapper_config,
-                                                        cleanJob=True,
                                                         max_ram=max_ram,
                                                         max_cores=max_cores)
         except ApiException as e:
@@ -300,7 +299,7 @@ Returns workflow result
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
-    volume_name_prefix = sanitize_k8_parameters(f"{service_id}volume")
+    volume_name_prefix = sanitize_k8_parameters(f"{service_id}-volume")
     mount_folder = "/workflow"
     outputfile = f"{workflow_name}.res"
 
