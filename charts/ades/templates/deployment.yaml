@@ -90,9 +90,6 @@ spec:
             - name: ades-config
               mountPath: /zooservices/main.cfg
               subPath: maincfg
-            - name: ades-config
-              mountPath: /var/etc/ades/stageincwl.cwl
-              subPath: stageincwl
         {{- if .Values.useKubeProxy }}
         - name: sidecar-proxy
           image: linuxacademycontent/kubectl-proxy:latest
