@@ -94,8 +94,6 @@ workflowExecutor:
   storageApiKey: "storageApi"
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
   processingStorageClass: glusterfs-storage
-  # Size of the Kubernetes Input Volume 
-  processingVolumeInputSize: "500Mi"
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "10Gi"
   # Size of the Kubernetes Output Volumes
@@ -106,6 +104,10 @@ workflowExecutor:
   processingMaxCores: "2"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: "False"
+    # includes terradue.docker.com docker credentials
+  t2cred: "True"
+  #  custom stagein cwl
+  stageincwl: "files/stageincwl.cwl"
 
 wps:
   pepBaseUrl: "http://mock-pep"

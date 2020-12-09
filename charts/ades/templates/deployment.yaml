@@ -65,8 +65,6 @@ spec:
               value: {{ .Values.workflowExecutor.storageApiKey | quote }}
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
-            - name: VOLUME_INPUT_SIZE
-              value: {{ .Values.workflowExecutor.processingVolumeInputSize | quote }}
             - name: VOLUME_TMP_SIZE
               value: {{ .Values.workflowExecutor.processingVolumeTmpSize | quote }}
             - name: VOLUME_OUTPUT_SIZE
@@ -77,6 +75,10 @@ spec:
               value: {{ .Values.workflowExecutor.processingMaxCores | quote }}
             - name: JOB_KEEPWORKSPACE
               value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
+            - name: T2CRED
+              value: {{ .Values.workflowExecutor.t2cred | quote }}
+            - name: ADES_WFEXEC_STAGEIN_CWL
+              value: /var/etc/ades/stageincwl.cwl
 
           volumeMounts:
             - name: ades-config
@@ -88,6 +90,9 @@ spec:
             - name: ades-config
               mountPath: /zooservices/main.cfg
               subPath: maincfg
+            - name: ades-config
+              mountPath: /var/etc/ades/stageincwl.cwl
+              subPath: stageincwl
         {{- if .Values.useKubeProxy }}
         - name: sidecar-proxy
           image: linuxacademycontent/kubectl-proxy:latest
