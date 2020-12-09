@@ -78,7 +78,6 @@ def read_prepare(content: PrepareContent, response: Response):
     default_tmpVolumeSize = "4Gi"
     default_outputVolumeSize = "5Gi"
 
-    inputVolumeSize = os.getenv('VOLUME_INPUT_SIZE', default_inputVolumeSize)
     tmpVolumeSize = os.getenv('VOLUME_TMP_SIZE', default_tmpVolumeSize)
     outputVolumeSize = os.getenv('VOLUME_OUTPUT_SIZE', default_outputVolumeSize)
 
@@ -94,17 +93,20 @@ def read_prepare(content: PrepareContent, response: Response):
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
+    # get t2regcred variable
+    t2cred = os.getenv("T2CRED", False)
+
     print('namespace: %s' % prepare_id)
-    print(f"inputVolumeSize: {inputVolumeSize}")
     print(f"tmpVolumeSize: {tmpVolumeSize}")
     print(f"outputVolumeSize: {outputVolumeSize}")
     print('volume_name: %s' % volumeName)
 
     try:
-        resp_status = workflow_executor.prepare.run(namespace=prepare_id, inputVolumeSize=inputVolumeSize,
-                                                    tmpVolumeSize=tmpVolumeSize, outputVolumeSize=outputVolumeSize,
+        resp_status = workflow_executor.prepare.run(namespace=prepare_id, tmpVolumeSize=tmpVolumeSize,
+                                                    outputVolumeSize=outputVolumeSize,
                                                     volumeName=volumeName, state=state,
-                                                    storage_class_name=storage_class_name)
+                                                    storage_class_name=storage_class_name,
+                                                    t2cred=t2cred)
     except ApiException as e:
         response.status_code = e.status
 
