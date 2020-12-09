@@ -254,8 +254,6 @@ public:
     void setWorkspaceService(std::string workspace, std::string service){
         this->workspace_ = std::move(workspace);
         this->service_ = std::move(service);
-        std::cerr << "------------ssss-----------------\n";
-
     }
 
     PepResource& operator=(const PepResource& other) {
