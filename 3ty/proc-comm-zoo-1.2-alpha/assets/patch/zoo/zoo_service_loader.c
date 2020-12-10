@@ -252,6 +252,16 @@ int dumpBackFinalFile(maps* m,char* fbkp,char* fbkp1)
   return 1;
 }
 
+char* replace_char(char* str, char find, char replace){
+    char *current_pos = strchr(str,find);
+    while (current_pos){
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
+}
+
+
 //rdr
 int mkpath(char *file_path, mode_t mode) {
   // assert(file_path && *file_path);
@@ -1810,7 +1820,11 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute =
                 (execute_t) GetProcAddress (so, r_inputs->value);
 #else
-              execute_t execute = (execute_t) dlsym (so, r_inputs->value);
+                  char* nS = zStrdup(r_inputs->value);
+                  replace_char(nS,'.','_');
+                  replace_char(nS,'-','_');
+                  fprintf(stderr,"service from %s to %s\n",r_inputs->value,nS);
+                  execute_t execute = (execute_t) dlsym (so, nS);
 #endif
 
               if (execute == NULL)

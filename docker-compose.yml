@@ -1,11 +1,37 @@
+version: "3.5"
+
+#sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up -d
 #sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml stop
 #sudo /usr/local/bin/docker-compose  -f docker-compose-dev.yml down
 services:
+
+  mock-wf-exe:
+    build:
+      context: test/mock/webinterface
+      dockerfile: Dockerfile
+    image: mock-wf-exe:1.0
+    hostname: webwf.org
+    container_name: mock-wf-exe
+    networks:
+      - eoepca_network
+  #    ports:
+  #      - "9999:80"
+
+  mock-pep:
+    build:
+      context: test/mock/pep
+      dockerfile: Dockerfile
+    image: mock-pep
+    hostname: mock-pep.org
+    container_name: mock-pep
+    networks:
+      - eoepca_network
+
   ades:
     build:
       context: .
       dockerfile: Dockerfile
-    image: eoepca/proc-ades:build
+    image: proc-ades:build
     container_name: ades
     networks:
       - eoepca_network
@@ -17,6 +43,14 @@ services:
     volumes:
       # configuration volume
       - ./config:/var/etc/ades:ro
+      # da rimuovere - ./:/work
+      - ./:/work
+    links:
+      - mock-wf-exe
+      - mock-pep
+    depends_on:
+      - mock-wf-exe
+      - mock-pep
 
 networks:
   eoepca_network:
@@ -29,3 +63,4 @@ networks:
 # docker-compose stop
 #sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml up
 #sudo /usr/local/bin/docker-compose -f docker-compose-dev.yml rm
+#  docker exec -ti -e COLUMNS="`tput cols`" -e LINES="`tput lines`" ades  bash

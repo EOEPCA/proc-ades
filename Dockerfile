@@ -2,12 +2,12 @@ FROM proc-comm-zoo:1.0
 
 COPY 3ty/workflow_executor /usr/local/workflow_executor
 
-RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
-ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-RUN conda config --add channels eoepca
-RUN conda config --add channels conda-forge
-RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
-RUN cd /usr/local/workflow_executor/ && python setup.py install
+# RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
+# ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
+# RUN conda config --add channels eoepca
+# RUN conda config --add channels conda-forge
+# RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
+# RUN cd /usr/local/workflow_executor/ && python setup.py install
 
 WORKDIR /
 
