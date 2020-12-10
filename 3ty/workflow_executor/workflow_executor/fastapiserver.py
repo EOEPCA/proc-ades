@@ -211,10 +211,10 @@ def read_execute(content: ExecuteContent, response: Response):
 
     cwlResourceRequirement = helpers.getCwlResourceRequirement(cwl_content)
     if cwlResourceRequirement:
-        if cwlResourceRequirement["ramMax"]:
+        if "ramMax" in cwlResourceRequirement:
             print(f"setting ramMax to {cwlResourceRequirement['ramMax']}Mi as specified in the CWL")
             max_ram = f"{cwlResourceRequirement['ramMax']}Mi"
-        if cwlResourceRequirement["coresMax"]:
+        if "coresMax" in cwlResourceRequirement:
             print(f"setting coresMax to {cwlResourceRequirement['coresMax']} as specified in the CWL")
             max_cores = str(cwlResourceRequirement["coresMax"])
 
