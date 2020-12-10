@@ -86,10 +86,10 @@ def read_prepare(content: PrepareContent, response: Response):
     cwlResourceRequirement = helpers.getCwlResourceRequirement(content.cwl)
 
     if cwlResourceRequirement:
-        if cwlResourceRequirement["tmpdirMax"]:
+        if "tmpdirMax" in cwlResourceRequirement:
             print(f"setting tmpdirMax to {cwlResourceRequirement['tmpdirMax']} as specified in the CWL")
             tmpVolumeSize = f"{cwlResourceRequirement['tmpdirMax']}Mi"
-        if cwlResourceRequirement["outdirMax"]:
+        if "outdirMax" in cwlResourceRequirement:
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
@@ -248,6 +248,7 @@ def read_execute(content: ExecuteContent, response: Response):
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
+
 
     return {"jobID": workflow_name}
 

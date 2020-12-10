@@ -18,7 +18,6 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, s
     core_api_instance = client.CoreV1Api(api_client=apiclient)
 
     # for further details check https://github.com/Duke-GCB/calrissian/blob/master/examples/ViewResultsJob.yaml
-
     jobname = f"{workflowname}-view-results"
 
     yamlFileTemplate = "CarlrissianViewResults.yaml"
