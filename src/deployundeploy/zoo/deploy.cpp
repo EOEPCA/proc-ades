@@ -24,6 +24,19 @@
 
 #include "../../templates/pepresources.hpp"
 
+
+
+static std::string replaceStr(std::string &str, const std::string &from,
+                                const std::string &to) {
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos +=
+                to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
+
 std::string authorizationBearer(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
     if (eoUserMap){
@@ -528,7 +541,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             xml->startElement("result");
             xml->writeAttribute("applicationPackageFile", owsOri);
 
-            std::string finalPath, cwlRef, zooRef;
+            std::string finalPath, cwlRef, zooRef,service_name_to_build;
             for (auto &single : out) {
                 xml->startElement("operations");
                 {
@@ -572,12 +585,19 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
                                     xml->startElement("status");
                                     if (!fileExist(zooRef.c_str())) {
+
+                                        service_name_to_build=zoo->getIdentifier();
+                                        replaceStr(service_name_to_build, ".", "_");
+                                        replaceStr(service_name_to_build, "-", "_");
+
                                         std::string COMPILE =
                                                 ("make -C " + buildPath +  " USERPATH=\"" +user->getPath() +"\" COMPILE=\"" +
-                                                 zoo->getIdentifier() + "\"  1>&2  ");
+                                                        service_name_to_build + "\"  SERVICENAMEFILE=\"" + zoo->getIdentifier()  + "\"    1>&2  ");
 
-                                        std::cerr << "***" << COMPILE << "\n";
+                                        std::cerr << "\n*** COMPILE SERVICE 2: " << COMPILE << "\n";
                                         int COMPILERES = system((char *)COMPILE.c_str());
+                                        std::cerr << "\n*** COMPILE SERVICE END: " << COMPILE << "\n";
+//                                        service_name_to_build.append(".zo");
 
                                         if (usepep){
 
@@ -613,7 +633,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                     if (!fileExist(zooRef.c_str())) {
                                         removeFile(finalPath.c_str());
                                         removeFile(cwlRef.c_str());
-                                        removeFile(zooRef.c_str());
+                                        removeFile(service_name_to_build.c_str());
                                         throw std::runtime_error("Error during the building phase!");
                                     }
 
@@ -696,7 +716,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         }
 
     } catch (std::runtime_error &err) {
-        std::cerr << err.what();
+        std::cerr << "catch...." << err.what();
         setStatus(conf, "failed", err.what());
         updateStatus(conf, 100, err.what() );
         return setZooError(conf, err.what(), "NoApplicableCode");
