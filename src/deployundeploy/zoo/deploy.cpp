@@ -457,8 +457,8 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             std::cerr << " Operation::UNDEPLOY----\n";
             auto found = owsOri.find("://");
             if (found == std::string::npos) {
-                if (owsOri == "eoepcaadesundeployprocess" || owsOri == "GetStatus" ||
-                    owsOri == "eoepcaadesdeployprocess") {
+                if (owsOri == "UndeployProcess" || owsOri == "GetStatus" ||
+                    owsOri == "DeployProcess") {
                     std::string err("The service ");
                     err.append(owsOri).append(" cannot be removed");
                     throw std::runtime_error(err);
@@ -733,7 +733,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 }
 extern "C" {
 
-ZOO_DLL_EXPORT int eoepcaadesdeployprocess(maps *&conf, maps *&inputs,
+ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
                                            maps *&outputs){
     dumpMaps(inputs);
     dumpMaps(conf);
@@ -741,7 +741,7 @@ ZOO_DLL_EXPORT int eoepcaadesdeployprocess(maps *&conf, maps *&inputs,
     return job(conf, inputs, outputs, Operation::DEPLOY);
 }
 
-ZOO_DLL_EXPORT int eoepcaadesundeployprocess(maps *&conf, maps *&inputs,
+ZOO_DLL_EXPORT int UndeployProcess(maps *&conf, maps *&inputs,
                                              maps *&outputs) {
     dumpMaps(inputs);
     dumpMaps(conf);

@@ -484,7 +484,7 @@ webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
     wfexe::SingleResult msgWeb= nlohmann::json::parse(buffer);
     std::cerr << "buffer: " << buffer<<"\n";
 
-    outPutList.emplace_back("wf_output",msgWeb.result);
+    outPutList.emplace_back("wf_outputs",msgWeb.result);
 
   }else {
     parseError(buffer);

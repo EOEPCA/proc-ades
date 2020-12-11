@@ -2507,7 +2507,7 @@ runRequest (map ** inputs)
           strcasecmp(cgiRequestMethod,"post")==0
         ){
 
-          cgiQueryString="/processes/eoepcaadesdeployprocess/jobs";
+          cgiQueryString="/processes/DeployProcess/jobs";
     }
 
 //    if((
@@ -2519,7 +2519,7 @@ runRequest (map ** inputs)
 //
 //
 //          //cgiRequestMethod="post";
-//          cgiQueryString="/processes/eoepcaadesundeployprocess/jobs";
+//          cgiQueryString="/processes/UndeployProcess/jobs";
 //    }
 
 
@@ -2668,8 +2668,8 @@ runRequest (map ** inputs)
       getUserWorkspacePath(m,ntmp,newPath,1024);
       
       if (
-        strcmp(cIdentifier,"eoepcaadesdeployprocess")==0 || 
-        strcmp(cIdentifier,"eoepcaadesundeployprocess")==0
+        strcmp(cIdentifier,"DeployProcess")==0 ||
+        strcmp(cIdentifier,"UndeployProcess")==0
       ){
          memset(newPath,'\0',1024);
          strcpy(newPath,ntmp);

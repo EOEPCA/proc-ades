@@ -1,6 +1,6 @@
-[eoepcaadesdeployprocess]
-	Title = Eoepca Deploy Process
-	Abstract = This method will deploy an application encapsulated within a Docker container as a process accessible through the WPS interface.
+[UndeployProcess]
+	Title = Undeploy Process
+	Abstract = This method will undeploy a deployed processing service.
 	processVersion = 1.0.0
 	storeSupported = true
 	statusSupported = true
@@ -8,8 +8,8 @@
 	serviceProvider = libepcatransactional.zo
 <DataInputs>
 	[applicationPackage]
-	Title = Application Package
-	Abstract = An application package, encoded as an ATOM-encoded OGC context document, describing the details of the application.
+	Title = Identifier
+	Abstract = Identifier of the service to be removed
 	minOccurs = 1
 	maxOccurs = 1
 	<ComplexData>
@@ -19,16 +19,13 @@
 		<Supported>
 			MimeType = application/atom+xml
 		</Supported>
-		<Supported>
-			MimeType = application/cwl
-		</Supported>
 	</ComplexData>
 </DataInputs>
 
 <DataOutputs>
-	[deployResult]
-	Title = Deploy Result
-	Abstract = The server's response to deploying a process.  A successful response will contain a summary of the deployed process.
+	[unDeployResult]
+	Title = UnDeploy Result
+	Abstract = The server's response to undeploying a process. A successful response will contain a summary of the removed process.
 <ComplexOutput>
 	<Default>
 		encoding = ISO-8859-1
@@ -40,6 +37,8 @@
 	</Supported>
 </ComplexOutput>
 </DataOutputs>
+
+
 
 
 
