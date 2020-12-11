@@ -1767,7 +1767,13 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute = (execute_t) GetProcAddress (so, fname);
 #else
               typedef int (*execute_t) (char ***, char ***, char ***);
+
+              char* nS = zStrdup(fname);
+              replace_char(nS,'.','_');
+              replace_char(nS,'-','_');
+              fprintf(stderr,"service from %s to %s\n",fname,nS);
               execute_t execute = (execute_t) dlsym (so, fname);
+              free(nS);
 #endif
 #ifdef DEBUG
 #ifdef WIN32
@@ -1825,6 +1831,7 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
                   replace_char(nS,'-','_');
                   fprintf(stderr,"service from %s to %s\n",r_inputs->value,nS);
                   execute_t execute = (execute_t) dlsym (so, nS);
+                  free(nS);
 #endif
 
               if (execute == NULL)
