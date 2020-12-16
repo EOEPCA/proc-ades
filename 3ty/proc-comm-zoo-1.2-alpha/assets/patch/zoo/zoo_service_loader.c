@@ -2605,7 +2605,9 @@ runRequest (map ** inputs)
       zDup2 (saved_stdout, fileno (stdout));
       zClose(saved_stdout);
       
-      json_object_object_add(res,"processes",res3);
+//      json_object_object_add(res,"processes",res3); //rdr
+    json_object_put(res);//rdr
+    res = res3;//rdr
     }else{
       service* s1=NULL;
       int t=0;
