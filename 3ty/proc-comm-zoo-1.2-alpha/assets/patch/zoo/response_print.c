@@ -2553,8 +2553,13 @@ void printExceptionReportResponse(maps* m,map* s){
        strcmp(tmp->value,"NoApplicableCode")==0)
       exceptionCode="501 Not Implemented";
     else
-      if(strcmp(tmp->value,"MissingParameterValue")==0 ||
-	 strcmp(tmp->value,"InvalidUpdateSequence")==0 ||
+        //rdr/*
+        if(strcmp(tmp->value,"MissingParameterValue")==0){
+            exceptionCode="404 Not Found";
+        }
+        //rdr*/
+    else
+      if(strcmp(tmp->value,"InvalidUpdateSequence")==0 ||
 	 strcmp(tmp->value,"OptionNotSupported")==0 ||
 	 strcmp(tmp->value,"VersionNegotiationFailed")==0 ||
 	 strcmp(tmp->value,"InvalidParameterValue")==0)
