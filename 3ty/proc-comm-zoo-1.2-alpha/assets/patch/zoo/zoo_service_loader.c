@@ -2765,7 +2765,7 @@ runRequest (map ** inputs)
 			 _
 			 ("The value for <identifier> seems to be wrong (%s). Please specify one of the processes in the list returned by a GetCapabilities request."),
 			 r_inputs->value);
-		map* error=createMap("code","InvalidParameterValue");
+		map* error=createMap("code","NotFound");//EOEPCA-237
 		addToMap(error,"message",tmpMsg);
 		//setMapInMaps(conf,"lenv","status_code","404 Bad Request");
 		printExceptionReportResponseJ(m,error);
