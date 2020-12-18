@@ -104,8 +104,6 @@ workflowExecutor:
   processingMaxCores: "2"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: "False"
-    # includes terradue.docker.com docker credentials
-  t2cred: "True"
   #  custom stagein cwl
   stageincwl: "files/stageincwl.cwl"
 

@@ -75,10 +75,8 @@ spec:
               value: {{ .Values.workflowExecutor.processingMaxCores | quote }}
             - name: JOB_KEEPWORKSPACE
               value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
-            - name: T2CRED
-              value: {{ .Values.workflowExecutor.t2cred | quote }}
-            - name: ADES_WFEXEC_STAGEIN_CWL
-              value: /var/etc/ades/stageincwl.cwl
+ 
+
 
           volumeMounts:
             - name: ades-config
