@@ -102,9 +102,10 @@ workflowExecutor:
   # Max number of CPU cores to use concurrently for a job
   processingMaxCores: "8"
   # if false the Ades will clean the volume after the workflow has successfully finished running
-  processingKeepWorkspace: "false"
+  processingKeepWorkspace: false
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
+
   #  custom stagein cwl
   stageincwl: "files/stageincwl.cwl"
 

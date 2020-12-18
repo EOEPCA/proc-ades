@@ -82,7 +82,6 @@ spec:
               value: /var/etc/ades/stageincwl.cwl
             - name: IMAGE_PULL_SECRETS
               value: /var/etc/ades/ppImagePullSecrets.json
-
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
