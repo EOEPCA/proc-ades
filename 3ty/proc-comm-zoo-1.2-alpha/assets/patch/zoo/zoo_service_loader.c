@@ -252,6 +252,16 @@ int dumpBackFinalFile(maps* m,char* fbkp,char* fbkp1)
   return 1;
 }
 
+char* replace_char(char* str, char find, char replace){
+    char *current_pos = strchr(str,find);
+    while (current_pos){
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
+}
+
+
 //rdr
 int mkpath(char *file_path, mode_t mode) {
   // assert(file_path && *file_path);
@@ -1757,7 +1767,13 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute = (execute_t) GetProcAddress (so, fname);
 #else
               typedef int (*execute_t) (char ***, char ***, char ***);
+
+              char* nS = zStrdup(fname);
+              replace_char(nS,'.','_');
+              replace_char(nS,'-','_');
+              fprintf(stderr,"service from %s to %s\n",fname,nS);
               execute_t execute = (execute_t) dlsym (so, fname);
+              free(nS);
 #endif
 #ifdef DEBUG
 #ifdef WIN32
@@ -1810,7 +1826,12 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute =
                 (execute_t) GetProcAddress (so, r_inputs->value);
 #else
-              execute_t execute = (execute_t) dlsym (so, r_inputs->value);
+                  char* nS = zStrdup(r_inputs->value);
+                  replace_char(nS,'.','_');
+                  replace_char(nS,'-','_');
+                  fprintf(stderr,"service from %s to %s\n",r_inputs->value,nS);
+                  execute_t execute = (execute_t) dlsym (so, nS);
+                  free(nS);
 #endif
 
               if (execute == NULL)
@@ -2486,7 +2507,7 @@ runRequest (map ** inputs)
           strcasecmp(cgiRequestMethod,"post")==0
         ){
 
-          cgiQueryString="/processes/eoepcaadesdeployprocess/jobs";
+          cgiQueryString="/processes/DeployProcess/jobs";
     }
 
 //    if((
@@ -2498,7 +2519,7 @@ runRequest (map ** inputs)
 //
 //
 //          //cgiRequestMethod="post";
-//          cgiQueryString="/processes/eoepcaadesundeployprocess/jobs";
+//          cgiQueryString="/processes/UndeployProcess/jobs";
 //    }
 
 
@@ -2584,7 +2605,9 @@ runRequest (map ** inputs)
       zDup2 (saved_stdout, fileno (stdout));
       zClose(saved_stdout);
       
-      json_object_object_add(res,"processes",res3);
+//      json_object_object_add(res,"processes",res3); //rdr
+    json_object_put(res);//rdr
+    res = res3;//rdr
     }else{
       service* s1=NULL;
       int t=0;
@@ -2647,8 +2670,8 @@ runRequest (map ** inputs)
       getUserWorkspacePath(m,ntmp,newPath,1024);
       
       if (
-        strcmp(cIdentifier,"eoepcaadesdeployprocess")==0 || 
-        strcmp(cIdentifier,"eoepcaadesundeployprocess")==0
+        strcmp(cIdentifier,"DeployProcess")==0 ||
+        strcmp(cIdentifier,"UndeployProcess")==0
       ){
          memset(newPath,'\0',1024);
          strcpy(newPath,ntmp);
@@ -2744,7 +2767,7 @@ runRequest (map ** inputs)
 			 _
 			 ("The value for <identifier> seems to be wrong (%s). Please specify one of the processes in the list returned by a GetCapabilities request."),
 			 r_inputs->value);
-		map* error=createMap("code","InvalidParameterValue");
+		map* error=createMap("code","NotFound");//EOEPCA-237
 		addToMap(error,"message",tmpMsg);
 		//setMapInMaps(conf,"lenv","status_code","404 Bad Request");
 		printExceptionReportResponseJ(m,error);

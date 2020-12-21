@@ -1,6 +1,6 @@
-[eoepcaadesundeployprocess]
-	Title = Eoepca Deploy Process
-	Abstract = This method will undeploy an application encapsulated within a Docker container as a process accessible through the WPS interface.
+[DeployProcess]
+	Title = Deploy Process
+	Abstract = This method will deploy an application package to create a process accessible through a WPS interface.
 	processVersion = 1.0.0
 	storeSupported = true
 	statusSupported = true
@@ -19,13 +19,16 @@
 		<Supported>
 			MimeType = application/atom+xml
 		</Supported>
+		<Supported>
+			MimeType = application/cwl
+		</Supported>
 	</ComplexData>
 </DataInputs>
 
 <DataOutputs>
-	[unDeployResult]
+	[deployResult]
 	Title = Deploy Result
-	Abstract = The server's response to undeploying a process.  A successful response will contain a summary of the removed process.
+	Abstract = The server's response to deploying a process. A successful response will contain a summary of the deployed process.
 <ComplexOutput>
 	<Default>
 		encoding = ISO-8859-1
@@ -37,8 +40,6 @@
 	</Supported>
 </ComplexOutput>
 </DataOutputs>
-
-
 
 
 
