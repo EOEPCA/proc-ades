@@ -69,6 +69,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     delete_line_by_full_match(wrapped_cwl_document, "  stdout: std.out")
 
     workflow_id = helpers.getCwlWorkflowId(cwl_document)
+    wrapped_cwl_workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json)
     cwl_input_json["workflow"]=workflow_id
@@ -114,7 +115,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
                      "tmpdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
                      "outdir": f"{path.join(mount_folder, 'output-data', workflow_name)}/",
                      "argument1": path.join(mount_folder, "input-data", workflow_name,
-                                            f"{cwlDocumentFilename}#{workflow_id}"),
+                                            f"{cwlDocumentFilename}#{wrapped_cwl_workflow_id}"),
                      "argument2": path.join(mount_folder, "input-data", workflow_name, jsonInputFilename),
                      "cwl_file_path": path.join(mount_folder, "input-data", workflow_name, f"{cwlDocumentFilename}"),
                      "inputs_file_path": path.join(mount_folder, "input-data", workflow_name, jsonInputFilename),
