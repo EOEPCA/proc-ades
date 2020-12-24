@@ -68,9 +68,11 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     delete_line_by_full_match(wrapped_cwl_document, "  stderr: std.err")
     delete_line_by_full_match(wrapped_cwl_document, "  stdout: std.out")
 
-    workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
+    workflow_id = helpers.getCwlWorkflowId(cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json)
+    cwl_input_json["workflow"]=workflow_id
+    cwl_input_json["process"]=workflow_name
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
