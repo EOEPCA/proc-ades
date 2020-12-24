@@ -96,7 +96,8 @@ RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.s
 ENV PATH="/opt/miniconda/bin:$PATH"
 RUN conda config --add channels eoepca
 RUN conda config --add channels conda-forge
-RUN conda install python-kubernetes click fastapi uvicorn cwl-wrapper
+RUN conda install python-kubernetes click fastapi uvicorn
+RUN conda install -c eoepca/label/dev cwl-wrapper
 RUN cd /usr/local/workflow_executor/ && python setup.py install
 
 # COPY assets/main.cfg /opt/t2service/main.cfg
