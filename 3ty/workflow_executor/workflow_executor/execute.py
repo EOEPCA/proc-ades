@@ -153,6 +153,7 @@ def wrapcwl(cwl_document, cwl_wrapper_config=None):
         k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config['maincwl'] else None
         k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config['stagein'] else None
         k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config['stageout'] else None
+        k['assets'] = None
     else:
         k = dict()
         k['cwl'] = cwl_document
@@ -161,6 +162,7 @@ def wrapcwl(cwl_document, cwl_wrapper_config=None):
         k['maincwl'] = None
         k['stagein'] = None
         k['stageout'] = None
+        k['assets'] = None
 
     wf = Parser(k)
     wf.write_output()
