@@ -94,9 +94,7 @@ steps:
             position: 1
             prefix: --process
           type: string
-      outputs:
-        results:
-          type: stdout
+      outputs: {}
       requirements:
         EnvVarRequirement:
           envDef:

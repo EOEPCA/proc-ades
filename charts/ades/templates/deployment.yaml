@@ -80,8 +80,8 @@ spec:
               value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
             - name: ADES_WFEXEC_MAINCWL
               value: /var/etc/ades/maincwl.cwl
-            - name: T2CRED
-              value: {{ .Values.workflowExecutor.t2cred | quote }}
+            - name: IMAGE_PULL_SECRETS
+              value: /var/etc/ades/ppImagePullSecrets.json
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades

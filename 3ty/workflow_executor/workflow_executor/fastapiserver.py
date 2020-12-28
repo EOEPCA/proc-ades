@@ -93,8 +93,14 @@ def read_prepare(content: PrepareContent, response: Response):
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
-    # get t2regcred variable
-    t2cred = os.getenv("T2CRED", False)
+
+    ades_namespace = os.getenv('ADES_NAMESPACE', None)
+
+    # image pull secrets
+    image_pull_secrets_json = os.getenv('IMAGE_PULL_SECRETS', None)
+    if image_pull_secrets_json is not None:
+        with open(image_pull_secrets_json) as json_file:
+            image_pull_secrets = json.load(json_file)
 
     print('namespace: %s' % prepare_id)
     print(f"tmpVolumeSize: {tmpVolumeSize}")
@@ -106,7 +112,8 @@ def read_prepare(content: PrepareContent, response: Response):
                                                     outputVolumeSize=outputVolumeSize,
                                                     volumeName=volumeName, state=state,
                                                     storage_class_name=storage_class_name,
-                                                    t2cred=t2cred)
+                                                    imagepullsecrets=image_pull_secrets,
+                                                    ades_namespace=ades_namespace)
     except ApiException as e:
         response.status_code = e.status
 
@@ -164,6 +171,7 @@ def read_execute(content: ExecuteContent, response: Response):
     cwl_wrapper_config["stagein"] = os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
     cwl_wrapper_config["stageout"] = os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
     cwl_wrapper_config["rulez"] = os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
+
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
