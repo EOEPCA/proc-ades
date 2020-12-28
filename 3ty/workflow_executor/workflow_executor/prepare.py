@@ -200,15 +200,14 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
     if imagepullsecrets is not None and ades_namespace is not None:
         for imagepullsecret in imagepullsecrets:
             # Create an instance of the API class
-
-            name = imagepullsecret['name']  # str | name of the Secret
+            secretname = imagepullsecret["name"]
             pretty = True  # str | If 'true', then the output is pretty printed. (optional)
             exact = False  # bool | Should the export be exact.  Exact export maintains cluster-specific fields like 'Namespace'. Deprecated. Planned for removal in 1.18. (optional)
             export = True  # bool | Should this value be exported.  Export strips fields that a user can not specify. Deprecated. Planned for removal in 1.18. (optional)
 
             secret_export = None
             try:
-                secret_export = v1.read_namespaced_secret(name, ades_namespace, pretty=pretty, exact=exact, export=export)
+                secret_export = v1.read_namespaced_secret(secretname, ades_namespace, pretty=pretty, exact=exact, export=export)
             except ApiException as e:
                 print("Exception when retrieving t2cred secret from eoepca: %s\n" % e)
 
@@ -219,16 +218,15 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
                 print("Exception when creating t2cred secret: %s\n" % e)
 
             time.sleep(5)
-            secretname = 't2regcred'  # str | name of the Secret
+
             name = 'default'
-            body = '{"imagePullSecrets": [{"name": "t2regcred"}]}'
             try:
                 service_account_body = v1.read_namespaced_service_account(name, namespace, pretty=True)
                 pprint(api_response)
                 time.sleep(5)
 
-                service_account_body.secrets.append({"name": "t2regcred"})
-                service_account_body.image_pull_secrets.append({"name": "t2regcred"})
+                service_account_body.secrets.append({"name": secretname})
+                service_account_body.image_pull_secrets.append({"name": secretname})
 
                 api_response = v1.patch_namespaced_service_account(name, namespace, service_account_body, pretty=True)
                 pprint(api_response)
