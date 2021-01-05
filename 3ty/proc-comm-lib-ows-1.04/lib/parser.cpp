@@ -214,6 +214,7 @@ class NamespaceCWL {
   std::string stac_{""};
   std::string opensearch_{""};
   std::string ows_{""};
+  std::string schema_org_{""};
 
  public:
   NamespaceCWL() = delete;
@@ -226,6 +227,7 @@ class NamespaceCWL {
         if (a->getF() == XMLNS_STAC) this->stac_ = a->getQ();
         if (a->getF() == XMLNS_OWS) this->ows_ = a->getQ();
         if (a->getF() == XMLNS_OPENSEARCH) this->opensearch_ = a->getQ();
+        if (a->getF() == XMLNS_SCHEMA_ORG) this->schema_org_ = a->getQ();
       }
     }
   }
@@ -236,6 +238,7 @@ class NamespaceCWL {
   const std::string& getStac() const { return stac_; }
   const std::string& getOpensearch() const { return opensearch_; }
   const std::string& getOws() const { return ows_; }
+  const std::string& getSchemaOrg() const { return schema_org_; }
 };
 
 const std::string& Parser::getName() const { return name; }
@@ -712,20 +715,44 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering) {
             processDescription->setTitle("NotDefined");
           }
 
-          if (!namespaceCWL->getOws().empty()) {
-            std::string owsVersion{namespaceCWL->getOws()};
-            owsVersion.append(":version");
+//@Deprecated old method
+//           if (!namespaceCWL->getOws().empty()) {
+//             std::string owsVersion{namespaceCWL->getOws()};
+//             owsVersion.append(":version");
 
-            processDescription->setVersion(
-                pWorkflow->findAndReturnF(owsVersion, "", false));
-            if (processDescription->getVersion().empty()) {
+//             processDescription->setVersion(
+//                 pWorkflow->findAndReturnF(owsVersion, "", false));
+//             if (processDescription->getVersion().empty()) {
+// //              dumpCWLMODEL(pWorkflow,0);
+//               std::string err{"Workflow version empty."};
+//               throw std::runtime_error(err);
+//             }
+//           }
 
-//              dumpCWLMODEL(pWorkflow,0);
+        if (namespaceCWL && !namespaceCWL->getSchemaOrg().empty()){
+            // echo <<  namespaceCWL->getSchemaOrg() << "\n";
+            //  sprintf(flenv, "%s/%s_lenv.cfg", r_inputs->value, usid->value);
+            auto softwareVersionName = std::make_unique<char[]>(1024);
+            std::memset(softwareVersionName.get(), '\0', 1024);
 
-              std::string err{"Workflow version empty."};
-              throw std::runtime_error(err);
+            sprintf(softwareVersionName.get(), SOFTWARE_VERSION,namespaceCWL->getSchemaOrg().c_str() );
+
+            auto nSoftVer = cwl->find(std::string(softwareVersionName.get()), "");
+            if (nSoftVer){
+
+              if (nSoftVer->getF().empty()){
+                processDescription->setVersion("1.0");
+              }else{
+                processDescription->setVersion(nSoftVer->getF());
+              }
+              
+            }else{
+              processDescription->setVersion("1.0");
             }
-          }
+            
+        }else{
+          processDescription->setVersion("1.0");
+        }
 
           if (processDescription->getAbstract().empty()) {
             if (!processDescription->getTitle().empty()) {
