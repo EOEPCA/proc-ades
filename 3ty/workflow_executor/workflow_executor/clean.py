@@ -8,13 +8,15 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 import sys
 
+from workflow_executor import helpers
+
 
 def run(namespace):
     try:
 
         # create an instance of the API class
-        config.load_kube_config()
-        api_instance = client.CoreV1Api(client.ApiClient())
+        api_client = helpers.get_api_client()
+        api_instance = client.CoreV1Api(api_client)
         resp = api_instance.delete_namespace(name=namespace,pretty=True)
         return resp
 

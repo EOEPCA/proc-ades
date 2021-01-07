@@ -92,5 +92,6 @@
         "unordered_set": "cpp"
     },
     "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true
+    "python.linting.pylintEnabled": true,
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

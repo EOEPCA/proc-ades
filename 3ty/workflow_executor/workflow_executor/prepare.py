@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -10,10 +11,10 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_name=None,
+def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_name=None, imagepullsecrets=None,ades_namespace=None,
         state=None):
     print(
-        f"Preparing {namespace}  inputVolumeSize: {inputVolumeSize}  tmpVolumeSize: {tmpVolumeSize} outputVolumeSize: {outputVolumeSize}  volumeName: {volumeName}")
+        f"Preparing {namespace} tmpVolumeSize: {tmpVolumeSize} outputVolumeSize: {outputVolumeSize}  volumeName: {volumeName}")
 
     apiclient = helpers.get_api_client()
     api_instance = client.RbacAuthorizationV1Api(apiclient)
@@ -143,20 +144,20 @@ def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName,
     print("####################################")
     print("######### Creating Persistent Volume Claims")
 
-    metadata1 = client.V1ObjectMeta(name=f"{volumeName}-input-data", namespace=namespace)
-    spec1 = client.V1PersistentVolumeClaimSpec(
-        # must be ReadWriteOnce for EBS
-        # access_modes=["ReadWriteOnce", "ReadOnlyMany"],
-        access_modes=["ReadWriteMany"],
-        resources=client.V1ResourceRequirements(
-            requests={"storage": inputVolumeSize}
-        )
-    )
-
-    if storage_class_name:
-        spec1.storage_class_name = storage_class_name
-
-    body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
+    # metadata1 = client.V1ObjectMeta(name=f"{volumeName}-input-data", namespace=namespace)
+    # spec1 = client.V1PersistentVolumeClaimSpec(
+    #     # must be ReadWriteOnce for EBS
+    #     # access_modes=["ReadWriteOnce", "ReadOnlyMany"],
+    #     access_modes=["ReadWriteMany"],
+    #     resources=client.V1ResourceRequirements(
+    #         requests={"storage": inputVolumeSize}
+    #     )
+    # )
+    #
+    # if storage_class_name:
+    #     spec1.storage_class_name = storage_class_name
+    #
+    # body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
 
     metadata2 = client.V1ObjectMeta(name=f"{volumeName}-tmpout", namespace=namespace)
     spec2 = client.V1PersistentVolumeClaimSpec(
@@ -185,15 +186,52 @@ def run(namespace, inputVolumeSize, tmpVolumeSize, outputVolumeSize, volumeName,
 
     pretty = True
     try:
-        api_response1 = v1.create_namespaced_persistent_volume_claim(namespace, body1, pretty=pretty)
+        #    api_response1 = v1.create_namespaced_persistent_volume_claim(namespace, body1, pretty=pretty)
         api_response2 = v1.create_namespaced_persistent_volume_claim(namespace, body2, pretty=pretty)
         api_response3 = v1.create_namespaced_persistent_volume_claim(namespace, body3, pretty=pretty)
-        pprint(api_response1)
+        #    pprint(api_response1)
         pprint(api_response2)
         pprint(api_response3)
     except ApiException as e:
         print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
         raise e
+
+    # t2cred variable is set to true, we copy the one t2cred secret from eoepca to the new namespace
+    if imagepullsecrets is not None and ades_namespace is not None:
+        for imagepullsecret in imagepullsecrets:
+            # Create an instance of the API class
+            secretname = imagepullsecret["name"]
+            pretty = True  # str | If 'true', then the output is pretty printed. (optional)
+            exact = False  # bool | Should the export be exact.  Exact export maintains cluster-specific fields like 'Namespace'. Deprecated. Planned for removal in 1.18. (optional)
+            export = True  # bool | Should this value be exported.  Export strips fields that a user can not specify. Deprecated. Planned for removal in 1.18. (optional)
+
+            secret_export = None
+            try:
+                secret_export = v1.read_namespaced_secret(secretname, ades_namespace, pretty=pretty, exact=exact, export=export)
+            except ApiException as e:
+                print("Exception when retrieving t2cred secret from eoepca: %s\n" % e)
+
+            time.sleep(5)
+            try:
+                api_response = v1.create_namespaced_secret(namespace, secret_export, pretty=pretty)
+            except ApiException as e:
+                print("Exception when creating t2cred secret: %s\n" % e)
+
+            time.sleep(5)
+
+            name = 'default'
+            try:
+                service_account_body = v1.read_namespaced_service_account(name, namespace, pretty=True)
+                pprint(api_response)
+                time.sleep(5)
+
+                service_account_body.secrets.append({"name": secretname})
+                service_account_body.image_pull_secrets.append({"name": secretname})
+
+                api_response = v1.patch_namespaced_service_account(name, namespace, service_account_body, pretty=True)
+                pprint(api_response)
+            except ApiException as e:
+                print("Exception when calling CoreV1Api->patch_namespaced_service_account: %s\n" % e)
 
     return {"status": "success"}
 

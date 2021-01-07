@@ -15,8 +15,7 @@ from cwl_wrapper.parser import Parser
 from io import StringIO
 
 
-def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, outputFolder, namespace, state=None):
-    print(job_input_json_file)
+def process_inputs(cwl_document, job_input_json_file):
     job_input_json = json.load(open(job_input_json_file))
 
     print("parsing cwl")
@@ -55,7 +54,7 @@ def process_inputs(cwl_document, job_input_json_file, volume_name_prefix, output
     return inputs
 
 
-def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name, cleanJob=True,
+def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name,
         max_ram="4G", max_cores="2", cwl_wrapper_config=None, state=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
@@ -69,10 +68,12 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     delete_line_by_full_match(wrapped_cwl_document, "  stderr: std.err")
     delete_line_by_full_match(wrapped_cwl_document, "  stdout: std.out")
 
-    workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
+    workflow_id = helpers.getCwlWorkflowId(cwl_document)
+    wrapped_cwl_workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
-    cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json, volume_name_prefix,
-                                    path.join(mount_folder, "input-data", workflow_name), namespace, state=state)
+    cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json)
+    cwl_input_json["workflow"]=workflow_id
+    cwl_input_json["process"]=workflow_name
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
@@ -82,10 +83,12 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open("/tmp/inputs.json", "w")
     f.write(json.dumps(cwl_input_json))
     f.close()
-    helpers.copy_files_to_volume(sources=[wrapped_cwl_document, tmppath],
-                                 targetFolder=path.join(mount_folder, workflow_name), mountFolder=mount_folder,
-                                 persistentVolumeClaimName=input_volume_name, namespace=namespace, state=state,
-                                 workflow_name=workflow_name)
+
+    cwl_config = "cwl-config"
+    inputs_config = "inputs-config"
+    helpers.create_configmap(source=wrapped_cwl_document, namespace=namespace, configmap_name=cwl_config,
+                             dataname="cwl")
+    helpers.create_configmap(source=tmppath, namespace=namespace, configmap_name=inputs_config, dataname="inputs")
 
     os.remove(tmppath)
 
@@ -96,16 +99,11 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     apiclient = helpers.get_api_client()
     api_instance = client.BatchV1Api(apiclient)
 
-
-
     yamlFileTemplate = "CalrissianJobTemplate.yaml"
 
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
         print(f"Customizing stage-in job using the template {yamlFileTemplate} ")
-
-        # for the moment these 2 variables are hardcoded
-        # TODO make these 2 variables configurable
 
         template = Template(f.read())
         variables = {"jobname": workflow_name,
@@ -117,10 +115,10 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
                      "tmpdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
                      "outdir": f"{path.join(mount_folder, 'output-data', workflow_name)}/",
                      "argument1": path.join(mount_folder, "input-data", workflow_name,
-                                            f"{cwlDocumentFilename}#{workflow_id}"),
+                                            f"{cwlDocumentFilename}#{wrapped_cwl_workflow_id}"),
                      "argument2": path.join(mount_folder, "input-data", workflow_name, jsonInputFilename),
-                     "volumemount_input_data_mount_path": path.join(mount_folder, "input-data"),
-                     "volumemount_input_data_name": input_volume_name,
+                     "cwl_file_path": path.join(mount_folder, "input-data", workflow_name, f"{cwlDocumentFilename}"),
+                     "inputs_file_path": path.join(mount_folder, "input-data", workflow_name, jsonInputFilename),
                      "volumemount_tmpout_mount_path": path.join(mount_folder, "tmpout"),
                      "volumemount_tmpout_name": tmpout_volume_name,
                      "volumemount_output_data_mount_path": path.join(mount_folder, "output-data"),
@@ -156,6 +154,7 @@ def wrapcwl(cwl_document, cwl_wrapper_config=None):
         k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config['maincwl'] else None
         k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config['stagein'] else None
         k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config['stageout'] else None
+        k['assets'] = None
     else:
         k = dict()
         k['cwl'] = cwl_document
@@ -164,6 +163,7 @@ def wrapcwl(cwl_document, cwl_wrapper_config=None):
         k['maincwl'] = None
         k['stagein'] = None
         k['stageout'] = None
+        k['assets'] = None
 
     wf = Parser(k)
     wf.write_output()

@@ -78,7 +78,6 @@ def read_prepare(content: PrepareContent, response: Response):
     default_tmpVolumeSize = "4Gi"
     default_outputVolumeSize = "5Gi"
 
-    inputVolumeSize = os.getenv('VOLUME_INPUT_SIZE', default_inputVolumeSize)
     tmpVolumeSize = os.getenv('VOLUME_TMP_SIZE', default_tmpVolumeSize)
     outputVolumeSize = os.getenv('VOLUME_OUTPUT_SIZE', default_outputVolumeSize)
 
@@ -87,24 +86,34 @@ def read_prepare(content: PrepareContent, response: Response):
     cwlResourceRequirement = helpers.getCwlResourceRequirement(content.cwl)
 
     if cwlResourceRequirement:
-        if cwlResourceRequirement["tmpdirMax"]:
+        if "tmpdirMax" in cwlResourceRequirement:
             print(f"setting tmpdirMax to {cwlResourceRequirement['tmpdirMax']} as specified in the CWL")
             tmpVolumeSize = f"{cwlResourceRequirement['tmpdirMax']}Mi"
-        if cwlResourceRequirement["outdirMax"]:
+        if "outdirMax" in cwlResourceRequirement:
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
+
+    ades_namespace = os.getenv('ADES_NAMESPACE', None)
+
+    # image pull secrets
+    image_pull_secrets_json = os.getenv('IMAGE_PULL_SECRETS', None)
+    if image_pull_secrets_json is not None:
+        with open(image_pull_secrets_json) as json_file:
+            image_pull_secrets = json.load(json_file)
+
     print('namespace: %s' % prepare_id)
-    print(f"inputVolumeSize: {inputVolumeSize}")
     print(f"tmpVolumeSize: {tmpVolumeSize}")
     print(f"outputVolumeSize: {outputVolumeSize}")
     print('volume_name: %s' % volumeName)
 
     try:
-        resp_status = workflow_executor.prepare.run(namespace=prepare_id, inputVolumeSize=inputVolumeSize,
-                                                    tmpVolumeSize=tmpVolumeSize, outputVolumeSize=outputVolumeSize,
+        resp_status = workflow_executor.prepare.run(namespace=prepare_id, tmpVolumeSize=tmpVolumeSize,
+                                                    outputVolumeSize=outputVolumeSize,
                                                     volumeName=volumeName, state=state,
-                                                    storage_class_name=storage_class_name)
+                                                    storage_class_name=storage_class_name,
+                                                    imagepullsecrets=image_pull_secrets,
+                                                    ades_namespace=ades_namespace)
     except ApiException as e:
         response.status_code = e.status
 
@@ -152,7 +161,7 @@ def read_execute(content: ExecuteContent, response: Response):
     namespace = content.prepareID
     cwl_content = content.cwl
     inputs_content = json.loads(content.inputs)
-    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}volume")
+    volume_name_prefix = sanitize_k8_parameters(f"{content.serviceID}-volume")
     workflow_name = sanitize_k8_parameters(f"wf-{content.runID}")
     mount_folder = "/workflow"
 
@@ -162,6 +171,7 @@ def read_execute(content: ExecuteContent, response: Response):
     cwl_wrapper_config["stagein"] = os.getenv('ADES_WFEXEC_STAGEIN_CWL', None)
     cwl_wrapper_config["stageout"] = os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
     cwl_wrapper_config["rulez"] = os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
+
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
@@ -209,10 +219,10 @@ def read_execute(content: ExecuteContent, response: Response):
 
     cwlResourceRequirement = helpers.getCwlResourceRequirement(cwl_content)
     if cwlResourceRequirement:
-        if cwlResourceRequirement["ramMax"]:
+        if "ramMax" in cwlResourceRequirement:
             print(f"setting ramMax to {cwlResourceRequirement['ramMax']}Mi as specified in the CWL")
             max_ram = f"{cwlResourceRequirement['ramMax']}Mi"
-        if cwlResourceRequirement["coresMax"]:
+        if "coresMax" in cwlResourceRequirement:
             print(f"setting coresMax to {cwlResourceRequirement['coresMax']} as specified in the CWL")
             max_cores = str(cwlResourceRequirement["coresMax"])
 
@@ -241,12 +251,12 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
                                                         cwl_wrapper_config=cwl_wrapper_config,
-                                                        cleanJob=True,
                                                         max_ram=max_ram,
                                                         max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
+
 
     return {"jobID": workflow_name}
 
@@ -300,7 +310,7 @@ Returns workflow result
 def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
-    volume_name_prefix = sanitize_k8_parameters(f"{service_id}volume")
+    volume_name_prefix = sanitize_k8_parameters(f"{service_id}-volume")
     mount_folder = "/workflow"
     outputfile = f"{workflow_name}.res"
 

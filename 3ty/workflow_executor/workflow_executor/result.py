@@ -1,106 +1,70 @@
-import json
+import sys
 import time
 from os import path
 from pprint import pprint
 
-from kubernetes import client, config
+import yaml
+from jinja2 import Template
+from kubernetes import client
 from kubernetes.client.rest import ApiException
-from kubernetes.stream import stream
-import sys
 
 from workflow_executor import helpers
 
 
 def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, state=None):
+    # create an instance of the API class
+    apiclient = helpers.get_api_client()
+    batch_api_instance = client.BatchV1Api(api_client=apiclient)
+    core_api_instance = client.CoreV1Api(api_client=apiclient)
+
+    # for further details check https://github.com/Duke-GCB/calrissian/blob/master/examples/ViewResultsJob.yaml
+    jobname = f"{workflowname}-view-results"
+
+    yamlFileTemplate = "CarlrissianViewResults.yaml"
+    with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
+
+        print(f"Customizing stage-in job using the template {yamlFileTemplate} ")
+        template = Template(f.read())
+        variables = {
+            "jobname": jobname,
+            "mount_folder": mount_folder,
+            "workflowname": workflowname,
+            "outputfile": outputfile,
+            "outputVolumeClaimName": f"{volume_name_prefix}-output-data",
+        }
+
+    yaml_modified = template.render(variables)
+
+    body = yaml.safe_load(yaml_modified)
+    pprint(body)
+
     try:
+        resp = batch_api_instance.create_namespaced_job(body=body, namespace=namespace)
+        print("Job created. status='%s'" % str(resp.status))
+    except ApiException as e:
+        print("Exception when submitting job: %s\n" % e, file=sys.stderr)
+        return e
 
-        # create an instance of the API class
-        apiclient = helpers.get_api_client()
-        api_instance = client.CoreV1Api(api_client=apiclient)
+    # wait for job to finish
+    count=0
+    ret = batch_api_instance.read_namespaced_job(name=jobname, namespace=namespace)
+    while not ret.status.conditions and count < 10:
+        time.sleep(3)
+        ret = batch_api_instance.read_namespaced_job(name=jobname, namespace=namespace)
+        count += 1
+    # get pod from job
+    try:
+        podlist = core_api_instance.list_namespaced_pod(namespace=namespace, label_selector=f"job-name={jobname}")
+        pod = podlist.items[0].metadata.name
+    except ApiException as e:
+        print("Exception listing pods: %s\n" % e)
+        raise e
 
-        name = f"{workflowname}-copy-pod"
-        resp = None
-        try:
-            resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
-        except ApiException as e:
-            if e.status != 404:
-                print("Exception when reading copy-pod: %s\n" % e, file=sys.stderr)
-                raise e
-
-        if not resp:
-            print("Pod %s does not exist. Creating it..." % name)
-            pod_manifest = {
-                'apiVersion': 'v1',
-                'kind': 'Pod',
-                'metadata': {
-                    'name': name,
-                },
-                'spec': {
-                    'volumes': [{
-                        'name': f"{workflowname}-output-data",
-                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-output-data"}
-                    },{
-                        'name': f"{workflowname}-input-data",
-                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-input-data"}
-                    },{
-                        'name': f"{workflowname}-tmpout",
-                        'persistentVolumeClaim': {'claimName': f"{volume_name_prefix}-tmpout"}
-                    }],
-                    'containers': [{
-                        'image': 'busybox',
-                        'name': 'sleep',
-                        "args": [
-                            "/bin/sh",
-                            "-c",
-                            "while true;do date;sleep 2; done"
-                        ],
-                        "volumeMounts": [{
-                            'mountPath': f"{mount_folder}/output-data",
-                            'name': f"{workflowname}-output-data"
-                        },
-                        {
-                            'mountPath': f"{mount_folder}/input-data",
-                            'name': f"{workflowname}-input-data"
-                        },
-                        {
-                            'mountPath': f"{mount_folder}/tmpout",
-                            'name': f"{workflowname}-tmpout"
-                        }]
-                    }]
-                }
-            }
-
-            print(f"Retrieving {outputfile}")
-            resp = api_instance.create_namespaced_pod(body=pod_manifest, namespace=namespace)
-            while True:
-                resp = api_instance.read_namespaced_pod(name=name, namespace=namespace)
-                if resp.status.phase != 'Pending':
-                    break
-                time.sleep(1)
-            
-
-
-
-        # Calling exec and waiting for response
-        exec_command = [
-            '/bin/sh',
-            '-c',
-            f"cat {mount_folder}/output-data/{workflowname}/*/{outputfile} >&2"]
-        resp = stream(api_instance.connect_get_namespaced_pod_exec,
-                      name,
-                      namespace,
-                      command=exec_command,
-                      stderr=True, stdin=False,
-                      stdout=True, tty=False)
-        pprint(f"resp cat {mount_folder}/{workflowname}/*/{outputfile}      {resp}" )
-        if "cat: can't open" in resp:
-            raise ApiException(status=404,reason=f"Result output for job {workflowname} was not found. {resp}")
-
-        if not resp:
-            print(f"couldn't not find {mount_folder}/{workflowname}/*/{outputfile}")
-
-        print("Retrieving {outputfile} success")    
-
-        return eval(resp)
-    finally:
-        resp = api_instance.delete_namespaced_pod(name=name, namespace=namespace)
+    # get pod log
+    try:
+        print(f"retrieving logs of {pod}")
+        result = core_api_instance.read_namespaced_pod_log(name=pod, namespace=namespace, container="view-results")
+    except ApiException as e:
+        print("Exception when retrieving result from output volume: %s\n" % e)
+        raise e
+    return eval(result)

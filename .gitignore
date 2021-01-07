@@ -67,4 +67,5 @@ charts/ades/values.eoepca-ref.terradue.yaml
 charts/ades/values.eoepca-ref.terradue.yaml
 # workflow executor test not yet ready
 3ty/workflow_executor/workflow_executor/test/
+charts/ades/files/maincwlmetrics.cwl
 *.pytest-kind
