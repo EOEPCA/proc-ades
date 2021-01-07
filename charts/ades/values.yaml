@@ -107,7 +107,7 @@ workflowExecutor:
   imagePullSecrets: []
 
   #  custom stagein cwl
-  stageincwl: "files/stageincwl.cwl"
+  # stageincwl: "files/stageincwl.cwl"
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
