@@ -196,7 +196,7 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
         print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
         raise e
 
-    # t2cred variable is set to true, we copy the one t2cred secret from eoepca to the new namespace
+    # we copy the secret from ades namespace to the new job namespace
     if imagepullsecrets is not None and ades_namespace is not None:
         for imagepullsecret in imagepullsecrets:
             # Create an instance of the API class
@@ -209,13 +209,13 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
             try:
                 secret_export = v1.read_namespaced_secret(secretname, ades_namespace, pretty=pretty, exact=exact, export=export)
             except ApiException as e:
-                print("Exception when retrieving t2cred secret from eoepca: %s\n" % e)
+                print("Exception when retrieving image pull secret from eoepca: %s\n" % e)
 
             time.sleep(5)
             try:
                 api_response = v1.create_namespaced_secret(namespace, secret_export, pretty=pretty)
             except ApiException as e:
-                print("Exception when creating t2cred secret: %s\n" % e)
+                print("Exception when creating image pull secret: %s\n" % e)
 
             time.sleep(5)
 
