@@ -43,6 +43,7 @@ class FastApiTestCase(unittest.TestCase):
         os.environ["STORAGE_HOST"] = "https://nx10438.your-storageshare.de/"
         os.environ["STORAGE_USERNAME"] = "eoepca-demo-storage"
         os.environ["STORAGE_APIKEY"] = "FakeApiKey"
+        os.environ["IMAGE_PULL_SECRETS"]="imagepullsecrets.json"
 
     def test_step1_get_root(self):
         response = self.client.get("/")

@@ -23,7 +23,7 @@ $graph:
         type: Directory
     requirements:
       ResourceRequirement:
-        ramMax: 1024
+        ramMax: 4096
         coresMax: 2
         tmpdirMax: 5120
         outdirMax: 5120

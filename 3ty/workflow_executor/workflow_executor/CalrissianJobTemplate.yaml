@@ -27,8 +27,6 @@ spec:
             - "--tmp-outdir-prefix"
             - "{{tmp_outdir_prefix}}"
             - "--debug"
-            - "--tmpdir-prefix"
-            - "{{tmpdir_prefix}}"
             - "--leave-tmpdir"
             - "--leave-container"
             - "--no-read-only"
@@ -37,12 +35,16 @@ spec:
             - "{{argument1}}"
             - "{{argument2}}"
           volumeMounts:
-            - mountPath: {{volumemount_input_data_mount_path}}
-              name: {{volumemount_input_data_name}}
             - mountPath: {{volumemount_tmpout_mount_path}}
               name: {{volumemount_tmpout_name}}
             - mountPath: {{volumemount_output_data_mount_path}}
               name: {{volumemount_output_data_name}}
+            - name: cwl-config-volume
+              mountPath: {{cwl_file_path}}
+              subPath: cwl
+            - name: inputs-config-volume
+              mountPath: {{inputs_file_path}}
+              subPath: inputs
           env:
             - name: CALRISSIAN_POD_NAME
               valueFrom:
@@ -51,12 +53,15 @@ spec:
 
       restartPolicy: Never
       volumes:
-        - name: {{volumemount_input_data_name}}
-          persistentVolumeClaim:
-            claimName: {{volumemount_input_data_name}}
         - name: {{volumemount_tmpout_name}}
           persistentVolumeClaim:
             claimName: {{volumemount_tmpout_name}}
         - name: {{volumemount_output_data_name}}
           persistentVolumeClaim:
             claimName: {{volumemount_output_data_name}}
+        - name: cwl-config-volume
+          configMap:
+            name: cwl-config
+        - name: inputs-config-volume
+          configMap:
+            name: inputs-config
