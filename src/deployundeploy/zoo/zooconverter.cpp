@@ -289,8 +289,10 @@ std::string ZooJob::getUniqueService() const {
     throw std::runtime_error(err);
   }
 
-//  std::string ig(identifier + "_" + processVersion);
-  std::string ig(identifier);
+std::string newVersion = processVersion;
+innerReplace(newVersion, ".", "_");
+ std::string ig(identifier + "-" + newVersion);
+// std::string ig(identifier);
 
 //  innerReplace(ig, ".", "_");
 //  innerReplace(ig, "-", "_");
