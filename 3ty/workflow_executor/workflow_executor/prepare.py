@@ -226,10 +226,10 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
                 time.sleep(5)
 
 
-                if "secrets" not in service_account_body.keys():
+                if "secrets" not in service_account_body:
                     service_account_body["secrets"] = []
 
-                if "image_pull_secrets" not in service_account_body.keys():
+                if "image_pull_secrets" not in service_account_body:
                     service_account_body["image_pull_secrets"] = []
 
                 service_account_body.secrets.append({"name": secretname})
