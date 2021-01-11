@@ -225,6 +225,13 @@ def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_na
                 pprint(api_response)
                 time.sleep(5)
 
+
+                if "secrets" not in service_account_body.keys():
+                    service_account_body["secrets"] = []
+
+                if "image_pull_secrets" not in service_account_body.keys():
+                    service_account_body["image_pull_secrets"] = []
+
                 service_account_body.secrets.append({"name": secretname})
                 service_account_body.image_pull_secrets.append({"name": secretname})
 
