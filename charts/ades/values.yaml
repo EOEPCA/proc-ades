@@ -106,8 +106,18 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
 
-  #  custom stagein cwl
+  #  custom main cwl
   # stageincwl: "files/stageincwl.cwl"
+  
+  #  custom stagein cwl
+  # stageincwl: "files/stageincwl.cwl"  
+  
+  #  custom stageout cwl
+  # stageincwl: "files/stageoutcwl.cwl"
+
+  #  custom rulez cwl
+  # stageincwl: "files/rulezcwl.cwl"
+
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"

@@ -78,6 +78,14 @@ spec:
               value: {{ .Values.workflowExecutor.processingMaxCores | quote }}
             - name: JOB_KEEPWORKSPACE
               value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
+            - name: ADES_WFEXEC_MAINCWL
+              value: /var/etc/ades/maincwl.cwl
+            - name: ADES_WFEXEC_STAGEIN_CWL
+              value: /var/etc/ades/stageincwl.cwl
+            - name: ADES_WFEXEC_STAGEOUT_CWL
+              value: /var/etc/ades/stageoutcwl.cwl
+            - name: ADES_WFEXEC_RULEZ_CWL
+              value: /var/etc/ades/rulezcwl.cwl
             - name: IMAGE_PULL_SECRETS
               value: /var/etc/ades/ppImagePullSecrets.json
           volumeMounts:
