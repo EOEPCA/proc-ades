@@ -7,7 +7,7 @@ services:
 
   mock-wf-exe:
     build:
-      context: mock/webinterface
+      context: webinterface
       dockerfile: Dockerfile
     image: mock-wf-exe:1.0
     hostname: webwf.org
@@ -19,7 +19,7 @@ services:
 
   mock-pep:
     build:
-      context: mock/pep
+      context: pep
       dockerfile: Dockerfile
     image: mock-pep
     hostname: mock-pep.org
