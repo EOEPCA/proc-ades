@@ -197,7 +197,37 @@ def read_execute(content: ExecuteContent, response: Response):
         "value": os.getenv('STORAGE_APIKEY', default_value),
         "mimeType": "",
         "href": ""})
-
+    inputs_content["inputs"].append({
+        "id": "stage_in_username",
+        "dataType": "string",
+        "value": os.getenv('STAGEIN_USERNAME', default_value),
+        "mimeType": "",
+        "href": ""})
+    inputs_content["inputs"].append({
+        "id": "stage_in_password",
+        "dataType": "string",
+        "value": os.getenv('STAGEIN_PASSWORD', default_value),
+        "mimeType": "",
+        "href": ""})        
+    inputs_content["inputs"].append({
+        "id": "stage_in_s3_endpoint",
+        "dataType": "string",
+        "value": os.getenv('STAGEIN_S3_ENDPOINT', default_value),
+        "mimeType": "",
+        "href": ""})
+    inputs_content["inputs"].append({
+        "id": "stage_in_s3_region",
+        "dataType": "string",
+        "value": os.getenv('STAGEIN_S3_REGION_NAME', default_value),
+        "mimeType": "",
+        "href": ""})
+    inputs_content["inputs"].append({
+        "id": "stage_in_s3_signature_version",
+        "dataType": "string",
+        "value": os.getenv('STAGEIN_S3_SIGNATURE_VERSION', default_value),
+        "mimeType": "",
+        "href": ""}) 
+                       
     inputs_content["inputs"].append({
         "id": "job",
         "dataType": "string",

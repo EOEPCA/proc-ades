@@ -107,16 +107,16 @@ workflowExecutor:
   imagePullSecrets: []
 
   #  custom main cwl
-  # stageincwl: "files/stageincwl.cwl"
+  stageincwl: ""
   
   #  custom stagein cwl
-  # stageincwl: "files/stageincwl.cwl"  
+  stageincwl: ""
   
   #  custom stageout cwl
-  # stageincwl: "files/stageoutcwl.cwl"
+  stageincwl: ""
 
   #  custom rulez cwl
-  # stageincwl: "files/rulezcwl.cwl"
+  stageincwl: ""
 
 
 wps:

@@ -60,6 +60,16 @@ spec:
             {{- end }}
             - name: ADES_NAMESPACE
               value: {{ .Release.Namespace }}
+            - name: STAGEIN_USERNAME
+              value: {{ .Values.workflowExecutor.stageInUsername | quote }}
+            - name: STAGEIN_PASSWORD
+              value: {{ .Values.workflowExecutor.stageInPassword | quote }}
+            - name: STAGEIN_S3_ENDPOINT
+              value: {{ .Values.workflowExecutor.stageInS3Endpoint | quote }}              
+            - name: STAGEIN_S3_REGION_NAME
+              value: {{ .Values.workflowExecutor.stageInS3RegionName | quote }}
+            - name: STAGEIN_S3_SIGNATURE_VERSION
+              value: {{ .Values.workflowExecutor.stageInS3SignatureVersion | quote }}
             - name: STORAGE_HOST
               value: {{ .Values.workflowExecutor.storageHost | quote }}
             - name: STORAGE_USERNAME
