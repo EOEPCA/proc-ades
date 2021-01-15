@@ -149,11 +149,11 @@ def wrapcwl(cwl_document, cwl_wrapper_config=None):
     if cwl_wrapper_config:
         k = dict()
         k['cwl'] = cwl_document
-        k['rulez'] = cwl_wrapper_config['rulez'] if cwl_wrapper_config['rulez'] and cwl_wrapper_config['rulez'] != "" else None
+        k['rulez'] = cwl_wrapper_config['rulez'] if cwl_wrapper_config.get("rulez") is not None and str(cwl_wrapper_config.get("rulez")).replace(" ", "") != '' else None
         k['output'] = wrappedcwl
-        k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config['maincwl'] and cwl_wrapper_config['maincwl'] != "" else None
-        k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config['stagein'] and cwl_wrapper_config['stagein'] != "" else None
-        k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config['stageout'] and cwl_wrapper_config['stageout'] != "" else None
+        k['maincwl'] = cwl_wrapper_config['maincwl'] if cwl_wrapper_config.get("maincwl") is not None and str(cwl_wrapper_config.get("maincwl")).replace(" ", "") != '' else None
+        k['stagein'] = cwl_wrapper_config['stagein'] if cwl_wrapper_config.get("stagein") is not None and str(cwl_wrapper_config.get("stagein")).replace(" ", "") != '' else None
+        k['stageout'] = cwl_wrapper_config['stageout'] if cwl_wrapper_config.get("stageout") is not None and str(cwl_wrapper_config.get("stageout")).replace(" ", "") != '' else None
         k['assets'] = None
     else:
         k = dict()
