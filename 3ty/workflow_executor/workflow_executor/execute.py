@@ -42,12 +42,18 @@ def process_inputs(cwl_document, job_input_json_file):
                 if "[]" in type:
                     if k not in inputs.keys():
                         inputs[k] = []
-                    # inputs[k].append(input['input']['value'])
-                    inputs[k].append(input['value'])
+                    
+                    if "value" in input:
+                        inputs[k].append(input['value'])
+                    else:
+                        inputs[k].append(input['href'])
                 else:
                     inputs[k] = {}
-                    # inputs[k] = input['input']['value']
-                    inputs[k] = input['value']
+
+                    if "value" in input:
+                        inputs[k].append(input['value'])
+                    else:
+                        inputs[k].append(input['href']
 
     print("Input json to pass to the cwl runner: ")
     pprint(inputs)
