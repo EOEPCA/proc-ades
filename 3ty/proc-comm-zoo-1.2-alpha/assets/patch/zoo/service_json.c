@@ -674,7 +674,21 @@ extern "C" {
    */
   void parseJComplex(maps* conf,json_object* req,elements* element,maps* output,const char* name){
     json_object* json_cinput=NULL;
-    if(json_object_object_get_ex(req,"value",&json_cinput)!=FALSE){
+    
+    
+    if (json_object_object_get_ex(req,"href",&json_cinput)!=FALSE){
+	  output->content=createMap("xlink:href",json_object_get_string(json_cinput));
+	  int len=0;
+	  int createdStr=0;
+	  char *tmpStr="url";
+	  char *tmpStr1="input";
+	  if(getMaps(conf,"http_requests")==NULL){
+	    maps* tmpMaps=createMaps("http_requests");
+	    tmpMaps->content=createMap("length","1");
+	    freeMaps(&tmpMaps);
+	    free(tmpMaps);
+      }
+    } else if(json_object_object_get_ex(req,"value",&json_cinput)!=FALSE){
       json_object* json_value=NULL;
       if(json_object_object_get_ex(json_cinput,"inlineValue",&json_value)!=FALSE)
 	output->content=createMap("value",json_object_get_string(json_value));
