@@ -106,17 +106,11 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
 
-  #  custom main cwl
+  #  custom cwls
   stageincwl: ""
-  
-  #  custom stagein cwl
-  stageincwl: ""
-  
-  #  custom stageout cwl
-  stageincwl: ""
-
-  #  custom rulez cwl
-  stageincwl: ""
+  stageoutcwl: ""
+  maincwl: ""
+  rulezcwl: ""
 
 
 wps:
