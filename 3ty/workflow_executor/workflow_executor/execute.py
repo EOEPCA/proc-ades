@@ -43,14 +43,14 @@ def process_inputs(cwl_document, job_input_json_file):
                     if k not in inputs.keys():
                         inputs[k] = []
                     
-                    if "value" in input:
+                    if "value" in input and input['value'] != "":
                         inputs[k].append(input['value'])
                     else:
                         inputs[k].append(input['href'])
                 else:
                     inputs[k] = {}
 
-                    if "value" in input:
+                    if "value" in input and input['value'] != "":
                         inputs[k].append(input['value'])
                     else:
                         inputs[k].append(input['href']
