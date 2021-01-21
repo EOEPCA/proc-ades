@@ -10,6 +10,7 @@ from workflow_executor import prepare, client, result, clean, helpers
 from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
+import yaml
 
 app = FastAPI(
     title="the title",
@@ -172,62 +173,22 @@ def read_execute(content: ExecuteContent, response: Response):
     cwl_wrapper_config["stageout"] = os.getenv('ADES_WFEXEC_STAGEOUT_CWL', None)
     cwl_wrapper_config["rulez"] = os.getenv('ADES_WFEXEC_RULEZ_CWL', None)
 
+    # read ADES config variables
+    with open(os.getenv('ADES_CWL_INPUTS', None)) as f:
+        cwl_inputs = yaml.load(f, Loader=yaml.FullLoader)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
     default_value = ""
 
-    inputs_content["inputs"].append({
-        "id": "store_host",
-        "dataType": "string",
-        "value": os.getenv('STORAGE_HOST', default_value),
-        "mimeType": "",
-        "href": ""})
+    for k, v in cwl_inputs.items():
+        inputs_content["inputs"].append({
+            "id": "ADES_"+k,
+            "dataType": "string",
+            "value": v,
+            "mimeType": "",
+            "href": ""})
 
-    inputs_content["inputs"].append({
-        "id": "store_username",
-        "dataType": "string",
-        "value": os.getenv('STORAGE_USERNAME', default_value),
-        "mimeType": "",
-        "href": ""})
-
-    inputs_content["inputs"].append({
-        "id": "store_apikey",
-        "dataType": "string",
-        "value": os.getenv('STORAGE_APIKEY', default_value),
-        "mimeType": "",
-        "href": ""})
-    inputs_content["inputs"].append({
-        "id": "stage_in_username",
-        "dataType": "string",
-        "value": os.getenv('STAGEIN_USERNAME', default_value),
-        "mimeType": "",
-        "href": ""})
-    inputs_content["inputs"].append({
-        "id": "stage_in_password",
-        "dataType": "string",
-        "value": os.getenv('STAGEIN_PASSWORD', default_value),
-        "mimeType": "",
-        "href": ""})        
-    inputs_content["inputs"].append({
-        "id": "stage_in_s3_endpoint",
-        "dataType": "string",
-        "value": os.getenv('STAGEIN_S3_ENDPOINT', default_value),
-        "mimeType": "",
-        "href": ""})
-    inputs_content["inputs"].append({
-        "id": "stage_in_s3_region",
-        "dataType": "string",
-        "value": os.getenv('STAGEIN_S3_REGION_NAME', default_value),
-        "mimeType": "",
-        "href": ""})
-    inputs_content["inputs"].append({
-        "id": "stage_in_s3_signature_version",
-        "dataType": "string",
-        "value": os.getenv('STAGEIN_S3_SIGNATURE_VERSION', default_value),
-        "mimeType": "",
-        "href": ""}) 
-                       
     inputs_content["inputs"].append({
         "id": "job",
         "dataType": "string",
