@@ -51,9 +51,9 @@ def process_inputs(cwl_document, job_input_json_file):
                     inputs[k] = {}
 
                     if "value" in input and input['value'] != "":
-                        inputs[k].append(input['value'])
+                        inputs[k]=input['value']
                     else:
-                        inputs[k].append(input['href'])
+                        inputs[k]=input['href']
 
     print("Input json to pass to the cwl runner: ")
     pprint(inputs)
