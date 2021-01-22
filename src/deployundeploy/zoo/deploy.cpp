@@ -439,6 +439,8 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     }
     std::cerr<< "\nstep: " << ++steps << "\n";
     if (!applicationPackageZooMap && !applicationPackageZooMapHref) {
+        setStatus(conf, "failed", "applicationPackage empty()");
+        updateStatus(conf, 100, "applicationPackage empty()");
         return setZooError(conf, "applicationPackage empty()", "NoApplicableCode");
     }
 
@@ -653,10 +655,15 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             break;
                                         }
                                         case DeployResults::EXIST: {
-                                            xml->writeAttribute("err", "2");
-                                            xml->writeAttribute("message", "Service already installed");
-                                            xml->writeContent("not ready");
-                                            break;
+
+                                            setStatus(conf, "failed", "Service already installed");
+                                            updateStatus(conf, 100, "Service already installed");
+                                            return setZooError(conf, "Service already installed", "NoApplicableCode");
+
+                                            // xml->writeAttribute("err", "2");
+                                            // xml->writeAttribute("message", "Service already installed");
+                                            // xml->writeContent("not ready");
+                                            // break;
                                         }
                                     }
                                     xml->endElement();
