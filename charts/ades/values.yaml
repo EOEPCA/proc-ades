@@ -118,6 +118,7 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
 
+
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
   usePep: "false"

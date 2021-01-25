@@ -341,7 +341,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
 
     int steps = 0;
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     std::map<std::string, std::string> confMain;
     getT2ConfigurationFromZooMapConfig(conf, "main", confMain);
 
@@ -352,25 +352,25 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         return setZooError(conf, message, "NoApplicableCode");
     }
 
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     if (confMain["servicePath"].empty()) {
         std::string message{"zoo servicePath empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     if (confEoepca["userworkspace"].empty()) {
         std::string message{"zoo userworkspace empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     if (*confEoepca["userworkspace"].rbegin() != '/') {
         confEoepca["userworkspace"].append("/");
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     std::map<std::string, std::string> userEoepca;
     getT2ConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
 
@@ -387,7 +387,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     for(auto& [k,q]:userEoepca){
         fprintf(stderr, "-----> %s,%s  \n",k.c_str(),q.c_str());
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+    
     if (userEoepca["grant"].empty()) {
         std::string message{"Grants for this user are not  defined"};
         setStatus(conf, "failed", message.c_str());
@@ -403,7 +403,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             updateStatus(conf, 100, message.c_str());
             return setZooError(conf, message, "NoApplicableCode");
         }
-        std::cerr<< "\nstep: " << ++steps << "\n";
+        
         std::cerr << "user: "<< userEoepca["user"] << " grants: "  << grant << "\n";
 
         if(grant.at(2) == '-'){
@@ -415,7 +415,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         }
 
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+
     auto resU=user->prepareUserWorkspace();
     if (!resU.empty()){
         std::string message{resU};
@@ -437,8 +437,10 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     if (applicationPackageZooMimeTypeMap){
         theMimeType=applicationPackageZooMimeTypeMap->value;
     }
-    std::cerr<< "\nstep: " << ++steps << "\n";
+
     if (!applicationPackageZooMap && !applicationPackageZooMapHref) {
+        setStatus(conf, "failed", "applicationPackage empty()");
+        updateStatus(conf, 100, "applicationPackage empty()");
         return setZooError(conf, "applicationPackage empty()", "NoApplicableCode");
     }
 
@@ -450,7 +452,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     if (applicationPackageZooMapHref)
         owsOri=applicationPackageZooMapHref->value;
 
-    std::cerr<< "\nstep: " << ++steps << "\n";
+
     try {
 
         if (operation == Operation::UNDEPLOY) {
@@ -653,10 +655,15 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             break;
                                         }
                                         case DeployResults::EXIST: {
-                                            xml->writeAttribute("err", "2");
-                                            xml->writeAttribute("message", "Service already installed");
-                                            xml->writeContent("not ready");
-                                            break;
+
+                                            setStatus(conf, "failed", "Service already installed");
+                                            updateStatus(conf, 100, "Service already installed");
+                                            return setZooError(conf, "Service already installed", "NoApplicableCode");
+
+                                            // xml->writeAttribute("err", "2");
+                                            // xml->writeAttribute("message", "Service already installed");
+                                            // xml->writeContent("not ready");
+                                            // break;
                                         }
                                     }
                                     xml->endElement();

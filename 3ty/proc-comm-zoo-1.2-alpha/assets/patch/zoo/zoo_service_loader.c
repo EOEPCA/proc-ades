@@ -3019,10 +3019,16 @@ runRequest (map ** inputs)
 	      }else{
 		loadHttpRequests(m,inputs_real_format);
 		loadServiceAndRun (&m,s1,request_inputs,&inputs_real_format,&outputs_real_format,&eres);
-		res=printJResult(m,s1,outputs_real_format,eres);
-	      
+		res=printJResult(m,s1,outputs_real_format,eres);	  
+    createStatusFile(m,eres);
 		printHeaders(m);
-		printf("Status: 201 Created \r\n\r\n");
+
+    if (eres==SERVICE_SUCCEEDED){
+      printf("Status: 201 Created \r\n\r\n");
+    }else{
+      printf("Status: 500 failed \r\n\r\n");
+    }
+		
 		const char* jsonStr=json_object_to_json_string_ext(res,JSON_C_TO_STRING_PLAIN);
 		printf(jsonStr);
 		printf("\n");
