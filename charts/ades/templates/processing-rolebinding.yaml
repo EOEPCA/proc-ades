@@ -4,7 +4,7 @@ metadata:
   name: {{ include "ades.fullname" . }}-processing
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-processing-manager
+    name: {{ .Release.Name }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

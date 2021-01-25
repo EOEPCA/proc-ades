@@ -1,0 +1,9 @@
+output_destination: s3://sentinel-1/
+aws_service_url: https://api.charter.uat.esaportal.eu
+aws_profile: minio
+aws_profiles_location:
+  class: File
+  path: /home/emathot/.aws/credentials
+input:
+  class: File
+  path: /home/emathot/Workspace/Terradue/Projects/EOEPCA/proc-ades/docker-compose.yml

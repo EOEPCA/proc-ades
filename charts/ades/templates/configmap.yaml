@@ -9,7 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
 data:
   ppImagePullSecrets.json: {{  toJson .Values.workflowExecutor.imagePullSecrets | quote }}
-  kubeconfig: {{ tpl (.Files.Get .Values.workflowExecutor.kubeconfig) . | quote }}
+  kubeconfig: {{ tpl .Values.workflowExecutor.kubeconfig . | quote }}
   maincfg: {{ tpl (.Files.Get .Values.wps.maincfgtpl) . | quote }}
   main.cwl: {{ required "A valid .Values.Values.workflowExecutor.main.cwl entry required!" (tpl (.Values.workflowExecutor.main.cwl) . | quote) }}
   stagein.cwl: {{ required "A valid .Values.Values.workflowExecutor.stagein.cwl entry required!" (tpl (.Values.workflowExecutor.stagein.cwl) . | quote) }}

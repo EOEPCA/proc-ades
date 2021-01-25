@@ -1,0 +1,6 @@
+input_reference: [ "https://catalog.terradue.com//sentinel1/series/GRD/search?format=atomeop&uid=S1A_IW_GRDH_1SSH_20201004T173230_20201004T173247_034649_04090D_F0B5" ]
+aws_service_url: https://api.charter.uat.esaportal.eu
+aws_profile: minio
+aws_profiles_location:
+  class: File
+  path: /home/emathot/.aws/credentials

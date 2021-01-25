@@ -84,7 +84,7 @@ useKubeProxy: true
 
 workflowExecutor:
   # Necessary if useKubeProxy set to false
-  # kubeconfig: "files/kubeconfig"
+  kubeconfig: ""
 
   # Here specify fixed inputs to all workflows execution in all stages (main, stage-in/out)
   # They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades'
