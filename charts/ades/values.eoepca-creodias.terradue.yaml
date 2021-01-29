@@ -61,13 +61,35 @@ tolerations: []
 affinity: {}
 useKubeProxy: True
 workflowExecutor:
-  kubeconfig: ""
-  # This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV)
-  storageHost: "https://nx13206.your-storageshare.de/"
-  # store username
-  storageUsername: "eoepca-storage"
-  # store password
-  storageApiKey: "4k8wMajA5ABaYdk"
+  # Necessary if useKubeProxy set to false
+  # kubeconfig: "files/kubeconfig"
+
+  # Here specify fixed inputs to all workflows execution in all stages (main, stage-in/out)
+  # They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades'
+  inputs:
+    APP: ades
+    STAGEIN_AWS_SERVICEURL: http://data.cloudferro.com
+    STAGEIN_AWS_PROFILE: s3creodias
+    STAGEIN_AWS_ACCESS_KEY_ID: ""
+    STAGEIN_AWS_SECRET_ACCESS_KEY: ""
+    STAGEOUT_AWS_SERVICEURL: http://data.cloudferro.com
+    STAGEOUT_AWS_PROFILE: s3creodias
+    STAGEOUT_AWS_ACCESS_KEY_ID: ""
+    STAGEOUT_AWS_SECRET_ACCESS_KEY: ""
+    STAGEOUT_OUTPUT: s3://processing-results
+
+  main:
+    cwl: ""
+
+  stagein:
+    cwl: ""
+
+  stageout:
+    cwl: ""
+
+  rulez:
+    cwl: ""
+
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
   processingStorageClass: managed-nfs-storage 
   # Size of the Kubernetes Tmp Volumes

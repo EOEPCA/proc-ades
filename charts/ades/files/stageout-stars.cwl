@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 baseCommand: Stars
-doc: "Run Stars for staging data"
+doc: "Run Stars for staging results"
 class: CommandLineTool
 hints:
   DockerRequirement:

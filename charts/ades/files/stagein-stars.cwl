@@ -1,6 +1,6 @@
 cwlVersion: v1.0
 baseCommand: Stars
-doc: "Run Stars for staging data"
+doc: "Run Stars for staging input data"
 class: CommandLineTool
 hints:
   DockerRequirement:
@@ -19,12 +19,8 @@ inputs:
     inputBinding:
       position: 6
     type: string[]
-  aws_profile: 
+  ADES_STAGEIN_AWS_SERVICEURL: 
     type: string?
-  aws_service_url:
-    type: string?
-  aws_profiles_location:
-    type: File?
 outputs: {}
 requirements:
   EnvVarRequirement:
@@ -32,5 +28,5 @@ requirements:
       PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       # AWS__Profile: $(inputs.aws_profile)
       # AWS__ProfilesLocation: $(inputs.aws_profiles_location.path)
-      # AWS__ServiceURL: $(inputs.aws_service_url)
+      AWS__ServiceURL: $(inputs.ADES_STAGEIN_AWS_SERVICEURL)
   ResourceRequirement: {}
