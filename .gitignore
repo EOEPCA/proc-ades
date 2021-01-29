@@ -69,3 +69,4 @@ charts/ades/values.eoepca-ref.terradue.yaml
 3ty/workflow_executor/workflow_executor/test/
 charts/ades/files/maincwlmetrics.cwl
 *.pytest-kind
+charts/ades/values.charter-acceptance.terradue.yaml
