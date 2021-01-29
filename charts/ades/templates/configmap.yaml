@@ -15,7 +15,7 @@ data:
   stagein.cwl: {{ required "A valid .Values.Values.workflowExecutor.stagein.cwl entry required!" (tpl (.Values.workflowExecutor.stagein.cwl) . | quote) }}
   stageout.cwl: {{ required "A valid .Values.Values.workflowExecutor.stageout.cwl entry required!" (tpl (.Values.workflowExecutor.stageout.cwl) . | quote) }}
   rulez.cwl: {{ required "A valid .Values.Values.workflowExecutor.rulez.cwl entry required!" (tpl (.Values.workflowExecutor.rulez.cwl) . | quote) }}
-  wfinputs.yaml: {{ .Values.workflowExecutor.inputs }}
+  wfinputs.yaml: {{ toYaml .Values.workflowExecutor.inputs | quote }}
 
 
   
