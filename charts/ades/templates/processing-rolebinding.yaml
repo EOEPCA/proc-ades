@@ -1,10 +1,10 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ include "ades.fullname" . }}-cluster-admin
+  name: {{ include "ades.fullname" . }}-processing
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-processing-manager
+    name: {{ .Release.Name }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

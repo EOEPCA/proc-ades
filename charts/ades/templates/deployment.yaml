@@ -24,7 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ .Release.Name }}-processing-manager
+      serviceAccountName: {{ .Release.Name }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -60,22 +60,8 @@ spec:
             {{- end }}
             - name: ADES_NAMESPACE
               value: {{ .Release.Namespace }}
-            - name: STAGEIN_USERNAME
-              value: {{ .Values.workflowExecutor.stageInUsername | quote }}
-            - name: STAGEIN_PASSWORD
-              value: {{ .Values.workflowExecutor.stageInPassword | quote }}
-            - name: STAGEIN_S3_ENDPOINT
-              value: {{ .Values.workflowExecutor.stageInS3Endpoint | quote }}              
-            - name: STAGEIN_S3_REGION_NAME
-              value: {{ .Values.workflowExecutor.stageInS3RegionName | quote }}
-            - name: STAGEIN_S3_SIGNATURE_VERSION
-              value: {{ .Values.workflowExecutor.stageInS3SignatureVersion | quote }}
-            - name: STORAGE_HOST
-              value: {{ .Values.workflowExecutor.storageHost | quote }}
-            - name: STORAGE_USERNAME
-              value: {{ .Values.workflowExecutor.storageUsername | quote }}
-            - name: STORAGE_APIKEY
-              value: {{ .Values.workflowExecutor.storageApiKey | quote }}
+            - name: ADES_CWL_INPUTS
+              value: /var/etc/ades/wfinputs.yaml
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
             - name: VOLUME_TMP_SIZE
@@ -89,13 +75,13 @@ spec:
             - name: JOB_KEEPWORKSPACE
               value: {{ .Values.workflowExecutor.processingKeepWorkspace | quote }}
             - name: ADES_WFEXEC_MAINCWL
-              value: /var/etc/ades/maincwl.cwl
+              value: /var/etc/ades/main.cwl
             - name: ADES_WFEXEC_STAGEIN_CWL
-              value: /var/etc/ades/stageincwl.cwl
+              value: /var/etc/ades/stagein.cwl
             - name: ADES_WFEXEC_STAGEOUT_CWL
-              value: /var/etc/ades/stageoutcwl.cwl
+              value: /var/etc/ades/stageout.cwl
             - name: ADES_WFEXEC_RULEZ_CWL
-              value: /var/etc/ades/rulezcwl.cwl
+              value: /var/etc/ades/rulez.cwl
             - name: IMAGE_PULL_SECRETS
               value: /var/etc/ades/ppImagePullSecrets.json
           volumeMounts:

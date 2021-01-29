@@ -9,12 +9,13 @@ metadata:
     heritage: {{ .Release.Service }}
 data:
   ppImagePullSecrets.json: {{  toJson .Values.workflowExecutor.imagePullSecrets | quote }}
-  kubeconfig: {{ tpl (.Files.Get .Values.workflowExecutor.kubeconfig) . | quote }}
+  kubeconfig: {{ tpl .Values.workflowExecutor.kubeconfig . | quote }}
   maincfg: {{ tpl (.Files.Get .Values.wps.maincfgtpl) . | quote }}
-  maincwl.cwl: {{ tpl (.Files.Get .Values.workflowExecutor.maincwl) . | quote }}
-  stageincwl.cwl: {{ tpl (.Files.Get .Values.workflowExecutor.stageincwl) . | quote }}
-  stageoutcwl.cwl: {{ tpl (.Files.Get .Values.workflowExecutor.stageoutcwl) . | quote }}
-  rulezcwl.cwl: {{ tpl (.Files.Get .Values.workflowExecutor.rulezcwl) . | quote }}
+  main.cwl: {{ required "A valid .Values.Values.workflowExecutor.main.cwl entry required!" (tpl (.Values.workflowExecutor.main.cwl) . | quote) }}
+  stagein.cwl: {{ required "A valid .Values.Values.workflowExecutor.stagein.cwl entry required!" (tpl (.Values.workflowExecutor.stagein.cwl) . | quote) }}
+  stageout.cwl: {{ required "A valid .Values.Values.workflowExecutor.stageout.cwl entry required!" (tpl (.Values.workflowExecutor.stageout.cwl) . | quote) }}
+  rulez.cwl: {{ required "A valid .Values.Values.workflowExecutor.rulez.cwl entry required!" (tpl (.Values.workflowExecutor.rulez.cwl) . | quote) }}
+  wfinputs.yaml: {{ toYaml .Values.workflowExecutor.inputs | quote }}
 
 
   
