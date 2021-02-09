@@ -68,15 +68,22 @@ workflowExecutor:
   # They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades'
   inputs:
     APP: ades
+
     STAGEIN_AWS_SERVICEURL: http://data.cloudferro.com
-    STAGEIN_AWS_PROFILE: s3creodias
-    STAGEIN_AWS_ACCESS_KEY_ID: ""
-    STAGEIN_AWS_SECRET_ACCESS_KEY: ""
-    STAGEOUT_AWS_SERVICEURL: http://data.cloudferro.com
-    STAGEOUT_AWS_PROFILE: s3creodias
-    STAGEOUT_AWS_ACCESS_KEY_ID: ""
-    STAGEOUT_AWS_SECRET_ACCESS_KEY: ""
-    STAGEOUT_OUTPUT: s3://processing-results
+    STAGEIN_AWS_ACCESS_KEY_ID: test
+    STAGEIN_AWS_SECRET_ACCESS_KEY: test
+
+    STAGEOUT_AWS_SERVICEURL: https://s3.fr-par.scw.cloud
+    #STAGEOUT_AWS_PROFILE: s3creodias
+    STAGEOUT_AWS_ACCESS_KEY_ID: SCW96Y8P089TRZHV9HY2
+    STAGEOUT_AWS_SECRET_ACCESS_KEY: 04c39142-faab-40b6-a9ab-5239805b4e77
+    STAGEOUT_AWS_REGION: fr-par
+    STAGEOUT_OUTPUT: s3://eoepca-ades
+
+ 
+#    STAGEOUT_STORAGE_HOST: https://nx13206.your-storageshare.de/
+#    STAGEOUT_STORAGE_USERNAME: eoepca-storage
+#    STAGEOUT_STORAGE_APIKEY: 4k8wMajA5ABaYdk
 
   main:
     cwl: ""
@@ -93,13 +100,13 @@ workflowExecutor:
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
   processingStorageClass: managed-nfs-storage 
   # Size of the Kubernetes Tmp Volumes
-  processingVolumeTmpSize: "30Gi"
+  processingVolumeTmpSize: "6Gi"
   # Size of the Kubernetes Output Volumes
-  processingVolumeOutputSize: "30Gi"
+  processingVolumeOutputSize: "6Gi"
   # Max ram to use for a job
-  processingMaxRam: "32Gi"
+  processingMaxRam: "8Gi"
   # Max number of CPU cores to use concurrently for a job
-  processingMaxCores: "4"
+  processingMaxCores: "2"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: "False"
   # image pull secrects

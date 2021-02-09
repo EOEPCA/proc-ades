@@ -4,7 +4,7 @@ doc: "Run Stars for staging input data"
 class: CommandLineTool
 hints:
   DockerRequirement:
-    dockerPull: terradue/stars:latest
+    dockerPull: terradue/stars-t2:latest
 id: stars
 arguments:
 - copy
@@ -14,12 +14,17 @@ arguments:
 - '4'
 - -o
 - ./
+- --harvest
 inputs: 
   input_reference:
     inputBinding:
       position: 6
     type: string[]
   ADES_STAGEIN_AWS_SERVICEURL: 
+    type: string?
+  ADES_STAGEIN_AWS_ACCESS_KEY_ID:
+    type: string?
+  ADES_STAGEIN_AWS_SECRET_ACCESS_KEY:
     type: string?
 outputs: {}
 requirements:
@@ -29,4 +34,6 @@ requirements:
       # AWS__Profile: $(inputs.aws_profile)
       # AWS__ProfilesLocation: $(inputs.aws_profiles_location.path)
       AWS__ServiceURL: $(inputs.ADES_STAGEIN_AWS_SERVICEURL)
+      AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEIN_AWS_ACCESS_KEY_ID)
+      AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEIN_AWS_SECRET_ACCESS_KEY)
   ResourceRequirement: {}
