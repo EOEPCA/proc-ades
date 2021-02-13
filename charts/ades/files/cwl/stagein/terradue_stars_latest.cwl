@@ -16,10 +16,6 @@ arguments:
 - ./
 - --harvest
 inputs: 
-  input_reference:
-    inputBinding:
-      position: 6
-    type: string[]
   ADES_STAGEIN_AWS_SERVICEURL: 
     type: string?
   ADES_STAGEIN_AWS_ACCESS_KEY_ID:
