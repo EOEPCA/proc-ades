@@ -13,7 +13,7 @@ spec:
       containers:
         - name: calrissian
           image: terradue/calrissian:0.9.0-cwl3
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["calrissian"]
           args:
             - "--stdout"
