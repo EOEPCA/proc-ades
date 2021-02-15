@@ -1,7 +1,7 @@
 
 #include "nlohmann/json.hpp"
 #include "workflow_executor.hpp"
-#include "../deployundeploy/zoo/httpfuntions.hpp"
+#include "../deployundeploy/includes/httpfuntions.hpp"
 #include <utility>
 #include <cstdio>
 #include <iostream>
@@ -448,6 +448,9 @@ webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
     std::cerr << "buffer: " << buffer<<"\n";
     msgWeb.dump();
 
+    wfpm.perc = msgWeb.percent;
+    wfpm.message  = msgWeb.msg;
+    
     if (msgWeb.percent==100){
       ret=0;
     }

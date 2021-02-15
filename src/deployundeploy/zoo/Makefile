@@ -14,6 +14,7 @@ install:
 local:
 	cp *.zcfg /zooservices/
 	cp build/*.zo /zooservices/
+	cp build/libepcatransactional.zo /opt/t2service/libepcatransactional.zo
 
 
 

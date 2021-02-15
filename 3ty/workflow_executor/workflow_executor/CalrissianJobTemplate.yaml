@@ -2,122 +2,66 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: calrissianjob
+  name: {{jobname}}
 spec:
   template:
     spec:
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 3000
-        fsGroup: 2000
-      initContainers:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
         - name: calrissian
-          image: dukegcb/calrissian:latest
-          imagePullPolicy: IfNotPresent
+          image: terradue/calrissian:0.9.0-cwl3
+          imagePullPolicy: Always
           command: ["calrissian"]
           args:
             - "--stdout"
-            - "/calrissian/output-data/revsort-output.json"
+            - "{{stdout}}"
             - "--stderr"
-            - "/calrissian/output-data/revsort-stderr.log"
+            - "{{stderr}}"
             - "--max-ram"
-            - "4G"
+            - "{{max_ram}}"
             - "--max-cores"
-            - "2"
+            - "{{max_cores}}"
             - "--tmp-outdir-prefix"
-            - "/calrissian/tmpout/"
+            - "{{tmp_outdir_prefix}}"
             - "--debug"
-            - "--tmpdir-prefix"
-            - "/calrissian/tmpout/"
-            - "--leave-tmpdir"
-            - "--leave-container"
+            # - "--leave-tmpdir"
+            # - "--leave-container"
             - "--no-read-only"
             - "--outdir"
-            - "/calrissian/output-data/"
-            - "/calrissian/input-data/revsort-array.cwl"
-            - "/calrissian/input-data/revsort-array-job.json"
+            - "{{outdir}}"
+            - "{{argument1}}"
+            - "{{argument2}}"
           volumeMounts:
-            - mountPath: /calrissian/input-data
-              name: calrissian-input-data
-            - mountPath: /calrissian/tmpout
-              name: calrissian-tmpout
-            - mountPath: /calrissian/output-data
-              name: calrissian-output-data
+            - mountPath: {{volumemount_tmpout_mount_path}}
+              name: {{volumemount_tmpout_name}}
+            - mountPath: {{volumemount_output_data_mount_path}}
+              name: {{volumemount_output_data_name}}
+            - name: cwl-config-volume
+              mountPath: {{cwl_file_path}}
+              subPath: cwl
+            - name: inputs-config-volume
+              mountPath: {{inputs_file_path}}
+              subPath: inputs
           env:
             - name: CALRISSIAN_POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-      containers:
-        - name: stage-out
-          image: terradue/c7-stage-out:1.6
-          command: ["stage-out"]
-          args:
-            - "--source"
-            - "/calrissian/output-data/revsort-output.json"
-            - "--endpoint"
-            - "$(CATALOG_ENDPOINT)"
-            - "--username"
-            - "$(CATALOG_USERNAME)"
-            - "--apikey"
-            - "$(CATALOG_APIKEY)"
-            - "--store-host"
-            - "$(STORAGE_HOST)"
-            - "--store-username"
-            - "$(STORAGE_USERNAME)"
-            - "--store-apikey"
-            - "$(STORAGE_APIKEY)"
-            - "--job"
-            - "t2workflow123"
-            - "--outputfile"
-            - "/calrissian/output-data/stac-output.out"
-          volumeMounts:
-            - mountPath: /calrissian/input-data
-              name: calrissian-input-data
-            - mountPath: /calrissian/tmpout
-              name: calrissian-tmpout
-            - mountPath: /calrissian/output-data
-              name: calrissian-output-data
-          env:
-            - name: CATALOG_ENDPOINT
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_endpoint
-            - name: CATALOG_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_username
-            - name: CATALOG_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: catalog_apikey
-            - name: STORAGE_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_host
-            - name: STORAGE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_username
-            - name: STORAGE_APIKEY
-              valueFrom:
-                secretKeyRef:
-                  name: procades-secret
-                  key: storage_apikey
 
       restartPolicy: Never
       volumes:
-        - name: calrissian-input-data
+        - name: {{volumemount_tmpout_name}}
           persistentVolumeClaim:
-            claimName: calrissian-input-data
-        - name: calrissian-tmpout
+            claimName: {{volumemount_tmpout_name}}
+        - name: {{volumemount_output_data_name}}
           persistentVolumeClaim:
-            claimName: calrissian-tmpout
-        - name: calrissian-output-data
-          persistentVolumeClaim:
-            claimName: calrissian-output-data
+            claimName: {{volumemount_output_data_name}}
+        - name: cwl-config-volume
+          configMap:
+            name: cwl-config
+        - name: inputs-config-volume
+          configMap:
+            name: inputs-config

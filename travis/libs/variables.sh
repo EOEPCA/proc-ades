@@ -21,6 +21,8 @@ TAG_PREFIX=''
 
 export CMAKERELEASE="Debug"
 
+export TAG_PREFIX=''
+
 #simple anchor
 if [ "${TRAVIS_BRANCH}" == 'master' ]
 then
@@ -30,6 +32,17 @@ then
   TRAVIS_NAME=''
   TAG_PREFIX=''
 	echo 'Branch selected: master '
+fi
+
+#simple anchor
+if [[ "${TRAVIS_BRANCH}" =~ v(.*) ]]
+then
+  CMAKERELEASE="Release"
+  RELEASETYPE='release'
+  TAG_VERSION=${BASH_REMATCH[1]}
+  TRAVIS_NAME=''
+  TAG_PREFIX=''
+	echo 'Branch selected:' ${TRAVIS_BRANCH}
 fi
 
 #simple anchor

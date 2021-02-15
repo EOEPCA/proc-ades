@@ -15,6 +15,9 @@ requirements:
     - python-kubernetes
     - fastapi
     - click
+    - cwl-wrapper
+    - uvicorn
+    - jinja2
 
 test:
   imports:

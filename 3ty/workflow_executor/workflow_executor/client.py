@@ -6,7 +6,7 @@ from workflow_executor import result
 from workflow_executor import status
 from workflow_executor import helpers
 import click
-
+from kubernetes.client.rest import ApiException
 
 ################################
 ### COMMON OPTIONS
@@ -76,10 +76,9 @@ def prepare_cli():
 @click.argument('namespace')
 @click.argument('volume_size', default=1, type=int)
 @click.argument('volume_name', default="eoepca-volume-" + str(uuid.uuid4()))
-@click.option('-s','--stageout_config_file', type=click.Path(exists=True))
 @common_options
 @pass_state
-def prepare(state, namespace, volume_size, volume_name,stageout_config_file):
+def prepare(state, namespace, volume_size, volume_name):
     """Prepares the workflow namespace in a kubernetes environment
 
     \b
@@ -94,8 +93,7 @@ def prepare(state, namespace, volume_size, volume_name,stageout_config_file):
     click.echo('volume_size: %d' % volume_size)
     click.echo('volume_name: %s' % volume_name)
 
-    resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volume_size, volumeName=volume_name,stageout_config_file=stageout_config_file,
-                                                state=state)
+    resp_status = workflow_executor.prepare.run(namespace=namespace, volumeSize=volume_size, volumeName=volume_name,state=state)
     click.echo(resp_status)
 
 
@@ -131,10 +129,21 @@ def execute(state, input_json, cwl_file, volume_name_prefix, namespace, workflow
     click.echo('Debug: %s' % state.debug)
     click.echo('Kubeconfig: %s' % state.kubeconfig)
 
-    resp_status = workflow_executor.execute.run(job_input_json=input_json, cwl_document=cwl_file,
-                                                volume_name_prefix=volume_name_prefix, namespace=namespace,
-                                                mount_folder=mount_folder,
-                                                workflow_name=workflow_name, state=state)
+    # job_input_json and cwl_document are file paths
+
+
+    try:
+        resp_status = workflow_executor.execute.run(state=state,
+                                                    cwl_document=cwl_file,
+                                                    job_input_json=input_json,
+                                                    volume_name_prefix=volume_name_prefix,
+                                                    mount_folder=mount_folder,
+                                                    namespace=namespace,
+                                                    workflow_name=workflow_name)
+    except ApiException as e:
+        response.status_code = e.status
+        resp_status = {"status": "failed", "error": e.body}
+
     click.echo(resp_status)
 
 

@@ -252,6 +252,16 @@ int dumpBackFinalFile(maps* m,char* fbkp,char* fbkp1)
   return 1;
 }
 
+char* replace_char(char* str, char find, char replace){
+    char *current_pos = strchr(str,find);
+    while (current_pos){
+        *current_pos = replace;
+        current_pos = strchr(current_pos,find);
+    }
+    return str;
+}
+
+
 //rdr
 int mkpath(char *file_path, mode_t mode) {
   // assert(file_path && *file_path);
@@ -377,9 +387,22 @@ int removeService(maps* conf,char* service=NULL){
   char* anonymousUser=NULL;
   char* userServicePath=NULL;
   char* deleteScript=NULL;
+  char* JWT = NULL;
 
   if (conf && service){
+
+    dumpMaps(conf);
     maps* eoepcaMap=getMaps(conf,"eoepca");
+
+
+      maps* userMap=getMaps(conf,"eoepcaUser");
+      if (userMap){
+          map* theUser=getMap(userMap->content,"user");
+          if (theUser){
+              username=zStrdup(theUser->value);
+          }
+      }
+
     if (eoepcaMap){
       map* defaultUser=getMap(eoepcaMap->content,"defaultUser");
       if (defaultUser){
@@ -392,6 +415,68 @@ int removeService(maps* conf,char* service=NULL){
         userServicePath=zStrdup(userServicePathMap->value);
       }
 
+      map* aa=getMap(userMap->content,"jwt");
+      if (aa)
+          JWT = aa->value;
+
+
+      maps* pepMap=getMaps(conf,"pep");
+      if (pepMap){
+          map* usepep=getMap(pepMap->content,"usepep");
+          map* pepresource=getMap(pepMap->content,"pepresource");
+          map* pephost=getMap(pepMap->content,"pephost");
+          map* onError=getMap(pepMap->content,"stopOnError");
+          map* pathBase=getMap(pepMap->content,"pathBase");
+
+          int usePep= pepresource && pepresource->value && pephost && pephost->value && pathBase && pathBase->value  ?1:0;
+          usePep  = usePep && strcmp(anonymousUser,username)!=0;
+
+          int stopOnError=0;
+          if (onError && onError->value && strcmp(onError->value,"true")==0 ){
+              stopOnError=1;
+          }
+
+
+          if (usepep && usepep->value && strcmp(usepep->value,"true")==0 ){
+              if (usePep){
+                  void *handle=NULL;
+                  handle = dlopen(pepresource->value, RTLD_LAZY);
+                  fprintf(stderr,"-->pepresource: %s \n", pepresource->value );
+                  if (handle) {
+                      long (*pepRemoveFromZoo)(const char*,const char*,char* jwt,int ) =
+                      (long (*)(const char* ,const char* /*base uri*/,char* jwt,int ))dlsym(handle, "pepRemoveFromZoo");
+
+                      if(pepRemoveFromZoo){
+                          fprintf(stderr,"-->pep SEND REMOVE!!!\n");
+                          char* serviceToDelete = (char*)malloc(2048);
+                          memset(serviceToDelete,0,2048);
+                          snprintf(serviceToDelete,2047,pathBase->value,username,service);
+                          fprintf(stderr,"jwt:%s\n user: %s\n service: %s\npath: %s\n",JWT,username,service,serviceToDelete);
+
+                          long a = pepRemoveFromZoo(serviceToDelete,pephost->value,JWT,stopOnError);
+                          fprintf(stderr,"-->pep END REMOVE!!!\n");
+                          free(serviceToDelete);
+                          if (a!=200 && stopOnError){
+                              memset(serviceToDelete,0,2048);
+                              snprintf(serviceToDelete,2047,"PEP result: %l on service: %s",a,service);
+                              errorException (conf, _("pepRemoveFromZoo"),serviceToDelete, NULL);
+                              free(serviceToDelete);
+                              serviceToDelete=NULL;
+                              return a;
+                          }
+
+                      }else{
+                          fprintf(stderr,"-->can't bind libs: %s on %s  \n", pepresource->value,"pepRemoveFromZoo");
+                      }
+                  }else{
+                      fprintf(stderr,"-->can't open libs: %s \n", pepresource->value );
+                  }
+                  if(handle){
+                      dlclose(handle);
+                  }
+              }
+          }
+      }
 
       map* deleteScriptMap=getMap(eoepcaMap->content,"removeServiceScript");
       if (deleteScriptMap){
@@ -399,13 +484,13 @@ int removeService(maps* conf,char* service=NULL){
       }
     }
 
-    maps* userMap=getMaps(conf,"eoepcaUser");
-    if (userMap){
-      map* theUser=getMap(userMap->content,"user");
-      if (theUser){
-        username=zStrdup(theUser->value);
-      }
-    }
+//    maps* userMap=getMaps(conf,"eoepcaUser");
+//    if (userMap){
+//      map* theUser=getMap(userMap->content,"user");
+//      if (theUser){
+//        username=zStrdup(theUser->value);
+//      }
+//    }
 
     if( strcmp(anonymousUser,username)!=0 && deleteScript!=NULL ) {
       if(
@@ -434,7 +519,27 @@ int removeService(maps* conf,char* service=NULL){
   return 0;
 }
 
+/**
+ *
+ * @param conf
+ * @param s
+ * @param req
+ * @return 0 async 1 sync
+ */
 
+#ifdef USE_JSON
+int parseJRequestMode(maps* conf, service* s,json_object* req){
+    json_object* the_mode=NULL;
+    char* c_the_mode=NULL;
+    if(json_object_object_get_ex(req,"mode",&the_mode)!=FALSE) {
+        int uLen=json_object_get_string_len(the_mode) * sizeof(char);
+        if (uLen>0) {
+            return strcasecmp(json_object_get_string(the_mode),"sync")==0?1:0;
+        }
+    }
+    return 0;
+}
+#endif
 
 //rdr
 int
@@ -445,6 +550,7 @@ addUserToMap(maps* conf){
   char **orig = environ;
   char *s=*orig;
   char* username=NULL;
+  char* JWT=NULL;
 
   char* anonymousUser=NULL;
 
@@ -461,14 +567,61 @@ addUserToMap(maps* conf){
   if(orig!=NULL)
     for (; s; ei++ ) {
       if(strstr(s,"=")!=NULL && strlen(strstr(s,"="))>1){
-        
-      	// int len=strlen(s);
-      	// char* tmpName=;
-      	// char* tmpValue=strstr(s,"=")+1;
-      	// char* tmpName1=(char*)malloc((1+(len-(strlen(tmpValue)+1)))*sizeof(char));
-      	// snprintf(tmpName1,(len-strlen(tmpValue)),"%s",tmpName);
 
-        if(strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
+        if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
+          char* baseU=strchr(s,'=');
+          if (strlen(baseU)>1){
+            char* workspace= ++baseU;
+//            fprintf(stderr,"GNAGNERA >%s<\n",workspace);
+
+
+            username = zStrdup(workspace);
+
+            maps *_tmpMaps = createMaps("eoepcaUser");
+            if(_tmpMaps->content == NULL)
+              _tmpMaps->content = createMap ("user",workspace);
+            else
+              addToMap (_tmpMaps->content,"user",workspace);
+
+            if( strcmp(anonymousUser,workspace)==0 ){
+              // it is  anonymous, can only reads
+              // rwx
+              map *theGrants = createMap("grant","1--");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }else{
+              // it is ok!
+              map *theGrants = createMap("grant","111");
+              addMapToMap(&_tmpMaps->content,theGrants);
+            }
+
+            if(conf){
+              addMapsToMaps (&conf, _tmpMaps);
+            }
+          }
+        }
+
+
+        if(strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL) {
+            char *baseU = strchr(s, '=');
+            if (baseU) {
+                char *baseS = strchr(++baseU, ' ');
+                if (baseS) {
+                    *baseS = '\0';
+                    fprintf(stderr, "**** %s\n", baseU);
+                    if (strcmp(baseU, "Bearer") == 0) {
+                        canContinue = true;
+                    }
+                    *baseS = ' ';
+                    if (canContinue) {
+                        while (*(++baseS) == ' ');
+                        fprintf(stderr, ">%s<\n", baseS);
+                        JWT = zStrdup(baseS);
+                    }
+                }
+            }
+        }
+
+        if(false && strstr(s,"HTTP_AUTHORIZATION")!=NULL && strlen(strstr(s,"="))>1  && strstr(s,"REDIRECT_HTTP_AUTHORIZATION")==NULL){
           // fprintf(stderr,"--> %s=%s \n", tmpName1, tmpValue );
           char* baseU=strchr(s,'=');
           if (baseU){
@@ -594,6 +747,13 @@ addUserToMap(maps* conf){
     username=zStrdup( anonymousUser?anonymousUser:"anonymous" );
   }
 
+    if(userMap && ret==0) {
+        if (JWT){
+            map *theYWT = createMap("jwt",zStrdup(JWT));
+            addMapToMap(&userMap->content,theYWT);
+        }
+    }
+
   int sc=createUserSpace(conf,username);
 
   if(username){
@@ -602,6 +762,10 @@ addUserToMap(maps* conf){
 
   if(anonymousUser){
     free(anonymousUser);
+  }
+
+  if (JWT){
+      free(JWT);
   }
 
   return ret;
@@ -1603,7 +1767,13 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute = (execute_t) GetProcAddress (so, fname);
 #else
               typedef int (*execute_t) (char ***, char ***, char ***);
+
+              char* nS = zStrdup(fname);
+              replace_char(nS,'.','_');
+              replace_char(nS,'-','_');
+              fprintf(stderr,"service from %s to %s\n",fname,nS);
               execute_t execute = (execute_t) dlsym (so, fname);
+              free(nS);
 #endif
 #ifdef DEBUG
 #ifdef WIN32
@@ -1656,7 +1826,12 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               execute_t execute =
                 (execute_t) GetProcAddress (so, r_inputs->value);
 #else
-              execute_t execute = (execute_t) dlsym (so, r_inputs->value);
+                  char* nS = zStrdup(r_inputs->value);
+                  replace_char(nS,'.','_');
+                  replace_char(nS,'-','_');
+                  fprintf(stderr,"service from %s to %s\n",r_inputs->value,nS);
+                  execute_t execute = (execute_t) dlsym (so, nS);
+                  free(nS);
 #endif
 
               if (execute == NULL)
@@ -2100,7 +2275,11 @@ runRequest (map ** inputs)
   //   free(theServicePath->value);
   //   theServicePath->value=tmpNewPath;
   // }
-  
+
+//  map* eoUserMap=getMapFromMaps(m,"eoepcaUser","user");
+//  if (eoUserMap && eoUserMap->value){
+//    fprintf(stderr,"eoUserMap->value=%s a8\n",eoUserMap->value);
+//  }
 
 
   map *getPath = getMapFromMaps (m, "main", "gettextPath");
@@ -2246,9 +2425,9 @@ runRequest (map ** inputs)
   }
 
   // Populate the Registry
-  char conf_dir[1024];
+  char conf_dir[1024*2];
   int t;
-  char tmps1[1024];
+  char tmps1[1024*2];
   r_inputs = NULL;
   r_inputs = getMap (request_inputs, "metapath");
   map* cwdMap0=getMapFromMaps(m,"main","servicePath");
@@ -2328,7 +2507,7 @@ runRequest (map ** inputs)
           strcasecmp(cgiRequestMethod,"post")==0
         ){
 
-          cgiQueryString="/processes/eoepcaadesdeployprocess/jobs";
+          cgiQueryString="/processes/DeployProcess/jobs";
     }
 
 //    if((
@@ -2340,7 +2519,7 @@ runRequest (map ** inputs)
 //
 //
 //          //cgiRequestMethod="post";
-//          cgiQueryString="/processes/eoepcaadesundeployprocess/jobs";
+//          cgiQueryString="/processes/UndeployProcess/jobs";
 //    }
 
 
@@ -2400,8 +2579,15 @@ runRequest (map ** inputs)
         }
 
         fprintf(stderr,"%s\n",orig);
-        removeService(m,orig);
+
+
+
+        int y=removeService(m,orig);
         free (orig);
+        if (y){
+            //                      errorException (conf, _("Unable to allocate memory"),"InternalError", NULL);
+            return 1;
+        }
 
       }
 
@@ -2419,7 +2605,9 @@ runRequest (map ** inputs)
       zDup2 (saved_stdout, fileno (stdout));
       zClose(saved_stdout);
       
-      json_object_object_add(res,"processes",res3);
+//      json_object_object_add(res,"processes",res3); //rdr
+    json_object_put(res);//rdr
+    res = res3;//rdr
     }else{
       service* s1=NULL;
       int t=0;
@@ -2482,8 +2670,8 @@ runRequest (map ** inputs)
       getUserWorkspacePath(m,ntmp,newPath,1024);
       
       if (
-        strcmp(cIdentifier,"eoepcaadesdeployprocess")==0 || 
-        strcmp(cIdentifier,"eoepcaadesundeployprocess")==0
+        strcmp(cIdentifier,"DeployProcess")==0 ||
+        strcmp(cIdentifier,"UndeployProcess")==0
       ){
          memset(newPath,'\0',1024);
          strcpy(newPath,ntmp);
@@ -2579,7 +2767,7 @@ runRequest (map ** inputs)
 			 _
 			 ("The value for <identifier> seems to be wrong (%s). Please specify one of the processes in the list returned by a GetCapabilities request."),
 			 r_inputs->value);
-		map* error=createMap("code","InvalidParameterValue");
+		map* error=createMap("code","NotFound");//EOEPCA-237
 		addToMap(error,"message",tmpMsg);
 		//setMapInMaps(conf,"lenv","status_code","404 Bad Request");
 		printExceptionReportResponseJ(m,error);
@@ -2645,8 +2833,23 @@ runRequest (map ** inputs)
 	      // Success, use jobj here.
 	      maps* inputs_real_format=NULL, *outputs_real_format= NULL;
 	      parseJRequest(m,s1,jobj,&inputs_real_format,&outputs_real_format);
+#ifdef USE_JSON
+	      int request_type = parseJRequestMode(m,s1,jobj);
+	      switch(request_type){
+	          case 0:
+	              fprintf(stderr,"REQUEST_TYPE: async\n");
+	              break;
+	          case 1:
+	              fprintf(stderr,"REQUEST_TYPE: sync\n");
+	              break;
+	      }
+#endif
 	      map* preference=getMapFromMaps(m,"renv","HTTP_PREFER");
+#ifdef USE_JSON
+	      if(request_type==0){//async
+#else
 	      if(preference!=NULL && strcasecmp(preference->value,"respond-async")==0){
+#endif
 		fprintf(stderr,"Asynchronous call!\n");
 		char *fbkp, *fbkpid, *fbkpres, *fbkp1, *flog;
 		FILE *f0, *f1;
@@ -2816,10 +3019,16 @@ runRequest (map ** inputs)
 	      }else{
 		loadHttpRequests(m,inputs_real_format);
 		loadServiceAndRun (&m,s1,request_inputs,&inputs_real_format,&outputs_real_format,&eres);
-		res=printJResult(m,s1,outputs_real_format,eres);
-	      
+		res=printJResult(m,s1,outputs_real_format,eres);	  
+    createStatusFile(m,eres);
 		printHeaders(m);
-		printf("Status: 201 Created \r\n\r\n");
+
+    if (eres==SERVICE_SUCCEEDED){
+      printf("Status: 201 Created \r\n\r\n");
+    }else{
+      printf("Status: 500 failed \r\n\r\n");
+    }
+		
 		const char* jsonStr=json_object_to_json_string_ext(res,JSON_C_TO_STRING_PLAIN);
 		printf(jsonStr);
 		printf("\n");
@@ -3205,8 +3414,19 @@ runRequest (map ** inputs)
     setMapInMaps (m, "lenv", "oIdentifier", r_inputs->value);
   } 
   else {
-    fprintf(stderr,"rdr a8\n");
+
+    char conf_dir2[1024*2];
+    memset(conf_dir2,0,1024*2);
+
+    strcpy(conf_dir2,conf_dir);
+    getUserWorkspacePath(m,conf_dir,conf_dir2,1024);
+    strcpy(conf_dir,conf_dir2);
+
+//    fprintf(stderr,"rdr a8--> conf_dir %s -- %s\n", conf_dir, r_inputs->value);
+//    fprintf(stderr,"rdr a8--> conf_dir2 %s -- %s\n", conf_dir2, r_inputs->value);
+
     snprintf (tmps1, 1024, "%s/%s.zcfg", conf_dir, r_inputs->value);
+
 #ifdef DEBUG
     fprintf (stderr, "Trying to load %s\n", tmps1);
 #endif

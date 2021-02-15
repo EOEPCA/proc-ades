@@ -1,36 +1,108 @@
-FROM proc-comm-zoo:1.0
+FROM centos/devtoolset-7-toolchain-centos7
+USER root
 
-COPY 3ty/workflow_executor /usr/local/workflow_executor
+RUN yum install -y epel-release
+RUN yum update -y
+RUN yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3
 
-RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b
-ENV PATH="/opt/app-root/src/miniconda3/bin:$PATH"
-RUN conda install -c conda-forge python-kubernetes click fastapi uvicorn
-RUN cd /usr/local/workflow_executor/ && python setup.py install
+RUN yum install -y bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
 
-WORKDIR /
+RUN yum install -y git
 
-#RUN git clone 'https://github.com/EOEPCA/proc-ades.git' /project
-COPY . /project
+RUN yum install -y automake && \
+	cd && \
+	wget http://ftp.gnu.org/gnu/cgicc/cgicc-3.2.19.tar.gz && \
+	tar -zxvf cgicc-3.2.19.tar.gz && \
+	cd cgicc-3.2.19 && ./autogen && ./configure && make && make install && \
+	cd && rm -fvR cgicc*
+ENV PATH "$PATH:/usr/local/bin"
 
+RUN mkdir /project
+COPY 3ty /project/3ty
+COPY assets /project/assets
+COPY test /project/test
+COPY src /project/src
+COPY CMakeLists.txt /project/CMakeLists.txt
 WORKDIR /project
-#RUN  git checkout 'develop' && mkdir build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
-RUN  mkdir -p build && cd build && cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
 
+### ZOO Build
+##  from ZOO source 
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
+RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
+### Apply patches
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c
+### Make libcgi
+RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
+### Configure ZOO
+RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && autoconf && \
+./configure  --with-json=/usr/ --with-fastcgi=${FOLDER}/libfcgi-2.4.0.orig/OUT/lib --with-xml2config=/usr/bin/xml2-config  --with-cgi-dir=/var/www/zoo-bin --with-etc-dir=yes --sysconfdir=/zooservices
+### Make ZOO
+RUN cd /opt/zoo-project/zoo-project/zoo-kernel/ && ls -ltr && make && make install
+
+### Create production directories
+RUN mkdir -p /opt/t2service /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/zoo-project/ /var/www/_run/res/statusInfos /var/www/t2dep/ /opt/watchjob/
+### Make job status service
+RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make 
+### Copy it as a service
+RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/
+RUN cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl /var/www/data/updateStatus.xsl
+### Copy watchjob source
+RUN cp -r 3ty/proc-comm-zoo-1.2-alpha/src/* /opt/watchjob/
+### Make watchjob
+RUN cd /opt/watchjob/ && make && make install
+
+## Make ADES
+RUN  rm -rf build && mkdir -p build && cd build
 WORKDIR /project/build/
-RUN make eoepcaows workflow_executor && mkdir -p /project/zooservice
+RUN cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
+RUN make eoepcaows workflow_executor pep_resource && mkdir -p /project/zooservice
 
-WORKDIR /project/zooservice
+## Make deploy/undeploy service
 RUN make -C ../src/deployundeploy/zoo/
+
+## Install HTTPD
+RUN yum install -y vim httpd \
+	&& mkdir -p /var/www/zoo-bin/ /etc/zoo-project/ /var/www/_run/res/statusInfos \
+	&& mkdir -p /zooservices &&  chmod 777 /zooservices \
+	&& mkdir -p /var/www/fcgi/ /var/www/_run/zoo  /var/www/_run/wps3 /var/www/t2dep /var/www/_run/watchjob \
+	&& chown -R 48:48 /var/www/zoo-bin/ /var/www/zoo-bin/ /var/www/data/ /var/www/_run/res  \
+	&& echo '/usr/local/lib' > /etc/ld.so.conf.d/zoo.conf && ldconfig \
+	&& mkdir -p /opt/t2build/includes  /opt/t2service/ /opt/opt/t2service/t2scripts/ \
+	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/
+
+## Copy HTTP files
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_html /var/www/html/.htaccess
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_wps3 /var/www/_run/wps3/.htaccess
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_watchjob /var/www/_run/watchjob/.htaccess
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess /var/www/_run/zoo/.htaccess
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/zoo.conf	/etc/httpd/conf.d/zoo.conf
+#COPY 3ty/proc-comm-zoo-1.2-alpha/assets/main.cfg /etc/zoo-project/main.cfg
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/oas.cfg /etc/zoo-project/oas.cfg
+
+## Build the base service interface
+COPY src /project/src
+COPY 3ty/proc-comm-lib-ows-1.04 /project/3ty/proc-comm-lib-ows-1.04
+COPY 3ty/nlohmann /project/3ty/nlohmann
+WORKDIR /project/zooservice
+
 RUN make -C ../src/templates interface
 
-WORKDIR /project
+## Install Workflow executor
+COPY 3ty/workflow_executor /usr/local/workflow_executor
 
+RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+ENV PATH="/opt/miniconda/bin:$PATH"
+RUN conda config --add channels eoepca
+RUN conda config --add channels conda-forge
+RUN conda install python-kubernetes click fastapi uvicorn
+RUN conda install -c eoepca/label/dev cwl-wrapper
+RUN cd /usr/local/workflow_executor/ && python setup.py install
 
-COPY assets/main.cfg /opt/t2service/main.cfg
+# COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
 
-#COPY src/zoo /tmp/zoo
-#RUN cd /tmp/zoo && make && make install && rm -fvR /tmp/zoo && chmod +x /opt/t2scripts/entrypoint.sh
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
 RUN chmod +x /opt/t2scripts/entrypoint.sh
 
@@ -43,12 +115,16 @@ RUN mkdir -p /opt/t2libs && cp /project/src/templates/libinterface.so /opt/t2lib
 RUN cp /project/build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
 
 RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
+RUN cp /project/build/libpep_resource.so /opt/t2service/libpep_resource.so
 RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
 
 RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
+RUN yum install mlocate -y
+
+CMD ["/opt/t2scripts/entrypoint.sh"]
 
 EXPOSE 80
 

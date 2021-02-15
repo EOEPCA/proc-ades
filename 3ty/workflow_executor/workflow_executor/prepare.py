@@ -1,22 +1,24 @@
 import json
 import sys
+import time
 
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from pprint import pprint
-
+from workflow_executor import helpers
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def run(namespace, tmpVolumeSize, outputVolumeSize, volumeName, storage_class_name=None, imagepullsecrets=None,ades_namespace=None,
+        state=None):
+    print(
+        f"Preparing {namespace} tmpVolumeSize: {tmpVolumeSize} outputVolumeSize: {outputVolumeSize}  volumeName: {volumeName}")
 
-def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
-    print("Preparing " + namespace + " volumeSize: " + str(volumeSize) + "Gi volumeName: " + volumeName)
-
-    config.load_kube_config()
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
-    v1 = client.CoreV1Api()
+    apiclient = helpers.get_api_client()
+    api_instance = client.RbacAuthorizationV1Api(apiclient)
+    v1 = client.CoreV1Api(api_client=apiclient)
 
     print("####################################")
     print("######### Checking if namespace already exists")
@@ -42,34 +44,11 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         print("Exception when creating namespace: %s\n" % e, file=sys.stderr)
         raise e
 
-    ### Configuring storage_class and creating kubernetes secrets for stageout
-    storage_class_name = ""
-    if workflow_config != None:
-        try:
-
-            storage_class_name = workflow_config["storageclass"]
-
-            secret = client.V1Secret()
-            secret.metadata = client.V1ObjectMeta(name="procades-secret")
-            secret.type = "Opaque"
-            secret.data = workflow_config["stageout"]
-            v1.create_namespaced_secret(namespace, secret)
-            volumeSize=workflow_config["volumesize"]
-
-
-
-        except ApiException as e:
-            # Status appears to be a string.
-            if e.status == 409:
-                print("procades-secret has already been installed")
-            else:
-                raise
-
     #### Creating pod manager role
     print("####################################")
     print("######### Creating pod_manager_role")
     metadata = client.V1ObjectMeta(name='pod-manager-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods', 'pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     rules = []
     rules.append(rule)
@@ -87,7 +66,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     print("####################################")
     print("######### Creating log-reader-role")
     metadata = client.V1ObjectMeta(name='log-reader-role', namespace=namespace)
-    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods','pods/log'],
+    rule = client.V1PolicyRule(api_groups=['*'], resources=['pods', 'pods/log'],
                                verbs=['create', 'patch', 'delete', 'list', 'watch'])
     # verbs=['get', 'list'])
     rules = []
@@ -140,7 +119,6 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
         print("Exception when creating log-reader-default-binding: %s\n" % e, file=sys.stderr)
         raise e
 
-
     print("####################################")
     print("######### Creating cluster-role-binding")
     metadata = client.V1ObjectMeta(name=f"{namespace}-rbac", namespace=namespace)
@@ -163,30 +141,29 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
             print("Exception when creating cluster-role-binding: %s\n" % e, file=sys.stderr)
             raise e
 
-
     print("####################################")
     print("######### Creating Persistent Volume Claims")
 
-    metadata1 = client.V1ObjectMeta(name=f"{volumeName}-input-data", namespace=namespace)
-    spec1 = client.V1PersistentVolumeClaimSpec(
-        # must be ReadWriteOnce for EBS
-        # access_modes=["ReadWriteOnce", "ReadOnlyMany"],
-        access_modes=["ReadWriteMany"],
-        resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
-        )
-    )
-
-    if storage_class_name:
-        spec1.storage_class_name = storage_class_name
-
-    body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
+    # metadata1 = client.V1ObjectMeta(name=f"{volumeName}-input-data", namespace=namespace)
+    # spec1 = client.V1PersistentVolumeClaimSpec(
+    #     # must be ReadWriteOnce for EBS
+    #     # access_modes=["ReadWriteOnce", "ReadOnlyMany"],
+    #     access_modes=["ReadWriteMany"],
+    #     resources=client.V1ResourceRequirements(
+    #         requests={"storage": inputVolumeSize}
+    #     )
+    # )
+    #
+    # if storage_class_name:
+    #     spec1.storage_class_name = storage_class_name
+    #
+    # body1 = client.V1PersistentVolumeClaim(metadata=metadata1, spec=spec1)
 
     metadata2 = client.V1ObjectMeta(name=f"{volumeName}-tmpout", namespace=namespace)
     spec2 = client.V1PersistentVolumeClaimSpec(
         access_modes=["ReadWriteMany"],
         resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
+            requests={"storage": tmpVolumeSize}
         )
     )
     if storage_class_name:
@@ -199,7 +176,7 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
     spec3 = client.V1PersistentVolumeClaimSpec(
         access_modes=["ReadWriteMany"],
         resources=client.V1ResourceRequirements(
-            requests={"storage": f"{volumeSize}Gi"}
+            requests={"storage": outputVolumeSize}
         )
     )
     if storage_class_name:
@@ -209,23 +186,66 @@ def run(namespace, volumeSize, volumeName, workflow_config=None, state=None):
 
     pretty = True
     try:
-        api_response1 = v1.create_namespaced_persistent_volume_claim(namespace, body1, pretty=pretty)
+        #    api_response1 = v1.create_namespaced_persistent_volume_claim(namespace, body1, pretty=pretty)
         api_response2 = v1.create_namespaced_persistent_volume_claim(namespace, body2, pretty=pretty)
         api_response3 = v1.create_namespaced_persistent_volume_claim(namespace, body3, pretty=pretty)
-        pprint(api_response1)
+        #    pprint(api_response1)
         pprint(api_response2)
         pprint(api_response3)
     except ApiException as e:
         print("Exception when creating persistent_volume_claim: %s\n" % e, file=sys.stderr)
         raise e
 
+    # we copy the secret from ades namespace to the new job namespace
+    if imagepullsecrets is not None and ades_namespace is not None:
+        for imagepullsecret in imagepullsecrets:
+            # Create an instance of the API class
+            secretname = imagepullsecret["name"]
+            pretty = True  # str | If 'true', then the output is pretty printed. (optional)
+            exact = False  # bool | Should the export be exact.  Exact export maintains cluster-specific fields like 'Namespace'. Deprecated. Planned for removal in 1.18. (optional)
+            export = True  # bool | Should this value be exported.  Export strips fields that a user can not specify. Deprecated. Planned for removal in 1.18. (optional)
+
+            secret_export = None
+            try:
+                secret_export = v1.read_namespaced_secret(secretname, ades_namespace, pretty=pretty, exact=exact, export=export)
+            except ApiException as e:
+                print("Exception when retrieving image pull secret from eoepca: %s\n" % e)
+
+            time.sleep(5)
+            try:
+                api_response = v1.create_namespaced_secret(namespace, secret_export, pretty=pretty)
+            except ApiException as e:
+                print("Exception when creating image pull secret: %s\n" % e)
+
+            time.sleep(5)
+
+            name = 'default'
+            try:
+                service_account_body = v1.read_namespaced_service_account(name, namespace, pretty=True)
+                pprint(service_account_body)
+                time.sleep(5)
+
+
+                if service_account_body.secrets is None:
+                    service_account_body.secrets = []
+
+                if service_account_body.image_pull_secrets is None:
+                    service_account_body.image_pull_secrets = []
+
+                service_account_body.secrets.append({"name": secretname})
+                service_account_body.image_pull_secrets.append({"name": secretname})
+
+                api_response = v1.patch_namespaced_service_account(name, namespace, service_account_body, pretty=True)
+                pprint(api_response)
+            except ApiException as e:
+                print("Exception when calling CoreV1Api->patch_namespaced_service_account: %s\n" % e)
+
     return {"status": "success"}
 
 
 def get(namespace, state=None):
-    config.load_kube_config()
-    api_instance = client.RbacAuthorizationV1Api(client.ApiClient())
-    v1 = client.CoreV1Api()
+    apiclient = helpers.get_api_client()
+    v1 = client.CoreV1Api(api_client=apiclient)
 
     # Things to check:
     # namespace
@@ -242,27 +262,17 @@ def get(namespace, state=None):
         raise e
 
     # VOLUME CLAIM CHECK
-
-    volumeclaim1 = f"{namespace}-volume-input-data"
-    volumeclaim2 = f"{namespace}-volume-tmpout"
-    volumeclaim3 = f"{namespace}-volume-output-data"
-
+    pretty = True
     try:
-        response1 = v1.read_namespaced_persistent_volume_claim(volumeclaim1, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-        response2 = v1.read_namespaced_persistent_volume_claim(volumeclaim2, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-        response3 = v1.read_namespaced_persistent_volume_claim(volumeclaim3, namespace, pretty=True)
-        if response1.status.phase == "Pending":
-            return {"status": "pending"}
-
-        pprint(response1)
-        pprint(response2)
-        pprint(response3)
+        pvc_list = v1.list_namespaced_persistent_volume_claim(namespace, pretty=pretty)
+        for pvc in pvc_list.items:
+            print("%s\t%s" % (pvc.metadata.name, pvc.status.phase))
+            if pvc.status.phase == "Pending":
+                return {"status": "pending"}
+            elif pvc.status.phase == "Failed":
+                return {"status": "failed"}
     except ApiException as e:
-        print("Exception when calling CoreV1Api->read_namespaced_persistent_volume_claim: %s\n" % e)
+        print("Exception when calling CoreV1Api->list_namespaced_persistent_volume_claim: %s\n" % e)
         raise e
 
     return {"status": "success"}

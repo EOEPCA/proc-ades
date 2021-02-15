@@ -1,0 +1,44 @@
+[UndeployProcess]
+	Title = Undeploy Process
+	Abstract = This method will undeploy a deployed processing service.
+	processVersion = 1.0.0
+	storeSupported = true
+	statusSupported = true
+	serviceType = C
+	serviceProvider = libepcatransactional.zo
+<DataInputs>
+	[applicationPackage]
+	Title = Identifier
+	Abstract = Identifier of the service to be removed
+	minOccurs = 1
+	maxOccurs = 1
+	<ComplexData>
+		<Default>
+			mimeType = application/atom+xml
+		</Default>
+		<Supported>
+			MimeType = application/atom+xml
+		</Supported>
+	</ComplexData>
+</DataInputs>
+
+<DataOutputs>
+	[unDeployResult]
+	Title = UnDeploy Result
+	Abstract = The server's response to undeploying a process. A successful response will contain a summary of the removed process.
+<ComplexOutput>
+	<Default>
+		encoding = ISO-8859-1
+		MimeType = application/xml
+	</Default>
+	<Supported>
+		encoding = ISO-8859-1
+		MimeType = application/xml
+	</Supported>
+</ComplexOutput>
+</DataOutputs>
+
+
+
+
+

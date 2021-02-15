@@ -4,14 +4,15 @@ import kubernetes.client
 from kubernetes.client.rest import ApiException
 from kubernetes import client, config
 
+from workflow_executor import helpers
+
 
 def run(namespace, workflow_name, state=None):
-    # # Setup K8 configs
-    config.load_kube_config()
 
     # create an instance of the API class
-    api_client = kubernetes.client.ApiClient()
-    api_instance = kubernetes.client.BatchV1Api(api_client)
+    apiclient = helpers.get_api_client()
+    api_instance = client.BatchV1Api(api_client=apiclient)
+
     pretty = True
 
     print("## JOB STATUS")

@@ -8,7 +8,7 @@ function copyIfNotExist() {
   fi
 }
 
-FILES="/opt/t2service/eoepcaadesundeployprocess.zcfg /opt/t2service/eoepcaadesdeployprocess.zcfg /opt/t2service/libepcatransactional.zo  /opt/t2service/GetStatus.zcfg /opt/t2service/wps_status.zo"
+FILES="/opt/t2service/UndeployProcess.zcfg /opt/t2service/DeployProcess.zcfg /opt/t2service/libepcatransactional.zo  /opt/t2service/GetStatus.zcfg /opt/t2service/wps_status.zo"
 if [ -n "$1" ]
 then
 

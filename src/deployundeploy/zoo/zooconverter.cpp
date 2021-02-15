@@ -7,6 +7,7 @@
 #include <memory>
 #include <sstream>
 #include <utility>
+#include <cstring>
 
 namespace ZOO {
 
@@ -278,21 +279,23 @@ void ZooJob::addOutput(std::string val) {
 }
 
 std::string ZooJob::getUniqueService() const {
-  //  std::string toSha1{""};
-  //  for (auto& tag : tags) {
-  //    toSha1.append(tag);
-  //  }
-  //  toSha1.append(identifier).append(processVersion);
-  //
-  //  std::string id = "w";
-  //  id.append(sha1::parseString(toSha1));
-  //
-  //  return id;
 
-  std::string ig(identifier + "_" + processVersion);
+  const char *invalid_characters = "1234567890-*.$£^&*";
+  auto s=identifier.substr(0,1);
 
-  innerReplace(ig, ".", "_");
-  innerReplace(ig, "-", "_");
+  if (std::strchr(invalid_characters, *s.c_str())){
+    std::string err{"The service name can't start with: "};
+    err.append(s);
+    throw std::runtime_error(err);
+  }
+
+std::string newVersion = processVersion;
+innerReplace(newVersion, ".", "_");
+ std::string ig(identifier + "-" + newVersion);
+// std::string ig(identifier);
+
+//  innerReplace(ig, ".", "_");
+//  innerReplace(ig, "-", "_");
 
   return ig;
 }

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  ppImagePullSecrets.json: {{  toJson .Values.workflowExecutor.imagePullSecrets | quote }}
+  kubeconfig: {{ tpl .Values.workflowExecutor.kubeconfig . | quote }}
+  maincfg: {{ tpl (.Files.Get .Values.wps.maincfgtpl) . | quote }}
+  main.cwl: {{ required "A valid .Values.Values.workflowExecutor.main.cwl entry required!" (tpl (.Values.workflowExecutor.main.cwl) . | quote) }}
+  stagein.cwl: {{ required "A valid .Values.Values.workflowExecutor.stagein.cwl entry required!" (tpl (.Values.workflowExecutor.stagein.cwl) . | quote) }}
+  stageout.cwl: {{ required "A valid .Values.Values.workflowExecutor.stageout.cwl entry required!" (tpl (.Values.workflowExecutor.stageout.cwl) . | quote) }}
+  rulez.cwl: {{ required "A valid .Values.Values.workflowExecutor.rulez.cwl entry required!" (tpl (.Values.workflowExecutor.rulez.cwl) . | quote) }}
+  wfinputs.yaml: {{ toYaml .Values.workflowExecutor.inputs | quote }}
+
+
+  

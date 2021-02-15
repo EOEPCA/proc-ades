@@ -11,6 +11,7 @@
 #define XMLNS_PURL "http://purl.org/dc/elements/1.1/"
 #define XMLNS_STAC "http://www.me.net/stac/cwl/extension"
 #define XMLNS_OPENSEARCH "http://a9.com/-/spec/opensearch/1.1/"
+#define XMLNS_SCHEMA_ORG "https://schema.org/"
 
 #define XML_DOCKER_TYPE "application/vnd.docker.distribution.manifest.v1+json"
 #define XML_CWL_TYPE "application/cwl"
@@ -77,6 +78,8 @@
 #define IS_PARSERDESCRIPTOR(D)                                      \
   if (!xmlStrcmp(D->name, (const xmlChar *)"ProcessDescription") && \
       !xmlStrcmp(D->ns->href, (const xmlChar *)XMLNS_ATOM))
+
+#define SOFTWARE_VERSION "%s:softwareVersion"
 
 // if (IS_INPUT(input, XMLNS_WPS1, "LiteralData")) {
 // param = parseLiteralData(input);
