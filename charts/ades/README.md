@@ -26,6 +26,10 @@ $ helm install --name ades . --namespace eoepca
 
 > Note - If you do not specify a name, helm will select a name for you.
 
+### Workflow executor values
+
+All information specific to the parameters that are passed to the workflow executor are described in the wiki at [Deploy And Configure the ADES](https://github.com/EOEPCA/proc-ades/wiki/Deploy-And-Configure-the-ADES)
+
 ### Installed Components
 
 You can use `kubectl get` to view all of the installed components.
@@ -66,9 +70,8 @@ The configuration parameters in this section control the resources requested and
 | clusterAdminRoleName                    | Name of the role binding for the ades service account that provision resources for processing  | `cluster-admin`                              |
 | useKubeProxy                            | If the ADES interacts with the kubernetes cluster via proxy or not. If false, workflowExecutor.kubeconfig file location must be provided | `true`                        |
 | workflowExecutor.kubeconfig             | kube config file to be used by the ADES to connect to th cluster where to provision resource for the processing. | `files/kubeconfig` |
-| workflowExecutor.storageHost            | This is the resource manager endpoint of the store used for processing results persistent storage (WebDAV)    | `[Empty String](https://storage.eoepca.com/nextcloud)`        |
-| workflowExecutor.storageUsername        | Storage credentials: username                                                                  | `user`                     |
-| workflowExecutor.storageApiKey          | Storage credentials: password or API key                                                       | `secret`   |
+| workflowExecutor.inputs            | Key/Value Dictionary of input values to be passed to all nodes of the application workflow. They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades' | `[Empty dictionary]`        |
+| workflowExecutor.main/stagein/stageout/rulez  | data structure for defining the CWL parameter used by [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper) | `empty`  |
 | workflowExecutor.processingStorageClass | kubernetes storage class to be used for provisioning volumes for processing. Must be ReadWriteMany compliant  | `glusterfs-storage`                       |
 | workflowExecutor.processingVolumeTmpSize | Size of the volumes for processing result of one workflow nodeouput                                                       | `5Gi`  
 | workflowExecutor.processingVolumeOutputSize | Size of the volumes for processing result for the whole workflow ouput                                                       | `10Gi`                   |

@@ -1,27 +1,27 @@
 cwlVersion: v1.0
 baseCommand: Stars
-doc: "Run Stars for staging data"
+doc: "Run Stars for staging input data"
 class: CommandLineTool
 hints:
   DockerRequirement:
-    dockerPull: terradue/stars-t2:latest
+    dockerPull: terradue/t2-stars:latest
 id: stars
 arguments:
 - copy
-- --harvest
 - -v
 - -rel
 - -r
 - '4'
 - -o
 - ./
+- --harvest
 inputs: 
-  aws_profile: 
+  ADES_STAGEIN_AWS_SERVICEURL: 
     type: string?
-  aws_service_url:
+  ADES_STAGEIN_AWS_ACCESS_KEY_ID:
     type: string?
-  aws_profiles_location:
-    type: File?
+  ADES_STAGEIN_AWS_SECRET_ACCESS_KEY:
+    type: string?
 outputs: {}
 requirements:
   EnvVarRequirement:
@@ -29,5 +29,7 @@ requirements:
       PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       # AWS__Profile: $(inputs.aws_profile)
       # AWS__ProfilesLocation: $(inputs.aws_profiles_location.path)
-      # AWS__ServiceURL: $(inputs.aws_service_url)
+      AWS__ServiceURL: $(inputs.ADES_STAGEIN_AWS_SERVICEURL)
+      AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEIN_AWS_ACCESS_KEY_ID)
+      AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEIN_AWS_SECRET_ACCESS_KEY)
   ResourceRequirement: {}

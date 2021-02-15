@@ -4,7 +4,7 @@ doc: "Run Stars for staging input data"
 class: CommandLineTool
 hints:
   DockerRequirement:
-    dockerPull: terradue/stars-t2:latest
+    dockerPull: terradue/stars:latest
 id: stars
 arguments:
 - copy
@@ -14,7 +14,6 @@ arguments:
 - '4'
 - -o
 - ./
-- --harvest
 inputs: 
   ADES_STAGEIN_AWS_SERVICEURL: 
     type: string?
