@@ -20,15 +20,22 @@ The ADES provision a new namespace for each processing job submitted. To do so, 
 You can install the chart with the release name `ades` in `eoepca` namespace as below.
 
 ```console
-$ helm install --name ades . --namespace eoepca
+$ helm install ades charts/ades --namespace eoepca
 ...
 ```
 
 > Note - If you do not specify a name, helm will select a name for you.
 
-### Workflow executor values
+### Stage-in/Out with Stars
 
-All information specific to the parameters that are passed to the workflow executor are described in the wiki at [Deploy And Configure the ADES](https://github.com/EOEPCA/proc-ades/wiki/Deploy-And-Configure-the-ADES)
+By default, CWL values for stage-in and stage-out are not set. Therefore, the default stage-in and stage-out from [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper) project are used. It is strongly recommended to install the default stage-in and stage-out contained in this repository.
+This can be done installing or upgrading the chart with
+
+```console
+helm upgrade --install ades charts/ades/ --namespace eoepca --set-file workflowExecutor.stagein.cwl=charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl  --set-file workflowExecutor.stageout.cwl=charts/ades/files/cwl/stageout/terradue_stars_latest.cwl
+```
+
+Those stage-in and stage-out includes the [Stars](https://github.com/Terradue/Stars) CLI that are able to read the EOEPCA catalog reference and provision with the assets referenced. In stage-in, data are also harvested to create a [STAC](https://github.com/radiantearth/stac-spec) catalog describing the assets staged.
 
 ### Installed Components
 
