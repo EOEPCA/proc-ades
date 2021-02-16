@@ -53,7 +53,7 @@ spec:
           env:
             {{- if .Values.useKubeProxy }}
             - name: HTTP_PROXY
-              value: "http://localhost:8001"
+              value: "http://{{ include "ades.fullname" . }}-kubeproxy:8001"
             {{- else }}
             - name: KUBECONFIG
               value: /var/etc/ades/kubeconfig
@@ -94,16 +94,10 @@ spec:
             - name: ades-config
               mountPath: /zooservices/main.cfg
               subPath: maincfg
-        {{- if .Values.useKubeProxy }}
-        - name: sidecar-proxy
-          image: linuxacademycontent/kubectl-proxy:latest
-          ports:
-            - containerPort: 8001
-        {{- end }}
       volumes:
         - name: ades-config
           configMap:
-            name: {{ .Release.Name }}-configmap
+            name: {{ template "ades.fullname" . }}-configmap
         - name: ades-user-data
         {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
