@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ades.fullname" . }}-kubeproxy
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8001
+      targetPort: 8001
+      protocol: TCP
+      name: http-kubeproxy
+  selector:
+    app.kubernetes.io/name: {{ include "ades.name" . }}-kubeproxy
