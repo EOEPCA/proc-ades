@@ -77,9 +77,11 @@ long pepDelete_(mods::PepResourceResponce& resourceResponce){
 
     std::string auth{"Authorization: Bearer "};
     auth.append(resourceResponce.getJwt());
+    std::string contenttype{"Content-Type: application/json"};
 
     std::list<std::string> list;
     list.push_back(auth);
+    list.push_back(contenttype);
     std::string buffer;
 
     long ret = 0;
@@ -107,8 +109,11 @@ long pepSave_(mods::PepResource& resource){
     std::string auth{"Authorization: Bearer "};
     auth.append(resource.getJwt());
 
+    std::string contenttype{"Content-Type: application/json"};
+
     std::list<std::string> list;
     list.push_back(auth);
+    list.push_back(contenttype);
     std::string buffer;
 
     long ret = 0;
@@ -206,9 +211,12 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     std::string baseUri(host);
     std::string auth{"Authorization: Bearer "};
     auth.append(std::string(jwt));
+    std::string contenttype{"Content-Type: application/json"};
+
 
     std::list<std::string> list;
     list.push_back(auth);
+    list.push_back(contenttype);
     std::string buffer;
 
     mods::PepResource resource;
