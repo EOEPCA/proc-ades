@@ -211,12 +211,10 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     std::string baseUri(host);
     std::string auth{"Authorization: Bearer "};
     auth.append(std::string(jwt));
-    std::string contenttype{"Content-Type: application/json"};
 
 
     std::list<std::string> list;
     list.push_back(auth);
-    list.push_back(contenttype);
     std::string buffer;
 
     mods::PepResource resource;
