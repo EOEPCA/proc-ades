@@ -324,7 +324,7 @@ curl -s -L "http://localhost:7777/wps3/processes/longProcess/jobs" -H "accept: a
     "id": "f4574dc8-8eaa-11ea-9279-0242ac110002",
     "infos": {
       "status": "successful",
-      "message": "ZOO-Kernel successfully run your service!",
+      "message": "ZOO-Kernel successfully ran your service!",
       "links": [
         {
           "Title": "Status location",

@@ -1296,7 +1296,8 @@ extern "C" {
       Url0=(char*) malloc((strlen(tmpPath->value)+
 			   strlen(cIdentifier->value)+strlen(sessId->value)+
 			   25)*sizeof(char));
-      sprintf(Url0,"%s/processes/%s/jobs/%s/result",
+      sprintf(Url0,"%s%s/processes/%s/jobs/%s/result",
+              (wpLen>0?wp:""),
 	      tmpPath->value,
 	      cIdentifier->value,
 	      sessId->value);
@@ -1419,7 +1420,7 @@ extern "C" {
       }
     case SERVICE_SUCCEEDED:
       {
-	message=_("ZOO-Kernel successfully run your service!");
+	message=_("ZOO-Kernel successfully ran your service!");
 	rstatus="successful";
 	needResult=1;
 	break;
