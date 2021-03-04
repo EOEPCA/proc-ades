@@ -85,11 +85,14 @@ long pepDelete_(mods::PepResourceResponce& resourceResponce){
     std::string buffer;
 
     long ret = 0;
-    std::cerr <<"DELETE: " << resourceResponce.getUri().c_str() <<"\n";
+    std::cerr << "pepDelete Request: \n"
+                 "Url:" << resourceResponce.getUri().c_str() << "\n"
+                                                                "Method: DELETE\n"
+                                                                "Content-Type: application/json\n";
     try{
         ret = postputToWeb(buffer, ""/*std::string()*/, resourceResponce.getUri().c_str(), "DELETE",&list);
 //        ret = deleteToWeb(buffer, resourceResponce.getUri().c_str());
-    std::cerr << "pepSave:\treturn: " << ret << " buffer:" << buffer <<"\n";
+    std::cerr << "pepDelete Response:\tstatus_code: " << ret << " buffer:" << buffer <<"\n";
     } catch (...) {
         std::cerr << "Error ... \n";
         ret = 199;
@@ -104,7 +107,7 @@ long pepSave_(mods::PepResource& resource){
     resource.dump();
     nlohmann::json json;
     nlohmann::to_json(json,resource);
-    std::cerr << "\n to send: "<< json.dump()  << "\n";
+    std::cerr << "\n pepSave Request:\njson: "<< json.dump()  << "\nUrl: " << resource.getUri().c_str() << "\n";
 
     std::string auth{"Authorization: Bearer "};
     auth.append(resource.getJwt());
@@ -119,7 +122,7 @@ long pepSave_(mods::PepResource& resource){
     long ret = 0;
     try{
         ret = postputToWeb(buffer, json.dump(), resource.getUri().c_str(), "POST",&list);
-        std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+        std::cerr << "pepSave Response:\tstatus_code: " << ret << " json:" << buffer <<"\n";
     } catch (...) {
 
         return 199;
