@@ -1274,7 +1274,7 @@ extern "C" {
       fprintf(stderr,"///////////////////////////////////////////// \n" );
     }
 
-    char *Url0=(char*) malloc(wpLen*(strlen(tmpPath->value)+
+    char *Url0=(char*) malloc(wpLen+(strlen(tmpPath->value)+
 			       strlen(cIdentifier->value)+
 			       strlen(sessId->value)+18)*sizeof(char));
 
@@ -1293,8 +1293,9 @@ extern "C" {
     json_object_array_add(res,val);
     if(result>0){
       free(Url0);
-      Url0=(char*) malloc((strlen(tmpPath->value)+
-			   strlen(cIdentifier->value)+strlen(sessId->value)+
+      Url0=(char*) malloc(wpLen+(strlen(tmpPath->value)+
+			   strlen(cIdentifier->value)+
+			   strlen(sessId->value)+
 			   25)*sizeof(char));
       sprintf(Url0,"%s%s/processes/%s/jobs/%s/result",
               (wpLen>0?wp:""),
