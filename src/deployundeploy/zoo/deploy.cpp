@@ -618,7 +618,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             if (pr==0){
 
                                                 long  retCode = pepRegisterResources->pepSave(*(resource.get()));
-                                                if (200 != retCode  && pepStopOnError) {
+                                                if (200 != retCode && 422 !=retCode && pepStopOnError) {
                                                     std::string err{
                                                             "eoepca: pepresource.so service error return code: "};
                                                     err.append(std::to_string(retCode));
