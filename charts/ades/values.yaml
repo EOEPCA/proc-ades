@@ -115,6 +115,8 @@ workflowExecutor:
   processingMaxCores: "8"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: false
+  # if false the Ades will clean the volume after the workflow has finished with an error
+  processingKeepWorkspaceIfFailed: false
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
 
