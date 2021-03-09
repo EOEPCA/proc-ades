@@ -89,3 +89,32 @@ def getCwlResourceRequirement(cwl_content):
                 return item["requirements"]["ResourceRequirement"]
             except KeyError:
                 return None
+
+
+def retrieveLogs(controllerUid, namespace):
+
+
+    # create an instance of the API class
+    apiclient = get_api_client()
+    api_instance = client.BatchV1Api(api_client=apiclient)
+    core_v1 = client.CoreV1Api(api_client=apiclient)
+
+    #controllerUid = api_response.metadata.labels["controller-uid"]
+    pod_label_selector = "controller-uid=" + controllerUid
+    pods_list = core_v1.list_namespaced_pod(namespace=namespace, label_selector=pod_label_selector, timeout_seconds=10)
+    pod_name = pods_list.items[0].metadata.name
+    try:
+        # For whatever reason the response returns only the first few characters unless
+        # the call is for `_return_http_data_only=True, _preload_content=False`
+        pod_log_response = core_v1.read_namespaced_pod_log(name=pod_name, namespace=namespace, _return_http_data_only=True, _preload_content=False)
+        pod_log = pod_log_response.data.decode("utf-8")
+        return pod_log
+
+    except client.rest.ApiException as e:
+        print("Exception when calling CoreV1Api->read_namespaced_pod_log: %s\n" % e)
+        raise e
+
+def storeLogs(logs, path):
+    f = open(path, "a")
+    f.write(logs)
+    f.close()

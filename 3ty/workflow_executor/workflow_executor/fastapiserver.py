@@ -94,7 +94,6 @@ def read_prepare(content: PrepareContent, response: Response):
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
 
-
     ades_namespace = os.getenv('ADES_NAMESPACE', None)
 
     # image pull secrets
@@ -183,7 +182,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
     for k, v in cwl_inputs.items():
         inputs_content["inputs"].append({
-            "id": "ADES_"+k,
+            "id": "ADES_" + k,
             "dataType": "string",
             "value": v,
             "mimeType": "",
@@ -248,7 +247,6 @@ def read_execute(content: ExecuteContent, response: Response):
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
 
-
     return {"jobID": workflow_name}
 
 
@@ -306,9 +304,12 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     outputfile = f"{workflow_name}.res"
 
     state = client.State()
+
+    keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
+    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+
     print('Result GET')
 
-    resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace,
                                                    workflowname=workflow_name,
@@ -318,28 +319,40 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
+
+        json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
+        print("wf_output json: ")
+        pprint(json_compatible_item_data)
+        print("job success")
+
+        keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
+        keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+
+        if not keepworkspace:
+            print('Removing Workspace')
+            clean_job_status = clean_job(namespace)
+            if isinstance(clean_job_status, Error):
+                return clean_job_status
+            else:
+                pprint(clean_job_status)
+            print('Removing Workspace Success')
+
     except ApiException as err:
         e = Error()
         e.set_error(12, err.body)
         print(err.body)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        if not keepworkspaceiffailed:
+            print('Removing Workspace')
+            clean_job_status = clean_job(namespace)
+            if isinstance(clean_job_status, Error):
+                return clean_job_status
+            else:
+                pprint(clean_job_status)
+            print('Removing Workspace Success')
+
         return e
-
-    json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
-    print("wf_output json: ")
-    pprint(json_compatible_item_data)
-    print("job success")
-
-    keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
-    keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
-    if not keepworkspace:
-        print('Removing Workspace')
-        clean_job_status = clean_job(namespace)
-        if isinstance(clean_job_status, Error):
-            return clean_job_status
-        else:
-            pprint(clean_job_status)
-        print('Removing Workspace Success')
 
     return JSONResponse(content=json_compatible_item_data)
 
