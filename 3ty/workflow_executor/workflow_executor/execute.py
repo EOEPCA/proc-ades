@@ -102,7 +102,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     f = open(pod_env_vars_tmp_path, "w")
     f.write(json.dumps(pod_env_vars))
     f.close()
-    helpers.create_configmap(source=pod_env_vars_tmp_path, namespace=namespace, configmap_name="pod_env_vars", dataname="pod_env_vars")
+    helpers.create_configmap(source=pod_env_vars_tmp_path, namespace=namespace, configmap_name="pod-env-vars", dataname="pod-env-vars")
     os.remove(pod_env_vars_tmp_path)
 
     jsonInputFilename = ntpath.basename(tmppath)

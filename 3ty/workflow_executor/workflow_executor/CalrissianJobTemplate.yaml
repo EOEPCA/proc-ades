@@ -47,9 +47,9 @@ spec:
             - name: inputs-config-volume
               mountPath: {{inputs_file_path}}
               subPath: inputs
-            - name: pod_env_vars
+            - name: pod-env-vars
               mountPath: {{pod_env_vars_path}}
-              subPath: pod_env_vars
+              subPath: pod-env-vars
           env:
             - name: CALRISSIAN_POD_NAME
               valueFrom:
@@ -70,6 +70,6 @@ spec:
         - name: inputs-config-volume
           configMap:
             name: inputs-config
-        - name: pod_env_vars
+        - name: pod-env-vars
           configMap:
-            name: pod_env_vars
+            name: pod-env-vars
