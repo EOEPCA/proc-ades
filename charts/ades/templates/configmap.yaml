@@ -16,6 +16,7 @@ data:
   stageout.cwl: {{ required "A valid .Values.Values.workflowExecutor.stageout.cwl entry required!" (tpl (.Values.workflowExecutor.stageout.cwl) . | quote) }}
   rulez.cwl: {{ required "A valid .Values.Values.workflowExecutor.rulez.cwl entry required!" (tpl (.Values.workflowExecutor.rulez.cwl) . | quote) }}
   wfinputs.yaml: {{ toYaml .Values.workflowExecutor.inputs | quote }}
+  pod_env_vars: {{ toYaml .Values.pod.env | quote }}
 
 
   

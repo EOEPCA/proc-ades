@@ -12,7 +12,7 @@ spec:
         fsGroup: 0
       containers:
         - name: calrissian
-          image: terradue/calrissian:0.9.0-cwl3
+          image: terradue/calrissian:0.9.1
           imagePullPolicy: Always
           command: ["calrissian"]
           args:
@@ -26,6 +26,8 @@ spec:
             - "{{max_cores}}"
             - "--tmp-outdir-prefix"
             - "{{tmp_outdir_prefix}}"
+            - "--pod-env_vars"
+            - "{{pod_env_vars_path}}"
             - "--debug"
             # - "--leave-tmpdir"
             # - "--leave-container"
@@ -45,6 +47,9 @@ spec:
             - name: inputs-config-volume
               mountPath: {{inputs_file_path}}
               subPath: inputs
+            - name: pod_env_vars
+              mountPath: {{pod_env_vars_path}}
+              subPath: pod_env_vars
           env:
             - name: CALRISSIAN_POD_NAME
               valueFrom:
@@ -65,3 +70,6 @@ spec:
         - name: inputs-config-volume
           configMap:
             name: inputs-config
+        - name: pod_env_vars
+          configMap:
+            name: pod_env_vars

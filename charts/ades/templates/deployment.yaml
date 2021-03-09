@@ -62,6 +62,8 @@ spec:
               value: {{ .Release.Namespace }}
             - name: ADES_CWL_INPUTS
               value: /var/etc/ades/wfinputs.yaml
+            - name: ADES_POD_ENV_VARS
+              value: /var/etc/ades/pod_env_vars.yaml
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
             - name: VOLUME_TMP_SIZE
