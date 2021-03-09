@@ -7,7 +7,7 @@ from kubernetes import client, config
 from workflow_executor import helpers
 
 
-ADES_USER_DATA_PATH = "/var/www/html/res"
+ADES_LOGS_PATH = "/var/www/_run/res"
 
 def run(namespace, workflow_name, state=None):
     # create an instance of the API class
@@ -28,7 +28,7 @@ def run(namespace, workflow_name, state=None):
         else:
             controller_uid = api_response.metadata.labels["controller-uid"]
             logs = helpers.retrieveLogs(controller_uid, namespace)
-            helpers.storeLogs(logs, os.path.join(ADES_USER_DATA_PATH, f"DeployProcess_{namespace}.log"))
+            helpers.storeLogs(logs, os.path.join(ADES_LOGS_PATH, f"{namespace}_calrissian.log"))
 
         # if processing has finished, store logs in /var/www/html/res
         if api_response.status.succeeded:
