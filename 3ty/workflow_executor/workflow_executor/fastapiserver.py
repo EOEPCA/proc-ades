@@ -74,8 +74,9 @@ def read_prepare(content: PrepareContent, response: Response):
     print('Prepare POST')
 
     prepare_id = sanitize_k8_parameters(f"{content.serviceID}{content.runID}")
+    if len(prepare_id) > 63:
+        prepare_id = shorten_namespace(sanitize_k8_parameters(content.serviceID), sanitize_k8_parameters(content.runID))
 
-    default_inputVolumeSize = "500Mi"
     default_tmpVolumeSize = "4Gi"
     default_outputVolumeSize = "5Gi"
 
@@ -372,6 +373,22 @@ def clean_job(namespace: str):
         e.set_error(12, err.body)
         print(err.body)
         return e
+
+
+"""
+Shortens namespace name to respect K8 64 chars limit
+"""
+
+
+def shorten_namespace(serviceId, runId):
+    new_namespace = f"{serviceId}{runId}"
+    while len(new_namespace) > 63:
+        serviceId = serviceId[:-1]
+        while serviceId.endswith('-'):
+            serviceId = serviceId[:-1]
+        new_namespace = f"{serviceId}{runId}"
+
+    return new_namespace
 
 
 def main():
