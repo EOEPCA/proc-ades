@@ -119,7 +119,10 @@ workflowExecutor:
   processingKeepWorkspaceIfFailed: false
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
-
+  # some configuration values for submitted pod
+  pod:
+    env: {}
+      # HTTP_PROXY: http://1.2.3.4:8534
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"

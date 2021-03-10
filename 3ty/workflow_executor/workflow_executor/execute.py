@@ -61,7 +61,7 @@ def process_inputs(cwl_document, job_input_json_file):
 
 
 def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_json, workflow_name,
-        max_ram="4G", max_cores="2", cwl_wrapper_config=None, state=None):
+        max_ram="4G", max_cores="2", cwl_wrapper_config=None, state=None, pod_env_vars=None):
     # volumes
     input_volume_name = volume_name_prefix + "-input-data"
     output_volume_name = volume_name_prefix + "-output-data"
@@ -95,11 +95,19 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     helpers.create_configmap(source=wrapped_cwl_document, namespace=namespace, configmap_name=cwl_config,
                              dataname="cwl")
     helpers.create_configmap(source=tmppath, namespace=namespace, configmap_name=inputs_config, dataname="inputs")
-
     os.remove(tmppath)
+
+    ## Adding pod env vars
+    pod_env_vars_tmp_path = "/tmp/pod_env_vars.json"
+    f = open(pod_env_vars_tmp_path, "w")
+    f.write(json.dumps(pod_env_vars))
+    f.close()
+    helpers.create_configmap(source=pod_env_vars_tmp_path, namespace=namespace, configmap_name="pod-env-vars", dataname="pod-env-vars")
+    os.remove(pod_env_vars_tmp_path)
 
     jsonInputFilename = ntpath.basename(tmppath)
     cwlDocumentFilename = ntpath.basename(wrapped_cwl_document)
+    podEnvVarsFilename = ntpath.basename(pod_env_vars_tmp_path)
 
     # # Setup K8 configs
     apiclient = helpers.get_api_client()
@@ -118,6 +126,7 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
                      "max_ram": max_ram,
                      "max_cores": max_cores,
                      "tmp_outdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
+                     "pod_env_vars_path": path.join(mount_folder, "input-data", workflow_name, f"{podEnvVarsFilename}"),
                      "tmpdir_prefix": f"{path.join(mount_folder, 'tmpout', workflow_name)}/",
                      "outdir": f"{path.join(mount_folder, 'output-data', workflow_name)}/",
                      "argument1": path.join(mount_folder, "input-data", workflow_name,

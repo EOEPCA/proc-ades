@@ -176,6 +176,10 @@ def read_execute(content: ExecuteContent, response: Response):
     # read ADES config variables
     with open(os.getenv('ADES_CWL_INPUTS', None)) as f:
         cwl_inputs = yaml.load(f, Loader=yaml.FullLoader)
+    
+    # read ADES config variables
+    with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
+        pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
@@ -242,6 +246,7 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
                                                         cwl_wrapper_config=cwl_wrapper_config,
+                                                        pod_env_vars=pod_env_vars,
                                                         max_ram=max_ram,
                                                         max_cores=max_cores)
         except ApiException as e:
