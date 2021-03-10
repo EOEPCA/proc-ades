@@ -60,11 +60,61 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, s
         print("Exception listing pods: %s\n" % e)
         raise e
 
+
     # get pod log
     try:
-        print(f"retrieving logs of {pod}")
+        print(f"Checking that pod {pod} is in ready state.")
+        podReady=False
+        count=0
+        while not podReady and count < 10:
+            time.sleep(3)
+            podstatus = core_api_instance.read_namespaced_pod_status(name=pod, namespace=namespace)
+            podReady = is_ready(podstatus=podstatus)
+            count += 1
+
+    except ApiException as e:
+        print("Exception when checking pod status of pod %s : %s\n" % pod, e)
+        raise e
+
+    # get pod log
+    try:
+        print(f"retrieving logs of pod {pod}")
         result = core_api_instance.read_namespaced_pod_log(name=pod, namespace=namespace, container="view-results")
     except ApiException as e:
         print("Exception when retrieving result from output volume: %s\n" % e)
         raise e
     return eval(result)
+
+
+
+
+
+def is_ready(podstatus) -> bool:
+    """Check if the Pod is in the ready state.
+
+    Returns:
+        True if in the ready state; False otherwise.
+    """
+
+    # if there is no status, the pod is definitely not ready
+    status = podstatus.status
+    if status is None:
+        return False
+
+    # check the pod phase to make sure it is running. a pod in
+    # the 'failed' or 'success' state will no longer be running,
+    # so we only care if the pod is in the 'running' state.
+    phase = status.phase
+    if phase.lower() != "running":
+        return False
+
+    for cond in status.conditions:
+        # we only care about the condition type 'ready'
+        if cond.type.lower() != "ready":
+            continue
+
+        # check that the readiness condition is True
+        return cond.status.lower() == "true"
+
+    # Catchall
+    return False

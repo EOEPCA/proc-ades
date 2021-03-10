@@ -13,7 +13,7 @@
 
 
 std::string replaceStr(std::string &str, const std::string &from,
-                         const std::string &to) {
+                       const std::string &to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
         str.replace(start_pos, from.length(), to);
@@ -26,14 +26,14 @@ std::string replaceStr(std::string &str, const std::string &from,
 namespace PEP {
     using nlohmann::json;
 
-    inline json get_untyped(const json & j, const char * property) {
+    inline json get_untyped(const json &j, const char *property) {
         if (j.find(property) != j.end()) {
             return j.at(property).get<json>();
         }
         return json();
     }
 
-    inline json get_untyped(const json & j, std::string property) {
+    inline json get_untyped(const json &j, std::string property) {
         return get_untyped(j, property.data());
     }
 
@@ -45,17 +45,18 @@ namespace nlohmann {
         return j.find(key) != j.end();
     }
 
-    void from_json(const json & j, mods::PepResource & x);
-    void to_json(json & j, const mods::PepResource & x);
+    void from_json(const json &j, mods::PepResource &x);
 
-    inline void from_json(const json & j, mods::PepResourceResponce& x) {
+    void to_json(json &j, const mods::PepResource &x);
+
+    inline void from_json(const json &j, mods::PepResourceResponce &x) {
         if (exists_key(j, "name"))
             x.setName(j.at("name").get<std::string>());
         if (exists_key(j, "icon_uri"))
             x.setIconUri(j.at("icon_uri").get<std::string>());
 
         if (exists_key(j, "icon_uri"))
-            x.setScopes(j.at("scopes").get<std::vector<std::string>>());
+            x.setScopes(j.at("scopes").get < std::vector < std::string >> ());
 
         if (exists_key(j, "ownership_id"))
             x.setOwnershipId(j.at("ownership_id").get<std::string>());
@@ -64,7 +65,7 @@ namespace nlohmann {
             x.setId(j.at("id").get<std::string>());
     }
 
-    inline void to_json(json & j, const mods::PepResource & x) {
+    inline void to_json(json &j, const mods::PepResource &x) {
         j = json::object();
         j["name"] = x.getName();
         j["icon_uri"] = x.getIconUri();
@@ -73,21 +74,26 @@ namespace nlohmann {
 }
 
 
-long pepDelete_(mods::PepResourceResponce& resourceResponce){
+long pepDelete_(mods::PepResourceResponce &resourceResponce) {
 
     std::string auth{"Authorization: Bearer "};
     auth.append(resourceResponce.getJwt());
+    std::string contenttype{"Content-Type: application/json"};
 
-    std::list<std::string> list;
+    std::list <std::string> list;
     list.push_back(auth);
+    list.push_back(contenttype);
     std::string buffer;
 
     long ret = 0;
-    std::cerr <<"DELETE: " << resourceResponce.getUri().c_str() <<"\n";
-    try{
-        ret = postputToWeb(buffer, ""/*std::string()*/, resourceResponce.getUri().c_str(), "DELETE",&list);
+    std::cerr << "pepDelete Request: \n"
+                 "Url:" << resourceResponce.getUri().c_str() << "\n"
+                                                                "Method: DELETE\n"
+                                                                "Content-Type: application/json\n";
+    try {
+        ret = postputToWeb(buffer, ""/*std::string()*/, resourceResponce.getUri().c_str(), "DELETE", &list);
 //        ret = deleteToWeb(buffer, resourceResponce.getUri().c_str());
-    std::cerr << "pepSave:\treturn: " << ret << " buffer:" << buffer <<"\n";
+        std::cerr << "pepDelete Response:\tstatus_code: " << ret << " buffer:" << buffer << "\n";
     } catch (...) {
         std::cerr << "Error ... \n";
         ret = 199;
@@ -96,41 +102,48 @@ long pepDelete_(mods::PepResourceResponce& resourceResponce){
     return ret;
 }
 
-long pepSave_(mods::PepResource& resource){
+long pepSave_(mods::PepResource &resource) {
     std::cerr << "int (*save)(PepResource& resource);\n";
 
     resource.dump();
     nlohmann::json json;
-    nlohmann::to_json(json,resource);
-    std::cerr << "\n to send: "<< json.dump()  << "\n";
+    nlohmann::to_json(json, resource);
+    std::cerr << "\n pepSave Request:\njson: " << json.dump() << "\nUrl: " << resource.getUri().c_str() << "\n";
 
     std::string auth{"Authorization: Bearer "};
     auth.append(resource.getJwt());
 
-    std::list<std::string> list;
+    std::string contenttype{"Content-Type: application/json"};
+
+    std::list <std::string> list;
     list.push_back(auth);
+    list.push_back(contenttype);
     std::string buffer;
 
     long ret = 0;
-    try{
-        ret = postputToWeb(buffer, json.dump(), resource.getUri().c_str(), "POST",&list);
-        std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+    try {
+        ret = postputToWeb(buffer, json.dump(), resource.getUri().c_str(), "POST", &list);
+        std::cerr << "pepSave Response:\tstatus_code: " << ret << " json:" << buffer << "\n";
     } catch (...) {
 
         return 199;
     }
 
     switch (ret) {
-        case 200:{
-            std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
-            mods::PepResourceResponce msgWeb= nlohmann::json::parse(buffer);
+        case 200: {
+            std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer << "\n";
+            mods::PepResourceResponce msgWeb = nlohmann::json::parse(buffer);
             msgWeb.dump();
+        }
+            break;
+        case 422:{
+            std::cerr << "pepSave: \treturn: " << ret << " (resource already registered) \n";
         }
             break;
         case 401:
         case 404:
         default:
-            std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer <<"\n";
+            std::cerr << "pepSave:\treturn: " << ret << " json:" << buffer << "\n";
             break;
     }
 
@@ -138,30 +151,31 @@ long pepSave_(mods::PepResource& resource){
 }
 
 
-long pepGets_(mods::PepResource& resource, std::list<std::unique_ptr<mods::PepResourceResponce>>* resources=nullptr){
+long
+pepGets_(mods::PepResource &resource, std::list <std::unique_ptr<mods::PepResourceResponce>> *resources = nullptr) {
 
     std::cerr << "int (*pepGets)(void);\n";
 
     std::string auth{"Authorization: Bearer "};
     auth.append(resource.getJwt());
 
-    std::list<std::string> list;
+    std::list <std::string> list;
     list.push_back(auth);
     std::string buffer;
 
     long ret = 199;
-    try{
-        ret = getFromWeb(buffer, resource.getUri().c_str() ,&list);
+    try {
+        ret = getFromWeb(buffer, resource.getUri().c_str(), &list);
     } catch (...) {
         return 199;
     }
 
     switch (ret) {
-        case 200:{
-            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
-            std::vector<mods::PepResourceResponce> msgWeb= nlohmann::json::parse(buffer);
+        case 200: {
+            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer << "\n";
+            std::vector <mods::PepResourceResponce> msgWeb = nlohmann::json::parse(buffer);
             if (resources)
-                for(auto&a:msgWeb){
+                for (auto &a:msgWeb) {
                     auto v = std::make_unique<mods::PepResourceResponce>();
                     *v = a;
                     resources->push_back(std::move(v));
@@ -172,34 +186,34 @@ long pepGets_(mods::PepResource& resource, std::list<std::unique_ptr<mods::PepRe
         case 401:
         case 404:
         default:
-            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer <<"\n";
+            std::cerr << "pepGets:\treturn: " << ret << " json:" << buffer << "\n";
             break;
     }
 
     return ret;
 }
 
-extern "C" long pepSave(mods::PepResource& resource){
+extern "C" long pepSave(mods::PepResource &resource) {
     return pepSave_(resource);
 }
 
 
-extern "C" long pepGets(mods::PepResource& resource){
+extern "C" long pepGets(mods::PepResource &resource) {
     return pepGets_(resource);
 }
 
-extern "C" long pepGet(const std::string& id,mods::PepResource& resource){
+extern "C" long pepGet(const std::string &id, mods::PepResource &resource) {
     std::cerr << "int (*pepGet)(const std::string& id);\n";
     return 0;
 }
 
-extern "C" long pepRemove(const std::string& id,mods::PepResource& resource){
+extern "C" long pepRemove(const std::string &id, mods::PepResource &resource) {
     std::cerr << "int (*pepRemove)(const std::string& id,PepResource& resource);\n";
 
     return 0;
 }
 
-extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,char* jwt,int stopOnError){
+extern "C" long pepRemoveFromZoo(const char *path, const char *host/*base uri*/, char *jwt, int stopOnError) {
     std::cerr << "pepRemoveFromZoo(const std::string& id,const char* host)\n";
 
     std::string sPath{path};
@@ -207,7 +221,8 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     std::string auth{"Authorization: Bearer "};
     auth.append(std::string(jwt));
 
-    std::list<std::string> list;
+
+    std::list <std::string> list;
     list.push_back(auth);
     std::string buffer;
 
@@ -215,10 +230,10 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     resource.setUri(baseUri + "/resources");
     resource.setJwt(std::string(jwt));
 
-    std::list<std::unique_ptr<mods::PepResourceResponce>> resources{};
+    std::list <std::unique_ptr<mods::PepResourceResponce>> resources{};
 
-    long ret = pepGets_(resource,&resources);
-    if (ret!=200){
+    long ret = pepGets_(resource, &resources);
+    if (ret != 200) {
         if (stopOnError)
             return ret;
         else
@@ -226,29 +241,29 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     }
 
     std::cerr << "*pepRemoveFromZoo* \n";
-    for(auto&r:resources){
+    for (auto &r:resources) {
         r->dump();
 
         std::string ns{sPath};
-        replaceStr(ns,"wps3","watchjob");
+        replaceStr(ns, "wps3", "watchjob");
 
-        if (r->getIconUri().rfind(sPath, 0) == 0 /*r->getIconUri() == sPath*/){
-            r->setUri(baseUri + "/resources/" + r->getId() );
+        if (r->getIconUri().rfind(sPath, 0) == 0 /*r->getIconUri() == sPath*/) {
+            r->setUri(baseUri + "/resources/" + r->getId());
             r->setJwt(std::string(jwt));
-            long retDel=pepDelete_(*r);
-            if (retDel!=200){
-                if(stopOnError){
+            long retDel = pepDelete_(*r);
+            if (retDel != 200) {
+                if (stopOnError) {
                     return retDel;
                 }
             }
         }
 
-        if (r->getIconUri().rfind(ns, 0) == 0){
-            r->setUri(baseUri + "/resources/" + r->getId() );
+        if (r->getIconUri().rfind(ns, 0) == 0) {
+            r->setUri(baseUri + "/resources/" + r->getId());
             r->setJwt(std::string(jwt));
-            long retDel=pepDelete_(*r);
-            if (retDel!=200){
-                if(stopOnError){
+            long retDel = pepDelete_(*r);
+            if (retDel != 200) {
+                if (stopOnError) {
                     return retDel;
                 }
             }
@@ -260,7 +275,7 @@ extern "C" long pepRemoveFromZoo(const char* path,const char* host/*base uri*/,c
     return 200;
 }
 
-extern "C" long pepUpdate(const std::string& id,mods::PepResource& resource){
+extern "C" long pepUpdate(const std::string &id, mods::PepResource &resource) {
     std::cerr << "int (*pepUpdate)(const std::string& id,PepResource& resource);\n";
     return 0;
 }

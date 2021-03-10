@@ -115,9 +115,14 @@ workflowExecutor:
   processingMaxCores: "8"
   # if false the Ades will clean the volume after the workflow has successfully finished running
   processingKeepWorkspace: false
+  # if false the Ades will clean the volume after the workflow has finished with an error
+  processingKeepWorkspaceIfFailed: false
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
-
+  # some configuration values for submitted pod
+  pod:
+    env: {}
+      # HTTP_PROXY: http://1.2.3.4:8534
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"

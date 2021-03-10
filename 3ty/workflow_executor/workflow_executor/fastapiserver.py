@@ -74,8 +74,9 @@ def read_prepare(content: PrepareContent, response: Response):
     print('Prepare POST')
 
     prepare_id = sanitize_k8_parameters(f"{content.serviceID}{content.runID}")
+    if len(prepare_id) > 63:
+        prepare_id = shorten_namespace(sanitize_k8_parameters(content.serviceID), sanitize_k8_parameters(content.runID))
 
-    default_inputVolumeSize = "500Mi"
     default_tmpVolumeSize = "4Gi"
     default_outputVolumeSize = "5Gi"
 
@@ -93,7 +94,6 @@ def read_prepare(content: PrepareContent, response: Response):
         if "outdirMax" in cwlResourceRequirement:
             print(f"setting outdirMax to {cwlResourceRequirement['outdirMax']} as specified in the CWL")
             outputVolumeSize = f"{cwlResourceRequirement['outdirMax']}Mi"
-
 
     ades_namespace = os.getenv('ADES_NAMESPACE', None)
 
@@ -176,6 +176,10 @@ def read_execute(content: ExecuteContent, response: Response):
     # read ADES config variables
     with open(os.getenv('ADES_CWL_INPUTS', None)) as f:
         cwl_inputs = yaml.load(f, Loader=yaml.FullLoader)
+    
+    # read ADES config variables
+    with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
+        pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
 
     # retrieve config params and store them in json
     # these will be used in the stageout phase
@@ -183,7 +187,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
     for k, v in cwl_inputs.items():
         inputs_content["inputs"].append({
-            "id": "ADES_"+k,
+            "id": "ADES_" + k,
             "dataType": "string",
             "value": v,
             "mimeType": "",
@@ -242,12 +246,12 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         namespace=namespace,
                                                         workflow_name=workflow_name,
                                                         cwl_wrapper_config=cwl_wrapper_config,
+                                                        pod_env_vars=pod_env_vars,
                                                         max_ram=max_ram,
                                                         max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
             resp_status = {"status": "failed", "error": e.body}
-
 
     return {"jobID": workflow_name}
 
@@ -306,9 +310,12 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     outputfile = f"{workflow_name}.res"
 
     state = client.State()
+
+    keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
+    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+
     print('Result GET')
 
-    resp_status = {}
     try:
         resp_status = workflow_executor.result.run(namespace=namespace,
                                                    workflowname=workflow_name,
@@ -318,28 +325,40 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
                                                    state=state)
         print("getresult success")
         pprint(resp_status)
+
+        json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
+        print("wf_output json: ")
+        pprint(json_compatible_item_data)
+        print("job success")
+
+        keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
+        keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+
+        if not keepworkspace:
+            print('Removing Workspace')
+            clean_job_status = clean_job(namespace)
+            if isinstance(clean_job_status, Error):
+                return clean_job_status
+            else:
+                pprint(clean_job_status)
+            print('Removing Workspace Success')
+
     except ApiException as err:
         e = Error()
         e.set_error(12, err.body)
         print(err.body)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        if not keepworkspaceiffailed:
+            print('Removing Workspace')
+            clean_job_status = clean_job(namespace)
+            if isinstance(clean_job_status, Error):
+                return clean_job_status
+            else:
+                pprint(clean_job_status)
+            print('Removing Workspace Success')
+
         return e
-
-    json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
-    print("wf_output json: ")
-    pprint(json_compatible_item_data)
-    print("job success")
-
-    keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
-    keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
-    if not keepworkspace:
-        print('Removing Workspace')
-        clean_job_status = clean_job(namespace)
-        if isinstance(clean_job_status, Error):
-            return clean_job_status
-        else:
-            pprint(clean_job_status)
-        print('Removing Workspace Success')
 
     return JSONResponse(content=json_compatible_item_data)
 
@@ -359,6 +378,22 @@ def clean_job(namespace: str):
         e.set_error(12, err.body)
         print(err.body)
         return e
+
+
+"""
+Shortens namespace name to respect K8 64 chars limit
+"""
+
+
+def shorten_namespace(serviceId, runId):
+    new_namespace = f"{serviceId}{runId}"
+    while len(new_namespace) > 63:
+        serviceId = serviceId[:-1]
+        while serviceId.endswith('-'):
+            serviceId = serviceId[:-1]
+        new_namespace = f"{serviceId}{runId}"
+
+    return new_namespace
 
 
 def main():

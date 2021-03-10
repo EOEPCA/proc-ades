@@ -1292,11 +1292,24 @@ extern "C" {
     json_object_object_add(val,"href",json_object_new_string(Url0));
     json_object_array_add(res,val);
     if(result>0){
+        fprintf(stderr, "Setting Result Location");
       free(Url0);
-      Url0=(char*) malloc((strlen(tmpPath->value)+
-			   strlen(cIdentifier->value)+strlen(sessId->value)+
-			   25)*sizeof(char));
-      sprintf(Url0,"%s/processes/%s/jobs/%s/result",
+
+      fprintf(stderr, (wpLen>0?"workspace name is greater than 1":""));
+      fprintf(stderr, "workspace is %s", wp);
+
+      Url0=(char*) malloc(wpLen*(strlen(tmpPath->value)+
+			   strlen(cIdentifier->value)+
+			   strlen(sessId->value)+25)*sizeof(char));
+
+      fprintf(stderr, "result location is %s%s/processes/%s/jobs/%s/result",
+              (wpLen>0?wp:""),
+              tmpPath->value,
+              cIdentifier->value,
+              sessId->value);
+
+      sprintf(Url0,"%s%s/processes/%s/jobs/%s/result",
+              (wpLen>0?wp:""),
 	      tmpPath->value,
 	      cIdentifier->value,
 	      sessId->value);
@@ -1419,7 +1432,7 @@ extern "C" {
       }
     case SERVICE_SUCCEEDED:
       {
-	message=_("ZOO-Kernel successfully run your service!");
+	message=_("ZOO-Kernel successfully ran your service!");
 	rstatus="successful";
 	needResult=1;
 	break;
