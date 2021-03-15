@@ -176,7 +176,7 @@ def read_execute(content: ExecuteContent, response: Response):
     # read ADES config variables
     with open(os.getenv('ADES_CWL_INPUTS', None)) as f:
         cwl_inputs = yaml.load(f, Loader=yaml.FullLoader)
-    
+
     # read ADES config variables
     with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
         pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
@@ -266,6 +266,9 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
+    keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
+    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+
     state = client.State()
     print('Status GET')
 
@@ -284,13 +287,32 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             e = Error()
             e.set_error(12, resp_status["error"])
             response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            # if keepworkspaceiffailed is false, namespace will be discarded
+            if not keepworkspaceiffailed:
+                print('Removing Workspace')
+                clean_job_status = clean_job(namespace)
+                if isinstance(clean_job_status, Error):
+                    return clean_job_status
+                else:
+                    pprint(clean_job_status)
+                print('Removing Workspace Success')
+
             return e
-
-
     except ApiException as err:
         e = Error()
         e.set_error(12, err.body)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # if keepworkspaceiffailed is false, namespace will be discarded
+        if not keepworkspaceiffailed:
+            print('Removing Workspace')
+            clean_job_status = clean_job(namespace)
+            if isinstance(clean_job_status, Error):
+                return clean_job_status
+            else:
+                pprint(clean_job_status)
+            print('Removing Workspace Success')
         return e
 
     return status
@@ -359,6 +381,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             print('Removing Workspace Success')
 
         return e
+
 
     return JSONResponse(content=json_compatible_item_data)
 

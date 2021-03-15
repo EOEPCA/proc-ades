@@ -13,7 +13,6 @@ def run(namespace, workflow_name, state=None):
     # create an instance of the API class
     apiclient = helpers.get_api_client()
     api_instance = client.BatchV1Api(api_client=apiclient)
-
     pretty = True
 
     print("## JOB STATUS")
