@@ -181,9 +181,51 @@ def read_execute(content: ExecuteContent, response: Response):
     with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
         pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
 
-    # retrieve config params and store them in json
-    # these will be used in the stageout phase
-    default_value = ""
+    # read USE_RESOURCE_MANAGER variable
+    useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
+    useResourceManagerStageOut = useResourceManagerStageOut.lower() in ['true', '1', 'y', 'yes']
+
+    # read RESOURCE MANAGER stageout variables
+    if useResourceManagerStageOut:
+
+        # retrieving rm endpoint and user
+        resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
+        resource_manager_user = os.getenv('RESOURCE_MANAGER_USERNAME', None)
+
+        if resource_manager_endpoint is None:
+            e = Error()
+            e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        if resource_manager_user is None:
+            e = Error()
+            e.set_error(12, "Username is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
+        workspace_id= f"rm-user-{resource_manager_user}"
+
+        # retrieve workspace details
+        workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)
+        try:
+            access = workspaceDetails["_storage"]["_credentials"]["access"]
+            bucketname = workspaceDetails["_storage"]["_credentials"]["bucketname"]
+            projectid = workspaceDetails["_storage"]["_credentials"]["projectid"]
+            secret = workspaceDetails["_storage"]["_credentials"]["secret"]
+
+            cwl_inputs["STAGEOUT_AWS_SERVICEURL"] = resource_manager_endpoint
+            cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
+            cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
+            cwl_inputs["STAGEOUT_OUTPUT"] = f"{projectid}:{bucketname}"
+
+
+        except KeyError:
+            e = Error()
+            e.set_error(12, "Resource Manager access credentials are missing or are invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
 
     for k, v in cwl_inputs.items():
         inputs_content["inputs"].append({
@@ -251,6 +293,7 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
+            response.body = e.body
             resp_status = {"status": "failed", "error": e.body}
 
     return {"jobID": workflow_name}
@@ -381,7 +424,6 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
             print('Removing Workspace Success')
 
         return e
-
 
     return JSONResponse(content=json_compatible_item_data)
 

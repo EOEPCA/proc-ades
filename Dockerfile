@@ -98,7 +98,8 @@ RUN conda config --add channels eoepca
 RUN conda config --add channels conda-forge
 RUN conda install python-kubernetes click fastapi uvicorn
 RUN conda install -c eoepca/label/dev cwl-wrapper
-RUN cd /usr/local/workflow_executor/ && python setup.py install
+RUN cd /usr/local/workflow_executor/rm_client && python setup.py install
+RUN cd /usr/local/workflow_executor/workflow_executor && python setup.py install
 
 # COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg

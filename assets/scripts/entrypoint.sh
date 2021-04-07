@@ -9,7 +9,7 @@ chown 48:48 /var/www/_run/res
 
 # Starting Workflow Executor
 echo "Starting workflow executor..."
-nohup /opt/miniconda/bin/python -m workflow_executor.fastapiserver &
+nohup /opt/miniconda/bin/python -m workflow_executor.workflow_executor.fastapiserver &
 sleep 5
 echo "Workflow executor started"
 
