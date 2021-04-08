@@ -215,7 +215,6 @@ def read_execute(content: ExecuteContent, response: Response):
             projectid = workspaceDetails["_storage"]["_credentials"]["projectid"]
             secret = workspaceDetails["_storage"]["_credentials"]["secret"]
 
-            cwl_inputs["STAGEOUT_AWS_SERVICEURL"] = resource_manager_endpoint
             cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
             cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
             cwl_inputs["STAGEOUT_OUTPUT"] = f"{projectid}:{bucketname}"
