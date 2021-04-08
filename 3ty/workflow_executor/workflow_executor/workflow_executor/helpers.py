@@ -141,7 +141,11 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
         # pprint(api_response)
 
     except rm_client.rest.ApiException as e:
-        print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+        if e.status == 404:
+            print(f"resource manager workspace {workspace_id} could not be found")
+        else:
+            print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+        raise e
 
 
     return api_response
