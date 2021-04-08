@@ -88,6 +88,14 @@ spec:
               value: /var/etc/ades/rulez.cwl
             - name: IMAGE_PULL_SECRETS
               value: /var/etc/ades/ppImagePullSecrets.json
+            {{- if .Values.workflowExecutor.useResourceManager }}
+            - name: USE_RESOURCE_MANAGER
+              value: {{ .Values.workflowExecutor.useResourceManager | quote }}
+            - name: RESOURCE_MANAGER_USERNAME
+              value: {{ .Values.workflowExecutor.resourceManagerUser | quote }}
+            - name: RESOURCE_MANAGER_ENDPOINT
+              value: {{ .Values.workflowExecutor.resourceManagerEndpoint | quote }}
+            {{- end }}
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
