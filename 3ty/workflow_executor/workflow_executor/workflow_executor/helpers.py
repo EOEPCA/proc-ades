@@ -1,4 +1,6 @@
 import os
+
+import rm_client
 import sys
 from pprint import pprint
 
@@ -24,7 +26,7 @@ def get_api_client():
     return my_api_config
 
 
-def create_configmap_object(source, namespace, configmap_name,dataname):
+def create_configmap_object(source, namespace, configmap_name, dataname):
     configmap_dict = dict()
     with open(source) as f:
         source_content = f.read()
@@ -45,8 +47,9 @@ def create_configmap_object(source, namespace, configmap_name,dataname):
     return configmap
 
 
-def create_configmap(source, namespace, configmap_name,dataname):
-    configmap = create_configmap_object(source=source, namespace=namespace, configmap_name=configmap_name,dataname=dataname)
+def create_configmap(source, namespace, configmap_name, dataname):
+    configmap = create_configmap_object(source=source, namespace=namespace, configmap_name=configmap_name,
+                                        dataname=dataname)
     api_client = get_api_client()
     api_instance = client.CoreV1Api(api_client)
     print("Creating configmap")
@@ -92,21 +95,20 @@ def getCwlResourceRequirement(cwl_content):
 
 
 def retrieveLogs(controllerUid, namespace):
-
-
     # create an instance of the API class
     apiclient = get_api_client()
     api_instance = client.BatchV1Api(api_client=apiclient)
     core_v1 = client.CoreV1Api(api_client=apiclient)
 
-    #controllerUid = api_response.metadata.labels["controller-uid"]
+    # controllerUid = api_response.metadata.labels["controller-uid"]
     pod_label_selector = "controller-uid=" + controllerUid
     pods_list = core_v1.list_namespaced_pod(namespace=namespace, label_selector=pod_label_selector, timeout_seconds=10)
     pod_name = pods_list.items[0].metadata.name
     try:
         # For whatever reason the response returns only the first few characters unless
         # the call is for `_return_http_data_only=True, _preload_content=False`
-        pod_log_response = core_v1.read_namespaced_pod_log(name=pod_name, namespace=namespace, _return_http_data_only=True, _preload_content=False)
+        pod_log_response = core_v1.read_namespaced_pod_log(name=pod_name, namespace=namespace,
+                                                           _return_http_data_only=True, _preload_content=False)
         pod_log = pod_log_response.data.decode("utf-8")
         return pod_log
 
@@ -114,7 +116,31 @@ def retrieveLogs(controllerUid, namespace):
         print("Exception when calling CoreV1Api->read_namespaced_pod_log: %s\n" % e)
         raise e
 
+
 def storeLogs(logs, path):
     f = open(path, "a")
     f.write(logs)
     f.close()
+
+
+def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
+    print("calling resource manager api")
+
+    if not resource_manager_endpoint:
+        raise ApiException(reason="Resource manager endpoint could not be found")
+
+    # Configure API key authorization: ApiKeyAuth
+    configuration = rm_client.Configuration()
+    configuration.host = resource_manager_endpoint
+    # create an instance of the API class
+    api_instance = rm_client.DefaultApi(rm_client.ApiClient(configuration))
+
+    try:
+        # Get Workspace
+        api_response = api_instance.get_workspace_workspaces_workspace_name_get(workspace_id)
+        # pprint(api_response)
+
+    except ApiException as e:
+        print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+
+    return api_response
