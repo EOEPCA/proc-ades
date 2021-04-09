@@ -218,7 +218,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
             cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
             cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
-            cwl_inputs["STAGEOUT_OUTPUT"] = f"{projectid}:{bucketname}"
+            cwl_inputs["STAGEOUT_OUTPUT"] = f"s3://{projectid}:{bucketname}"
 
 
         except KeyError:

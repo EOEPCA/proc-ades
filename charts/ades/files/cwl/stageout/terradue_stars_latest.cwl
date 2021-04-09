@@ -51,6 +51,6 @@ requirements:
       AWS__ServiceURL: $(inputs.ADES_STAGEOUT_AWS_SERVICEURL)
       AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEOUT_AWS_ACCESS_KEY_ID)
       AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY)
-      AWS__Region: $(inputs.ADES_STAGEOUT_AWS_REGION)
-      AWS__AuthenticationRegion: $(inputs.ADES_STAGEOUT_AWS_REGION)
+      # AWS__Region: $(inputs.ADES_STAGEOUT_AWS_REGION)
+      # AWS__AuthenticationRegion: $(inputs.ADES_STAGEOUT_AWS_REGION)
   ResourceRequirement: {}
