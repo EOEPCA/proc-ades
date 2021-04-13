@@ -184,7 +184,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
     # read USE_RESOURCE_MANAGER variable
     useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
-    useResourceManagerStageOut = useResourceManagerStageOut.lower() in ['true', '1', 'y', 'yes']
+    useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
 
     # read RESOURCE MANAGER stageout variables
     if useResourceManagerStageOut:
@@ -310,7 +310,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
-    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+    keepworkspaceiffailed = str(keepworkspaceiffailedString).lower() in ['true', '1', 'y', 'yes']
 
     state = client.State()
     print('Status GET')
@@ -377,7 +377,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     state = client.State()
 
     keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
-    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+    keepworkspaceiffailed = str(keepworkspaceiffailedString).lower() in ['true', '1', 'y', 'yes']
 
     print('Result GET')
 
@@ -391,13 +391,48 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
         print("getresult success")
         pprint(resp_status)
 
+        # retrieving s3 path containing the catalog.json file
+        s3ResultPath = os.path.dirname(resp_status['StacCatalogUri'])
+
         json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
         print("wf_output json: ")
         pprint(json_compatible_item_data)
         print("job success")
 
+
+
+
+
+        # read USE_RESOURCE_MANAGER variable
+        useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
+        useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
+        if useResourceManagerStageOut:
+
+            # retrieving rm endpoint and user
+            resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
+            resource_manager_user = os.getenv('RESOURCE_MANAGER_USERNAME', None)
+
+            if resource_manager_endpoint is None:
+                e = Error()
+                e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            if resource_manager_user is None:
+                e = Error()
+                e.set_error(12, "Username is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
+            workspace_id= f"rm-user-{resource_manager_user}"
+
+            print(f"Registering result to resource manager: {s3ResultPath}")
+            helpers.registerResourceManagerWorkspace(resource_manager_endpoint=resource_manager_endpoint,workspace_id=workspace_id,s3PAthUrl=s3ResultPath)
+            print("Registering result complete")
+
         keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
-        keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+        keepworkspace = str(keepworkspaceString).lower() in ['true', '1', 'y', 'yes']
 
         if not keepworkspace:
             print('Removing Workspace')

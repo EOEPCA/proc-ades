@@ -1,6 +1,6 @@
 import os
 
-import rm_client
+import rm_client.rest
 import sys
 from pprint import pprint
 
@@ -141,10 +141,28 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
         # pprint(api_response)
 
     except rm_client.rest.ApiException as e:
-        if e.status == 404:
-            print(f"resource manager workspace {workspace_id} could not be found")
-        else:
-            print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+        print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+
+    return api_response
+
+
+def registerResourceManagerWorkspace(resource_manager_endpoint, workspace_id, s3PAthUrl):
+    if not resource_manager_endpoint:
+        raise ApiException(reason="Resource manager endpoint could not be found")
+
+    # Configure API key authorization: ApiKeyAuth
+    configuration = rm_client.Configuration()
+    configuration.host = resource_manager_endpoint
+    # create an instance of the API class
+    api_instance = rm_client.DefaultApi(rm_client.ApiClient(configuration))
+    body = rm_client.Product(type="stac-item", url=s3PAthUrl)  # Product |
+
+    try:
+        # Register
+        api_response = api_instance.register_workspaces_workspace_name_register_post(body, workspace_id)
+        pprint(api_response)
+    except ApiException as e:
+        print("Exception when calling DefaultApi->register_workspaces_workspace_name_register_post: %s\n" % e)
         raise e
 
     return api_response
