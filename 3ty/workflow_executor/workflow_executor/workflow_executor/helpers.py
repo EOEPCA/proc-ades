@@ -142,6 +142,7 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
 
     except rm_client.rest.ApiException as e:
         print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
+        raise e
 
     return api_response
 

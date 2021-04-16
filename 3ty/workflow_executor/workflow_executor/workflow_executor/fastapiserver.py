@@ -206,7 +206,7 @@ def read_execute(content: ExecuteContent, response: Response):
             return e
 
         # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-        workspace_id= f"rm-user-{resource_manager_user}"
+        workspace_id= f"rm-user-{resource_manager_user}".lower()
 
         # retrieve workspace details
         workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)
@@ -425,7 +425,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
                 return e
 
             # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-            workspace_id= f"rm-user-{resource_manager_user}"
+            workspace_id= f"rm-user-{resource_manager_user}".lower()
 
             print(f"Registering result to resource manager: {s3ResultPath}")
             helpers.registerResourceManagerWorkspace(resource_manager_endpoint=resource_manager_endpoint,workspace_id=workspace_id,s3PAthUrl=s3ResultPath)
