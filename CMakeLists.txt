@@ -23,7 +23,9 @@ add_subdirectory(3ty/yaml-cpp-0.6.3)
 include_directories(3ty/yaml-cpp-0.6.3/include)
 include_directories(3ty/nlohmann)
 
-
+# Jwt Parser
+add_subdirectory(3ty/jwt-cpp)
+include_directories(3ty/jwt-cpp/include)
 
 add_subdirectory(3ty/proc-comm-lib-ows-1.04)
 include_directories(3ty/proc-comm-lib-ows-1.04/includes)
