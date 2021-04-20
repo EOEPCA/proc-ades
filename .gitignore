@@ -71,3 +71,4 @@ charts/ades/files/maincwlmetrics.cwl
 *.pytest-kind
 charts/ades/values.charter-acceptance.terradue.yaml
 charts/ades/values.eoepca-creodias.yaml
+t2regcred.yaml
