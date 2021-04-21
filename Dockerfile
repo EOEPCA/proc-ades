@@ -85,6 +85,7 @@ COPY 3ty/proc-comm-zoo-1.2-alpha/assets/oas.cfg /etc/zoo-project/oas.cfg
 COPY src /project/src
 COPY 3ty/proc-comm-lib-ows-1.04 /project/3ty/proc-comm-lib-ows-1.04
 COPY 3ty/nlohmann /project/3ty/nlohmann
+COPY 3ty/jwt-cpp /project/3ty/jwt-cpp
 WORKDIR /project/zooservice
 
 RUN make -C ../src/templates interface
@@ -101,7 +102,7 @@ RUN conda install -c eoepca/label/dev cwl-wrapper
 RUN cd /usr/local/workflow_executor/rm_client && python setup.py install
 RUN cd /usr/local/workflow_executor/workflow_executor && python setup.py install
 
-# COPY assets/main.cfg /opt/t2service/main.cfg
+COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
 
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh

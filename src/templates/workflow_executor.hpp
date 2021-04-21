@@ -77,6 +77,7 @@ public:
     std::string inputs;
     int perc;
     std::string message;
+    std::string username;
 
     std::string hostName;
     ~WorkflowExecutorWebParameters()=default;
@@ -84,6 +85,7 @@ public:
     void dump() const{
       std::cerr<< "WorkflowExecutorWebParameters: \n";
       std::cerr << "\thostName: " << hostName << "\n";
+      std::cerr << "\tusername: " << username << "\n";
       std::cerr << "\tserviceID: " << serviceID << "\n";
       std::cerr << "\trunID: " << runID << "\n";
       std::cerr << "\tprepareID: " << prepareID << "\n";

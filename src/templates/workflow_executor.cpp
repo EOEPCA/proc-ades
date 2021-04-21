@@ -475,7 +475,7 @@ webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
          <<wfpm.serviceID<<"/"
          <<wfpm.runID<<"/"
          << wfpm.prepareID
-         <<"/"<<wfpm.jobID;
+         <<"/"<<wfpm.username;
 
 
   auto ret=getFromWeb(buffer,request.str().c_str());

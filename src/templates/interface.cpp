@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <jwt-cpp/jwt.h>
 
 #include <json.h>
 #include "workflow_executor.hpp"
@@ -508,7 +509,22 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                     }else{
                         usepep = false;
                     }
-
+                    std::cerr << "Retrieving username from JWT \n";
+                    auto decoded = jwt::decode(resource->getJwt());
+                    for(auto& e : decoded.get_payload_claims()) {
+                        if (e.first == "user_name") {
+                            std::cerr << "Found username: \n" << e.second;
+                            wfpm->username = e.second.as_string();
+                            break;
+                        }
+                    }
+                    if( wfpm->username.empty()){
+                        std::string err{
+                                "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
+                        err.append(" on ").append(resource->getIconUri()).append(" ");
+                        setStatus(conf, "failed", err.c_str());
+                        updateStatus(conf, 100, err.c_str());
+                    }
                 }
             }
             //register get Status and Get Results

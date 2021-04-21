@@ -44,6 +44,7 @@ class PrepareContent(BaseModel):
     serviceID: str
     runID: str
     cwl: str
+    username: str
 
 
 class ExecuteContent(PrepareContent):
@@ -191,7 +192,7 @@ def read_execute(content: ExecuteContent, response: Response):
 
         # retrieving rm endpoint and user
         resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
-        resource_manager_user = os.getenv('RESOURCE_MANAGER_USERNAME', None)
+        resource_manager_user = content.username
 
         if resource_manager_endpoint is None:
             e = Error()
@@ -366,8 +367,8 @@ Returns workflow result
 """
 
 
-@app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
-def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
+@app.get("/result/{service_id}/{run_id}/{prepare_id}/{user_id}", status_code=status.HTTP_200_OK)
+def read_getresult(service_id: str, run_id: str, prepare_id: str, user_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = sanitize_k8_parameters(f"{service_id}-volume")
@@ -410,7 +411,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
             # retrieving rm endpoint and user
             resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
-            resource_manager_user = os.getenv('RESOURCE_MANAGER_USERNAME', None)
+            resource_manager_user = user_id
 
             if resource_manager_endpoint is None:
                 e = Error()

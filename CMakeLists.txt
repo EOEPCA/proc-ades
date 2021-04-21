@@ -33,7 +33,11 @@ include_directories(3ty/proc-comm-lib-ows-1.04/includes)
 
 SET(MODS_LIBS z m dl)
 
-set(LIB_SRC src/templates/exec.cpp src/templates/workflow_executor.hpp src/templates/workflow_executor.cpp)
+set(LIB_SRC
+        src/templates/exec.cpp
+        src/templates/workflow_executor.hpp
+        src/templates/workflow_executor.cpp
+        )
 add_library(workflow_executor SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(workflow_executor ${MODS_LIBS})
 
