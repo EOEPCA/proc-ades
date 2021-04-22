@@ -44,13 +44,12 @@ class PrepareContent(BaseModel):
     serviceID: str
     runID: str
     cwl: str
-    username: str
-
 
 class ExecuteContent(PrepareContent):
     prepareID: str
     cwl: str
     inputs: str
+    username: str
 
 
 def sanitize_k8_parameters(value: str):
