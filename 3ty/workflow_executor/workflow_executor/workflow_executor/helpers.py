@@ -162,7 +162,7 @@ def registerResourceManagerWorkspace(resource_manager_endpoint, workspace_id, s3
         # Register
         api_response = api_instance.register_workspaces_workspace_name_register_post(body, workspace_id)
         pprint(api_response)
-    except rm_client.rest.ApiExceptio as e:
+    except rm_client.rest.ApiException as e:
         print("Exception when calling DefaultApi->register_workspaces_workspace_name_register_post: %s\n" % e)
         raise e
 
