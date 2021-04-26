@@ -513,14 +513,10 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 }
                 std::cerr << "Retrieving username from JWT \n";
                 auto decoded = jwt::decode(resource->getJwt());
-                for(auto& e : decoded.get_payload_claims()) {
-                    if (e.first == "user_name") {
-                        std::cerr << "Found username: \n" << e.second;
-                        wfpm->username = e.second.as_string();
-                        break;
-                    }
-                }
-                if( wfpm->username.empty()){
+                auto pct_claims_json = decoded.get_payload_claims()["pct_claims"].to_json();
+                if(pct_claims_json.contains("user_name")) {
+                    wfpm->username = pct_claims_json.get("user_name").to_str();
+                }else {
                     std::string err{
                             "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
                     err.append(" on ").append(resource->getIconUri()).append(" ");

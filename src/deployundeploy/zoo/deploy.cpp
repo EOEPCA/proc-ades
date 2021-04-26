@@ -656,9 +656,13 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                         }
                                         case DeployResults::EXIST: {
 
-                                            setStatus(conf, "failed", "Service already installed");
-                                            updateStatus(conf, 100, "Service already installed");
-                                            return setZooError(conf, "Service already installed", "NoApplicableCode");
+                                            // setStatus(conf, "failed", "Service already installed");
+                                            // updateStatus(conf, 100, "Service already installed");
+                                            // return setZooError(conf, "Service already installed", "NoApplicableCode");
+
+                                            xml->writeAttribute("err", "0");
+                                            xml->writeAttribute("mess", "Service already installed");
+                                            xml->writeContent("ready");
 
                                             // xml->writeAttribute("err", "2");
                                             // xml->writeAttribute("message", "Service already installed");
