@@ -475,12 +475,16 @@ webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
   std::cerr << "**************************************webGetResults\n";
   std::string buffer;
 
+  std::string usernameOrJobId = wfpm.jobID;
+  if( !wfpm.username.empty() ){
+      usernameOrJobId = wfpm.username;
+  }
   std::stringstream request;
   request<< wfpm.hostName << "/result/"
          <<wfpm.serviceID<<"/"
          <<wfpm.runID<<"/"
          << wfpm.prepareID
-         <<"/"<<wfpm.username;
+         <<"/"<<usernameOrJobId;
 
 
   auto ret=getFromWeb(buffer,request.str().c_str());
