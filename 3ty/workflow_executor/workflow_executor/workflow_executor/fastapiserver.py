@@ -182,51 +182,6 @@ def read_execute(content: ExecuteContent, response: Response):
     with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
         pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
 
-    # read USE_RESOURCE_MANAGER variable
-    useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
-    useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
-
-    # read RESOURCE MANAGER stageout variables
-    if useResourceManagerStageOut:
-
-        # retrieving rm endpoint and user
-        resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
-        resource_manager_user = content.username
-
-        if resource_manager_endpoint is None:
-            e = Error()
-            e.set_error(12, "Resource Manager endpoint is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
-
-        if resource_manager_user is None:
-            e = Error()
-            e.set_error(12, "Username is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
-
-        # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-        workspace_id= f"rm-user-{resource_manager_user}".lower()
-
-        # retrieve workspace details
-        workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)
-        try:
-            access = workspaceDetails._storage._credentials["access"]
-            bucketname = workspaceDetails._storage._credentials["bucketname"]
-            projectid = workspaceDetails._storage._credentials["projectid"]
-            secret = workspaceDetails._storage._credentials["secret"]
-
-            cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
-            cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
-            cwl_inputs["STAGEOUT_OUTPUT"] = f"s3://{projectid}:{bucketname}"
-
-
-        except KeyError:
-            e = Error()
-            e.set_error(12, "Resource Manager access credentials are missing or are invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
-
     for k, v in cwl_inputs.items():
         inputs_content["inputs"].append({
             "id": "ADES_" + k,
@@ -366,8 +321,8 @@ Returns workflow result
 """
 
 
-@app.get("/result/{service_id}/{run_id}/{prepare_id}/{user_id}", status_code=status.HTTP_200_OK)
-def read_getresult(service_id: str, run_id: str, prepare_id: str, user_id: str, response: Response):
+@app.get("/result/{service_id}/{run_id}/{prepare_id}/{job_id}", status_code=status.HTTP_200_OK)
+def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, response: Response):
     namespace = prepare_id
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
     volume_name_prefix = sanitize_k8_parameters(f"{service_id}-volume")
@@ -398,38 +353,6 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, user_id: str, 
         print("wf_output json: ")
         pprint(json_compatible_item_data)
         print("job success")
-
-
-
-
-
-        # read USE_RESOURCE_MANAGER variable
-        useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
-        useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
-        if useResourceManagerStageOut:
-
-            # retrieving rm endpoint and user
-            resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
-            resource_manager_user = user_id
-
-            if resource_manager_endpoint is None:
-                e = Error()
-                e.set_error(12, "Resource Manager endpoint is missing or is invalid")
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return e
-
-            if resource_manager_user is None:
-                e = Error()
-                e.set_error(12, "Username is missing or is invalid")
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return e
-
-            # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-            workspace_id= f"rm-user-{resource_manager_user}".lower()
-
-            print(f"Registering result to resource manager: {s3ResultPath}")
-            helpers.registerResourceManagerWorkspace(resource_manager_endpoint=resource_manager_endpoint,workspace_id=workspace_id,s3PAthUrl=s3ResultPath)
-            print("Registering result complete")
 
         keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
         keepworkspace = str(keepworkspaceString).lower() in ['true', '1', 'y', 'yes']

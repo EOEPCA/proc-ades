@@ -17,8 +17,10 @@
 
 #include <json.h>
 #include "workflow_executor.hpp"
+#include "nlohmann/json.hpp"
 
 #include "pepresources.hpp"
+#include "../deployundeploy/includes/httpfuntions.hpp"
 
 //https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
 struct InputParameter{
@@ -231,6 +233,8 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     free(flenv);
 }
 
+
+
 extern "C" {
 
 //  auto configFile = std::make_unique<char[]>(M1024);
@@ -321,6 +325,12 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             std::cerr << "\nlibworkflow_executor.so: VALID!\n\n";
         }
         //==================================GET CONFIGURATION
+
+        //================ RESOURCE MANAGER
+        std::map<std::string, std::string> confRm;
+        getConfigurationFromZooMapConfig(conf, "resourcemanager", confRm);
+        bool useResourceManager=confRm["useResourceManager"]=="true";
+
 
 
         //================ PEP
@@ -589,6 +599,63 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             std::cerr << "workflowExecutor->webGetResults init\n";
             workflowExecutor->webGetResults(*wfpm,outPutList);
             std::cerr << "workflowExecutor->webGetResults end\n";
+
+            if (usepep && useResourceManager){
+                std::cerr << "Registering results to resource manager init\n";
+
+                // retrieving resource manager endpoint
+                std::string resourceManagerEndpoint=confRm["resourceManagerEndpoint"];
+
+                // username to lowecase
+                std::string username = wfpm->username;
+                transform(username.begin(), username.end(), username.begin(), ::tolower);
+
+                std::string outputString;
+                for (auto &[k, p] : outPutList) {
+                    std::cerr << "output: " << k<< " " << p << std::endl;
+                    if(k == "wf_outputs"){
+                        outputString = p;
+                        break;
+                    }
+                }
+                // retrieving S3 path
+                std::string stacCatalogUri = nlohmann::json::parse(outputString)["wf_output"]["StacCatalogUri"].get<std::string>();
+                Util::innerReplace(stacCatalogUri, "/catalog.json", "/");
+                std::cerr << "Registering " << stacCatalogUri << std::endl;
+
+
+                std::string buffer;
+                std::string request{resourceManagerEndpoint};
+                request.append("/workspaces");
+                request.append("/rm-user-");
+                request.append(username);
+                request.append("/register");
+
+                nlohmann::json json;
+                nlohmann::json bodyjson;
+                bodyjson["type"] = "stacItem";
+                bodyjson["url"] = stacCatalogUri;
+
+                std::cerr << request.c_str() << std::endl;
+                auto ret = postputToWeb(buffer, bodyjson.dump(), request.c_str(), "POST");
+                std::cerr << "RM workspace register:\nreturn: " << ret << " json:" << buffer <<"\n";
+
+                if (ret==200){
+                    nlohmann::json data = nlohmann::json::parse(buffer);
+                    data.dump();
+                }else{
+                    std::string err{
+                            "eoepca: error registering results to resource manager workspace. Error return code: "};
+                    err.append(std::to_string(ret));
+                    err.append(buffer);
+                    setStatus(conf, "failed", err.c_str());
+                    updateStatus(conf, 100, err.c_str());
+                    return SERVICE_FAILED;
+                }
+                std::cerr << "Registering results to resource manager end\n";
+            }
+
+
 
             std::cerr << "getresults finished" << std::endl;
             for (auto &[k, p] : outPutList) {
