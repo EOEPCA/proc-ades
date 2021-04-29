@@ -619,7 +619,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                     }
                 }
                 // retrieving S3 path
-                std::string stacCatalogUri = nlohmann::json::parse(outputString)["wf_output"]["StacCatalogUri"].get<std::string>();
+                std::string stacCatalogUri = nlohmann::json::parse(outputString)["StacCatalogUri"].get<std::string>();
                 Util::innerReplace(stacCatalogUri, "/catalog.json", "/");
                 std::cerr << "Registering " << stacCatalogUri << std::endl;
 
