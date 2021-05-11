@@ -601,35 +601,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                         std::cerr << "\n*** COMPILE SERVICE END: " << COMPILE << "\n";
 //                                        service_name_to_build.append(".zo");
 
-                                        if (usepep){
 
-                                            resource->dump();
-
-                                            resource->setWorkspaceService(user->getUsername(),zoo->getIdentifier());
-                                            int pr=resource->prepareBase(confPep);
-                                            if (0 != pr && pepStopOnError){
-                                                std::string err{"eoepca: Can't prepare 'prepareBase'."};
-                                                setStatus(conf, "failed", err.c_str());
-                                                updateStatus(conf, 100, err.c_str());
-                                                return SERVICE_FAILED;
-                                            }
-
-
-                                            if (pr==0){
-
-                                                long  retCode = pepRegisterResources->pepSave(*(resource.get()));
-                                                if (200 != retCode && 422 !=retCode && pepStopOnError) {
-                                                    std::string err{
-                                                            "eoepca: pepresource.so service error return code: "};
-                                                    err.append(std::to_string(retCode));
-                                                    err.append(" on ").append(resource->getIconUri()).append(" ");
-                                                    setStatus(conf, "failed", err.c_str());
-                                                    updateStatus(conf, 100, err.c_str());
-                                                    return SERVICE_FAILED;
-                                                }
-                                            }
-                                        }
-                                        sleep(2);
                                     }
 
                                     if (!fileExist(zooRef.c_str())) {
@@ -645,6 +617,36 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             xml->writeAttribute("err", "0");
                                             xml->writeAttribute("mess", "");
                                             xml->writeContent("ready");
+
+                                            if (usepep){
+
+                                                resource->dump();
+
+                                                resource->setWorkspaceService(user->getUsername(),zoo->getIdentifier());
+                                                int pr=resource->prepareBase(confPep);
+                                                if (0 != pr && pepStopOnError){
+                                                    std::string err{"eoepca: Can't prepare 'prepareBase'."};
+                                                    setStatus(conf, "failed", err.c_str());
+                                                    updateStatus(conf, 100, err.c_str());
+                                                    return SERVICE_FAILED;
+                                                }
+
+
+                                                if (pr==0){
+
+                                                    long  retCode = pepRegisterResources->pepSave(*(resource.get()));
+                                                    if (200 != retCode && 422 !=retCode && pepStopOnError) {
+                                                        std::string err{
+                                                                "eoepca: pepresource.so service error return code: "};
+                                                        err.append(std::to_string(retCode));
+                                                        err.append(" on ").append(resource->getIconUri()).append(" ");
+                                                        setStatus(conf, "failed", err.c_str());
+                                                        updateStatus(conf, 100, err.c_str());
+                                                        return SERVICE_FAILED;
+                                                    }
+                                                }
+                                            }
+
                                             break;
                                         }
                                         case DeployResults::CANTWRITE: {
