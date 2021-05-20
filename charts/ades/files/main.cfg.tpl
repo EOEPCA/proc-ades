@@ -70,6 +70,7 @@ stopOnError=true
 [resourcemanager]
 useResourceManager={{ .Values.workflowExecutor.useResourceManager }}
 resourceManagerEndpoint={{ .Values.workflowExecutor.resourceManagerEndpoint }}
+resourceManagerWorkspacePrefix= {{ .Values.workflowExecutor.resourceManagerWorkspacePrefix }}
 
 [eoepca]
 owsparser=/opt/t2libs/libeoepcaows.so

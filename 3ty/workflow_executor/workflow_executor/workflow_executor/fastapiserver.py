@@ -189,6 +189,9 @@ def read_execute(content: ExecuteContent, response: Response):
     # read RESOURCE MANAGER stageout variables
     if useResourceManagerStageOut:
 
+        # retrieving resource manager workspace prefix
+        rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
+
         # retrieving rm endpoint and user
         resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
         resource_manager_user = content.username
@@ -206,7 +209,7 @@ def read_execute(content: ExecuteContent, response: Response):
             return e
 
         # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-        workspace_id= f"rm-user-{resource_manager_user}".lower()
+        workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
 
         # retrieve workspace details
         workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)

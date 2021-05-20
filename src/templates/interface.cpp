@@ -330,6 +330,10 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         std::map<std::string, std::string> confRm;
         getConfigurationFromZooMapConfig(conf, "resourcemanager", confRm);
         bool useResourceManager=confRm["useResourceManager"]=="true";
+        std::string resourceManagerWorkspacePrefix = confRm["resourceManagerWorkspacePrefix"];
+        if(resourceManagerWorkspacePrefix.empty()){
+            resourceManagerWorkspacePrefix = "rm-user";
+        }
 
 
 
@@ -626,8 +630,9 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
                 std::string buffer;
                 std::string request{resourceManagerEndpoint};
-                request.append("/workspaces");
-                request.append("/rm-user-");
+                request.append("/workspaces/");
+                request.append(resourceManagerWorkspacePrefix);
+                request.append("-");
                 request.append(username);
                 request.append("/register");
 

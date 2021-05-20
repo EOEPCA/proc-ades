@@ -95,6 +95,8 @@ spec:
               value: {{ .Values.workflowExecutor.resourceManagerUser | quote }}
             - name: RESOURCE_MANAGER_ENDPOINT
               value: {{ .Values.workflowExecutor.resourceManagerEndpoint | quote }}
+            - name: RESOURCE_MANAGER_WORKSPACE_PREFIX
+              value: {{ .Values.workflowExecutor.resourceManagerWorkspacePrefix | quote }}
             {{- end }}
           volumeMounts:
             - name: ades-config
