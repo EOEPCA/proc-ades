@@ -78,8 +78,11 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     wrapped_cwl_workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json)
-    cwl_input_json["workflow"]=workflow_id
-    cwl_input_json["process"]=workflow_name
+    cwl_input_json["workflow"] = workflow_id
+    cwl_input_json["process"] = workflow_name
+
+    # adding process env variable to processing pod
+    pod_env_vars["_PROCESS_ID"] = workflow_name
 
     # copying cwl in volume -input-data
     targetFolder = path.join(mount_folder, "input-data")
