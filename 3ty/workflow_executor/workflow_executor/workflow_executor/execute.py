@@ -75,7 +75,9 @@ def run(namespace, volume_name_prefix, mount_folder, cwl_document, job_input_jso
     delete_line_by_full_match(wrapped_cwl_document, "  stdout: std.out")
 
     workflow_id = helpers.getCwlWorkflowId(cwl_document)
-    wrapped_cwl_workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
+    #wrapped_cwl_workflow_id = helpers.getCwlWorkflowId(wrapped_cwl_document)
+    # no need to retrieve the id anymnore, the cwl-wrapper always sets the id "main"
+    wrapped_cwl_workflow_id = "main"
     package_directory = path.dirname(path.abspath(__file__))
     cwl_input_json = process_inputs(wrapped_cwl_document, job_input_json)
     cwl_input_json["workflow"] = workflow_id
