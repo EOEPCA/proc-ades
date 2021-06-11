@@ -367,6 +367,11 @@ webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
   nlohmann::to_json(json,wfpm);
 //  std::string content = R"({"runID": "string","serviceID": "string"})";
 
+  std::cerr << "webprepare request:" << std::endl;
+  std::cerr << request.c_str() << std::endl;
+  wfpm->dump();
+  std::cerr << "webprepare request end" << std::endl;
+
   auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
   std::cerr << "webPrepare:\treturn: " << ret << " json:" << buffer <<"\n";
 

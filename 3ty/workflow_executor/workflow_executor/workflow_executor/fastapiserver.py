@@ -2,7 +2,7 @@ import json
 import os
 import tempfile
 import uvicorn
-from fastapi import FastAPI, Form, File, status, Response
+from fastapi import FastAPI, Form, File, status, Response, Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
@@ -12,6 +12,16 @@ from kubernetes.client.rest import ApiException
 from pprint import pprint
 import yaml
 import rm_client
+
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
 
 app = FastAPI(
     title="the title",
@@ -44,6 +54,7 @@ class PrepareContent(BaseModel):
     serviceID: str
     runID: str
     cwl: str
+    username: str
 
 class ExecuteContent(PrepareContent):
     prepareID: str
