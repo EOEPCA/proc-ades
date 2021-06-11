@@ -54,7 +54,6 @@ class PrepareContent(BaseModel):
     serviceID: str
     runID: str
     cwl: str
-    username: str
 
 class ExecuteContent(PrepareContent):
     prepareID: str
