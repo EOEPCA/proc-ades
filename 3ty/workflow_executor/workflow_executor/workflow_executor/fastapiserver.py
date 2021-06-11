@@ -2,7 +2,7 @@ import json
 import os
 import tempfile
 import uvicorn
-from fastapi import FastAPI, Form, File, status, Response, Request
+from fastapi import FastAPI, Form, File, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
@@ -13,15 +13,6 @@ from pprint import pprint
 import yaml
 import rm_client
 
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
-    )
 
 app = FastAPI(
     title="the title",
