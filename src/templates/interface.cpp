@@ -233,7 +233,41 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     free(flenv);
 }
 
+/***
+ *
+ */
+void getUserIdToken(char baseUrl[]){
 
+    // Get the URL of the token endpoint
+    // Requires no authentication.
+
+    // if token_endpoint == None
+
+
+    char uma2confpath[] = "/.well-known/uma2-configuration";
+    strcat(baseUrl,source);
+
+    std::cerr << "Get the URL of the token endpoint. Requires no authentication.\n";
+
+    //std::string auth{"Authorization: Bearer "};
+    //auth.append(resource.getJwt());
+
+
+    std::string contentTypeHeader{"content-type: application/json"};
+    std::list <std::string> list;
+    list.push_back(contentTypeHeader);
+    std::string buffer;
+
+    long ret = 199;
+    try {
+        ret = getFromWeb(buffer, resource.getUri().c_str(), &list);
+    } catch (...) {
+        return 199;
+    }
+
+
+
+}
 
 extern "C" {
 
