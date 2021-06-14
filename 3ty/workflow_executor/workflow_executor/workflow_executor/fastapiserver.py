@@ -224,13 +224,17 @@ def read_execute(content: ExecuteContent, response: Response):
         # retrieve workspace details
         workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)
         try:
+            endpoint = workspaceDetails._storage._credentials["endpoint"]
             access = workspaceDetails._storage._credentials["access"]
             bucketname = workspaceDetails._storage._credentials["bucketname"]
             projectid = workspaceDetails._storage._credentials["projectid"]
             secret = workspaceDetails._storage._credentials["secret"]
+            region = workspaceDetails._storage._credentials["region"]
 
+            cwl_inputs["STAGEOUT_AWS_SERVICEURL"] = endpoint
             cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
             cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
+            cwl_inputs["STAGEOUT_AWS_REGION"] = region
             cwl_inputs["STAGEOUT_OUTPUT"] = f"s3://{projectid}:{bucketname}"
 
 
