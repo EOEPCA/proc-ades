@@ -233,39 +233,126 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     free(flenv);
 }
 
+
+
+
+
+/*        void registerClient(std::string clientName, std::string grantTypes, std::string redirectURIs, std::string logoutURI, std::string responseTypes, std::string scopes, std::string token_endpoint_auth_method, bool useJWT, std::string sectorIdentifier  ){
+            std::cerr << "Registering new client..." << std::endl;
+
+            headers = { 'content-type': "application/scim+json"}
+            payload = self.clientPayloadCreation(clientName, grantTypes, redirectURIs, logoutURI, responseTypes, scopes, sectorIdentifier, token_endpoint_auth_method, useJWT)
+
+        }*/
+
+
 /***
  *
  */
-void getUserIdToken(char baseUrl[]){
+nlohmann::json registerClient(char *baseUrl){
 
+    nlohmann::json registrationJson;
+
+    // GET TOKEN ENDPOINT
     // Get the URL of the token endpoint
     // Requires no authentication.
-
-    // if token_endpoint == None
-
-
+    std::cerr << "registerClient called!\n";
     char uma2confpath[] = "/.well-known/uma2-configuration";
-    strcat(baseUrl,source);
-
+    strcat(baseUrl,uma2confpath);
     std::cerr << "Get the URL of the token endpoint. Requires no authentication.\n";
-
-    //std::string auth{"Authorization: Bearer "};
-    //auth.append(resource.getJwt());
-
-
+    std::cerr << baseUrl << std::endl;
     std::string contentTypeHeader{"content-type: application/json"};
     std::list <std::string> list;
     list.push_back(contentTypeHeader);
     std::string buffer;
+    auto ret = getFromWeb(buffer, baseUrl, &list);
+    std::cerr << "get url of the token endpoint:\treturn: " << ret << " json:" << buffer << "\n";
 
-    long ret = 199;
-    try {
-        ret = getFromWeb(buffer, resource.getUri().c_str(), &list);
-    } catch (...) {
-        return 199;
+    std::string tokenEndpoint;
+    std::string registration_endpoint;
+    switch (ret) {
+        case 404: {
+            std::cerr << "An error occured retrrieving the tokenEndpoint" << std::endl;
+        }
+        case 200: {
+            auto responseJson = nlohmann::json::parse(buffer);
+            std::cerr << responseJson.dump() << std::endl;
+
+            tokenEndpoint = responseJson["token_endpoint"].get<std::string>();
+            std::cerr << tokenEndpoint << std::endl;
+
+            // registration_endpoint
+            registration_endpoint = responseJson["registration_endpoint"].get<std::string>();
+            std::cerr << registration_endpoint << std::endl;
+
+            // id_token
+            //https://test.185.52.193.87.nip.io/oxauth/restv1/token
+
+            break;
+        }
     }
 
 
+    // REGISTER CLIENT
+    // check if state.json file exists
+    bool stateJsonExists = false;
+
+
+    if (stateJsonExists){
+
+        std::cerr << "State json exists" << std::endl;
+
+    } else {
+
+        std::cerr << "State json does not exist" << std::endl;
+        // POST
+        // https://test.185.52.193.87.nip.io/oxauth/restv1/register
+        // REGISTER PAYLOAD: { "client_name": "Demo Client", "grant_types":["client_credentials", "password", "urn:ietf:params:oauth:grant-type:uma-ticket"], "redirect_uris" : [""], "post_logout_redirect_uris": [""], "scope": "openid email user_name uma_protection permission", "response_types": [  "code",  "token",  "id_token",], "token_endpoint_auth_method": "client_secret_post"}
+        // REGISTER HEADERS: {'content-type': 'application/scim+json'}
+
+
+
+        std::cerr << "Registering client.\n";
+        std::cerr << registration_endpoint << std::endl;
+        std::string contentTypeHeader{"content-type: application/scim+json"};
+        std::list <std::string> list;
+        list.push_back(contentTypeHeader);
+        std::string buffer;
+        //auto ret = postputToWeb(buffer, registration_endpoint, &list);
+        //std::cerr << "get url of the token endpoint:\treturn: " << ret << " json:" << buffer << "\n";
+
+
+        nlohmann::json json;
+        nlohmann::json bodyjson;
+        bodyjson["client_name"] = "Demo Client";
+        bodyjson["grant_types"] = {"client_credentials", "password", "urn:ietf:params:oauth:grant-type:uma-ticket"};
+        bodyjson["redirect_uris"] = {""};
+        bodyjson["post_logout_redirect_uris"] = {""};
+        bodyjson["scope"] = "openid email user_name uma_protection permission";
+        bodyjson["response_types"] = {"code",  "token",  "id_token"};
+        bodyjson["token_endpoint_auth_method"] = "client_secret_post";
+
+
+        std::cerr << "POST\n json payload" << bodyjson.dump() << std::endl;
+        auto ret = postputToWeb(buffer, bodyjson.dump(), registration_endpoint.c_str(), "POST", &list);
+        std::cerr << "Client registration:\nreturn: " << ret << " json:" << buffer <<"\n";
+
+
+        registrationJson = nlohmann::json::parse(buffer);
+
+        // save state.json
+        /* example:
+          {
+              "client_id": "928910a0-7a44-4b24-b2d1-cdf3c0c1ee7f",
+              "client_secret": "c9af85d9-f853-4031-bac8-44417aa73e26"
+          }
+         */
+
+
+
+    }
+
+    return registrationJson;
 
 }
 
@@ -276,6 +363,10 @@ extern "C" {
 ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
     try {
+
+        std::cerr << "registering client!\n";
+        char baseurl[] = "https://test.185.52.193.87.nip.io";
+        auto registrationJson = registerClient(baseurl);
 
         std::cerr << "interface has been loaded!\n";
         fflush(stderr);
@@ -376,7 +467,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         getConfigurationFromZooMapConfig(conf, "pep", confPep);
         bool usepep=confPep["usepep"]=="true";
         bool pepStopOnError=confPep["stopOnError"]=="true";
-        std::string pephost = confPep["pephost"];
+        std::string pephost = "http://ades.test.185.52.193.87.nip.io"; //confPep["pephost"];
         std::unique_ptr<mods::PepRegisterResources> pepRegisterResources= nullptr;
         std::unique_ptr<mods::PepResource> resource = nullptr;
 
