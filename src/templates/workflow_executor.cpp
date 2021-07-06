@@ -318,6 +318,10 @@ from_json(const json &j,
   if (exists_key(j, "username")) {
     x.jobID = j.at("username").get<std::string>();
   }
+
+  if (exists_key(j, "userIdToken")) {
+        x.jobID = j.at("userIdToken").get<std::string>();
+  }
 }
 
 inline void
@@ -331,6 +335,8 @@ to_json(json &j,
   j["cwl"] = x.cwl;
   j["inputs"] = x.inputs;
   j["username"] = x.username;
+  j["userIdToken"] = x.userIdToken;
+
 }
 
 } // namespace nlohmann

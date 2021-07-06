@@ -1,6 +1,6 @@
 import os
 
-import rm_client.rest
+import rm_client
 import sys
 from pprint import pprint
 
@@ -123,7 +123,7 @@ def storeLogs(logs, path):
     f.close()
 
 
-def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
+def getResourceManagerWorkspaceDetailsOld(resource_manager_endpoint, workspace_id):
     print("calling resource manager api")
 
     if not resource_manager_endpoint:
@@ -143,6 +143,36 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
     except rm_client.rest.ApiException as e:
         print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
         raise e
+
+    return api_response
+
+
+def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id, userIdToken= None):
+    print("calling resource manager api")
+
+    base_domain = "185.52.193.87.nip.io"
+    workspace_prefix = "rm-user"
+    platform_domain = "test." + base_domain
+    base_url = "https://" + platform_domain
+
+    demo = client.DemoClient(base_url)
+    demo.register_client()
+    demo.save_state()
+
+    #user_name = "eric"
+    #user_password = "defaultPWD"
+    #user_id_token = demo.get_id_token(user_name, user_password)
+    #print(user_id_token)
+
+    #workspace_name = f"{workspace_prefix}-{user_name}"
+
+    workspace_url = f"https://workspace-api.{base_domain}"
+    workspace_access_token = None
+    response, workspace_access_token = demo.workspace_get_details(workspace_url, workspace_name,
+                                                                  id_token=user_id_token,
+                                                                  access_token=workspace_access_token)
+    workspace_details = response.json()
+    print(json.dumps(workspace_details, indent=2))
 
     return api_response
 

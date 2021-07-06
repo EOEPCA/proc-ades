@@ -98,6 +98,19 @@ spec:
             - name: RESOURCE_MANAGER_WORKSPACE_PREFIX
               value: {{ .Values.workflowExecutor.resourceManagerWorkspacePrefix | quote }}
             {{- end }}
+            {{- if .Values.workflowExecutor.backofflimit }}
+            - name: ADES_BACKOFF_LIMIT
+              value: {{ .Values.workflowExecutor.backofflimit| quote }}
+            {{- end }}
+            {{- if .Values.nodeSelector }}
+            - name: ADES_NODE_SELECTOR
+              value: {{ toJson .Values.nodeSelector| quote }}
+            {{- end }}
+            {{- if .Values.workflowExecutor.platformDomain }}
+            - name: ADES_PLATFORM_DOMAIN
+              value: {{ .Values.workflowExecutor.platformDomain| quote }}
+            {{- end }}
+
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades

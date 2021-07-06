@@ -364,10 +364,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
     try {
 
-        std::cerr << "registering client!\n";
-        char baseurl[] = "https://test.185.52.193.87.nip.io";
-        auto registrationJson = registerClient(baseurl);
-
         std::cerr << "interface has been loaded!\n";
         fflush(stderr);
 
@@ -625,6 +621,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             wfpm->perc = -1;
             wfpm->message = "";
             wfpm->username = "";
+            wfpm->userIdToken = "";
             wfpm->cwl=cwlBuffer.str();
 
             //==========PEP
@@ -650,6 +647,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                         usepep = false;
                     }
                 }
+
+                wfpm->userIdToken = resource->getJwt();
                 std::cerr << "Retrieving username from JWT \n";
                 auto decoded = jwt::decode(resource->getJwt());
                 auto pct_claims_json = decoded.get_payload_claims()["pct_claims"].to_json();
