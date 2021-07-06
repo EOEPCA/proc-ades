@@ -55,12 +55,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-      { % if nodeSelector is defined % }
+      {% if nodeSelector is defined %}
       nodeSelector:
-        { % for key, value in nodeSelector.items() % }
-        {{key}}: {{ value }}
-        {% endfor %}
-      { % nodeSelector % }
+        {% for key,value in nodeSelector.items() %}
+          {{key}}: "{{ value }}"
+          {% endfor %}
+      {% endif %}
 
       restartPolicy: Never
       volumes:
@@ -79,6 +79,6 @@ spec:
         - name: pod-env-vars
           configMap:
             name: pod-env-vars
-  { % if backoff_limit is defined % }
-  backoffLimit: { { backoff_limit } }
-  { % endif % }
+  {% if backoff_limit is defined %}
+  backoffLimit: {{ backoff_limit }}
+  {% endif %}
