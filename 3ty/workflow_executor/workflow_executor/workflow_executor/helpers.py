@@ -8,7 +8,7 @@ import yaml
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
-
+from urllib.parse import urljoin
 
 def get_api_client():
     proxy_url = os.getenv('HTTP_PROXY', None)
@@ -124,6 +124,12 @@ def storeLogs(logs, path):
 
 
 def getResourceManagerWorkspaceDetailsOld(resource_manager_endpoint, workspace_id):
+    '''
+    Deprecated
+    :param resource_manager_endpoint:
+    :param workspace_id:
+    :return:
+    '''
     print("calling resource manager api")
 
     if not resource_manager_endpoint:
@@ -147,34 +153,26 @@ def getResourceManagerWorkspaceDetailsOld(resource_manager_endpoint, workspace_i
     return api_response
 
 
-def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id, userIdToken= None):
-    print("calling resource manager api")
+def getResourceManagerWorkspaceDetails(resource_manager_endpoint,platform_domain, workspace_name, user_id_token= None):
+    print("getResourceManagerWorkspaceDetails start")
 
-    base_domain = "185.52.193.87.nip.io"
-    workspace_prefix = "rm-user"
-    platform_domain = "test." + base_domain
-    base_url = "https://" + platform_domain
-
-    demo = client.DemoClient(base_url)
+    print("Registering client")
+    demo = client.DemoClient(platform_domain)
     demo.register_client()
     demo.save_state()
+    print("Client succesfully registered")
 
-    #user_name = "eric"
-    #user_password = "defaultPWD"
-    #user_id_token = demo.get_id_token(user_name, user_password)
-    #print(user_id_token)
 
-    #workspace_name = f"{workspace_prefix}-{user_name}"
-
-    workspace_url = f"https://workspace-api.{base_domain}"
+    print("Calling workspace api")
     workspace_access_token = None
-    response, workspace_access_token = demo.workspace_get_details(workspace_url, workspace_name,
+    response, workspace_access_token = demo.workspace_get_details(resource_manager_endpoint, workspace_name,
                                                                   id_token=user_id_token,
                                                                   access_token=workspace_access_token)
     workspace_details = response.json()
     print(json.dumps(workspace_details, indent=2))
 
-    return api_response
+    print("getResourceManagerWorkspaceDetails end")
+    return workspace_details
 
 
 def registerResourceManagerWorkspace(resource_manager_endpoint, workspace_id, s3PAthUrl):
