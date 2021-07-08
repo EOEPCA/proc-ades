@@ -1,6 +1,6 @@
 import os
 
-import rm_client.rest
+import rm_client
 import sys
 from pprint import pprint
 
@@ -8,7 +8,7 @@ import yaml
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
-
+from urllib.parse import urljoin
 
 def get_api_client():
     proxy_url = os.getenv('HTTP_PROXY', None)
@@ -123,7 +123,13 @@ def storeLogs(logs, path):
     f.close()
 
 
-def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
+def getResourceManagerWorkspaceDetailsOld(resource_manager_endpoint, workspace_id):
+    '''
+    Deprecated
+    :param resource_manager_endpoint:
+    :param workspace_id:
+    :return:
+    '''
     print("calling resource manager api")
 
     if not resource_manager_endpoint:
@@ -145,6 +151,28 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint, workspace_id):
         raise e
 
     return api_response
+
+
+def getResourceManagerWorkspaceDetails(resource_manager_endpoint,platform_domain, workspace_name, user_id_token= None):
+    print("getResourceManagerWorkspaceDetails start")
+
+    print("Registering client")
+    demo = client.DemoClient(platform_domain)
+    demo.register_client()
+    demo.save_state()
+    print("Client succesfully registered")
+
+
+    print("Calling workspace api")
+    workspace_access_token = None
+    response, workspace_access_token = demo.workspace_get_details(resource_manager_endpoint, workspace_name,
+                                                                  id_token=user_id_token,
+                                                                  access_token=workspace_access_token)
+    workspace_details = response.json()
+    print(json.dumps(workspace_details, indent=2))
+
+    print("getResourceManagerWorkspaceDetails end")
+    return workspace_details
 
 
 def registerResourceManagerWorkspace(resource_manager_endpoint, workspace_id, s3PAthUrl):

@@ -243,12 +243,12 @@ class DefaultApi(object):
             (data) = self.get_workspace_workspaces_workspace_name_get_with_http_info(workspace_name, **kwargs)  # noqa: E501
             return data
 
-    def get_workspace_workspaces_workspace_name_get_with_http_info(self, workspace_name, **kwargs):  # noqa: E501
+    def get_workspace_workspaces_workspace_name_get_with_http_info(self, workspace_name,header_params={}, **kwargs):  # noqa: E501
         """Get Workspace  # noqa: E501
 
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.get_workspace_workspaces_workspace_name_get_with_http_info(workspace_name, async_req=True)
+        >>> thread = api.get_workspace_workspaces_workspace_name_get_with_http_info(workspace_name,header_params, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
@@ -285,8 +285,6 @@ class DefaultApi(object):
             path_params['workspace_name'] = params['workspace_name']  # noqa: E501
 
         query_params = []
-
-        header_params = {}
 
         form_params = []
         local_var_files = {}

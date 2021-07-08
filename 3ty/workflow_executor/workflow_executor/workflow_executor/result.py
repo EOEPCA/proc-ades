@@ -20,7 +20,7 @@ def run(namespace, mount_folder, volume_name_prefix, workflowname, outputfile, s
     # for further details check https://github.com/Duke-GCB/calrissian/blob/master/examples/ViewResultsJob.yaml
     jobname = f"{workflowname}-view-results"
 
-    yamlFileTemplate = "CarlrissianViewResults.yaml"
+    yamlFileTemplate = "CalrissianViewResults.yaml"
     with open(path.join(path.dirname(__file__), yamlFileTemplate)) as f:
 
         print(f"Customizing stage-in job using the template {yamlFileTemplate} ")

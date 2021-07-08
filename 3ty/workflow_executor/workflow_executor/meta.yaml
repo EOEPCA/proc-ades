@@ -9,20 +9,9 @@ requirements:
   build:
     - python
     - setuptools
-
   run:
-    - python
-    - python-kubernetes
-    - fastapi
-    - click
-    - cwl-wrapper
-    - uvicorn
-    - jinja2
-
 test:
   imports:
     - workflow_executor
-    - kubernetes
-
 about:
   home:

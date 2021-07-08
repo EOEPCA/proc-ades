@@ -60,6 +60,7 @@ class ExecuteContent(PrepareContent):
     cwl: str
     inputs: str
     username: str
+    userIdToken: str
 
 
 def sanitize_k8_parameters(value: str):
@@ -199,6 +200,14 @@ def read_execute(content: ExecuteContent, response: Response):
     # read RESOURCE MANAGER stageout variables
     if useResourceManagerStageOut:
 
+        # retrieving userIdToken
+        userIdToken = content.userIdToken
+        if userIdToken is None:
+            e = Error()
+            e.set_error(12, "User Id Token is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
         # retrieving resource manager workspace prefix
         rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
 
@@ -206,9 +215,17 @@ def read_execute(content: ExecuteContent, response: Response):
         resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
         resource_manager_user = content.username
 
+        platform_domain = os.getenv('ADES_PLATFORM_DOMAIN', None)
+
         if resource_manager_endpoint is None:
             e = Error()
             e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        if platform_domain is None:
+            e = Error()
+            e.set_error(12, "Platform domain is missing or is invalid")
             response.status_code = status.HTTP_400_BAD_REQUEST
             return e
 
@@ -222,7 +239,7 @@ def read_execute(content: ExecuteContent, response: Response):
         workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
 
         # retrieve workspace details
-        workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , workspace_id=workspace_id)
+        workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id, user_id_token=userIdToken)
         try:
             endpoint = workspaceDetails._storage._credentials["endpoint"]
             access = workspaceDetails._storage._credentials["access"]
@@ -236,7 +253,6 @@ def read_execute(content: ExecuteContent, response: Response):
             cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
             cwl_inputs["STAGEOUT_AWS_REGION"] = region
             cwl_inputs["STAGEOUT_OUTPUT"] = f"s3://{projectid}:{bucketname}"
-
 
         except KeyError:
             e = Error()

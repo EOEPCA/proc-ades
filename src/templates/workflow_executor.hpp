@@ -78,6 +78,7 @@ public:
     int perc;
     std::string message;
     std::string username;
+    std::string userIdToken;
 
     std::string hostName;
     ~WorkflowExecutorWebParameters()=default;
@@ -92,6 +93,7 @@ public:
       std::cerr << "\tjobID: " << jobID << "\n";
       std::cerr << "\tcwl: " << cwl << "\n";
       std::cerr << "\tinputs: " << inputs << "\n";
+      std::cerr << "\tuserIdToken: " << userIdToken << "\n";
 
       std::cerr << "\tperc: " << perc << "\n";
       std::cerr << "\tmessage: " << message << "\n";
