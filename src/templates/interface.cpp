@@ -651,9 +651,14 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 wfpm->userIdToken = resource->getJwt();
                 std::cerr << "Retrieving username from JWT \n";
                 auto decoded = jwt::decode(resource->getJwt());
-                auto pct_claims_json = decoded.get_payload_claims()["pct_claims"].to_json();
-                if(pct_claims_json.contains("user_name")) {
-                    wfpm->username = pct_claims_json.get("user_name").to_str();
+
+                auto claims = decoded.get_payload_claims();
+                std::string key = "user_name";
+                auto count = claims.count(key);
+                std::cout << count << std::endl;
+                if(count) {
+                    wfpm->username = claims[key].as_string();
+                    std::cerr << "Retrieving username from JWT success. Username: " << claims[key].as_string() << std::endl;
                 }else {
                     std::string err{
                             "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
