@@ -622,6 +622,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             wfpm->message = "";
             wfpm->username = "";
             wfpm->userIdToken = "";
+            wfpm->registerResultUrl = "";
             wfpm->cwl=cwlBuffer.str();
 
             //==========PEP
@@ -756,36 +757,12 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 Util::innerReplace(stacCatalogUri, "/catalog.json", "/");
                 std::cerr << "Registering " << stacCatalogUri << std::endl;
 
+                wfpm->registerResultUrl = stacCatalogUri;
+                std::cerr << "workflowExecutor->webRegisterResults init\n";
+                workflowExecutor->webRegisterResults(*wfpm);
+                std::cerr << "workflowExecutor->webRegisterResults end\n";
 
-                std::string buffer;
-                std::string request{resourceManagerEndpoint};
-                request.append("/workspaces/");
-                request.append(resourceManagerWorkspacePrefix);
-                request.append("-");
-                request.append(username);
-                request.append("/register");
 
-                nlohmann::json json;
-                nlohmann::json bodyjson;
-                bodyjson["type"] = "stacItem";
-                bodyjson["url"] = stacCatalogUri;
-
-                std::cerr << request.c_str() << std::endl;
-                auto ret = postputToWeb(buffer, bodyjson.dump(), request.c_str(), "POST");
-                std::cerr << "RM workspace register:\nreturn: " << ret << " json:" << buffer <<"\n";
-
-                if (ret==200){
-                    nlohmann::json data = nlohmann::json::parse(buffer);
-                    data.dump();
-                }else{
-                    std::string err{
-                            "eoepca: error registering results to resource manager workspace. Error return code: "};
-                    err.append(std::to_string(ret));
-                    err.append(buffer);
-                    setStatus(conf, "failed", err.c_str());
-                    updateStatus(conf, 100, err.c_str());
-                    return SERVICE_FAILED;
-                }
                 std::cerr << "Registering results to resource manager end\n";
             }
 

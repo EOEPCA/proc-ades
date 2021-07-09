@@ -81,6 +81,8 @@ public:
     std::string userIdToken;
 
     std::string hostName;
+    std::string registerResultUrl;
+
     ~WorkflowExecutorWebParameters()=default;
 
     void dump() const{
@@ -97,6 +99,7 @@ public:
 
       std::cerr << "\tperc: " << perc << "\n";
       std::cerr << "\tmessage: " << message << "\n";
+      std::cerr << "\tregisterResultUrl: " << registerResultUrl << "\n";
 
     }
 
@@ -215,7 +218,16 @@ public:
       }
     }
 
-
+      if (isValid()) {
+          webRegisterResults =
+                  (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(handle, "webRegisterResults");
+          if (!clear) {
+              std::cerr << "can't load 'webRegisterResults' function\n";
+              setValid(false);
+              setLastError("can't load 'webRegisterResults' function");
+              return;
+          }
+      }
 
   }
 
@@ -266,6 +278,8 @@ public:
   long (*webGetResults)(WorkflowExecutorWebParameters& wfpm,
                         std::list<std::pair<std::string, std::string>> &outPutList
                         ){nullptr};
+  long (*webRegisterResults)(WorkflowExecutorWebParameters& wfpm){nullptr};
+
 };
 
 } // namespace mods

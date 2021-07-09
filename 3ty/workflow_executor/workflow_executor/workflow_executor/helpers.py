@@ -137,7 +137,8 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint,platform_domain
 
     print("Calling workspace api")
     workspace_access_token = None
-    response, workspace_access_token = demo.workspace_get_details(resource_manager_endpoint, workspace_name,
+    response, workspace_access_token = demo.workspace_get_details(service_base_url= resource_manager_endpoint,
+                                                                  workspace_name= workspace_name,
                                                                   id_token=user_id_token,
                                                                   access_token=workspace_access_token)
     workspace_details = response.json()
@@ -147,23 +148,25 @@ def getResourceManagerWorkspaceDetails(resource_manager_endpoint,platform_domain
     return workspace_details
 
 
-def registerResourceManagerWorkspace(resource_manager_endpoint, workspace_id, s3PAthUrl):
-    if not resource_manager_endpoint:
-        raise ApiException(reason="Resource manager endpoint could not be found")
+def registerResults(resource_manager_endpoint,platform_domain, workspace_name, result_url, user_id_token= None):
+    print("registerResults start")
 
-    # Configure API key authorization: ApiKeyAuth
-    configuration = rm_client.Configuration()
-    configuration.host = resource_manager_endpoint
-    # create an instance of the API class
-    api_instance = rm_client.DefaultApi(rm_client.ApiClient(configuration))
-    body = rm_client.Product(type="stac-item", url=s3PAthUrl)  # Product |
+    print("Registering client")
+    demo = eoepcaclient.DemoClient(platform_domain)
+    demo.register_client()
+    demo.save_state()
+    print("Client succesfully registered")
 
-    try:
-        # Register
-        api_response = api_instance.register_workspaces_workspace_name_register_post(body, workspace_id)
-        pprint(api_response)
-    except rm_client.rest.ApiException as e:
-        print("Exception when calling DefaultApi->register_workspaces_workspace_name_register_post: %s\n" % e)
-        raise e
 
-    return api_response
+    print("Calling workspace api")
+    workspace_access_token = None
+    response, workspace_access_token = demo.register_client(service_base_url= resource_manager_endpoint,
+                                                            workspace_name= workspace_name,
+                                                            result_url= result_url,
+                                                            id_token=user_id_token,
+                                                            access_token=workspace_access_token)
+    registration_details = response.json()
+    print(json.dumps(registration_details, indent=2))
+
+    print("registerResults end")
+    return registration_details

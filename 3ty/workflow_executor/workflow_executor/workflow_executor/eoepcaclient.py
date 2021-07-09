@@ -532,6 +532,21 @@ class DemoClient:
         print(f"[Workspace Details] = {r.status_code} ({r.reason})")
         return r, access_token
 
+
+    @keyword(name='Workspace Registration')
+    def workspace_register(self, service_base_url, workspace_name, result_url, id_token=None, access_token=None):
+        """Get details for the workspace with the supplied name
+        """
+        url = service_base_url + "/workspaces/" + workspace_name + '/register'
+        headers = { "Accept": "application/json" }
+        data = { "type":"stac-item", "url":result_url}
+        r, access_token = self.uma_http_request("POST", url, headers=headers, id_token=id_token, access_token=access_token, json=data)
+        print(f"[Workspace Registration] = {r.status_code} ({r.reason})")
+
+        return r, access_token
+
+
+
     @keyword(name='Response Summary')
     def response_summary(self, response, isJson=True):
         print(f"STATUS = {response.status_code} {response.reason}")
