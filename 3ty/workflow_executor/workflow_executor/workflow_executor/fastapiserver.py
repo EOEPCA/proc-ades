@@ -475,59 +475,58 @@ Registers results
 @app.post("/register", status_code=status.HTTP_201_CREATED)
 def read_register_results(content: ExecuteContent, response: Response):
     try:
+        # read USE_RESOURCE_MANAGER variable
+        useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
+        useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
+        # read RESOURCE MANAGER stageout variables
+        if useResourceManagerStageOut:
 
-    # read USE_RESOURCE_MANAGER variable
-    useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
-    useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
-    # read RESOURCE MANAGER stageout variables
-    if useResourceManagerStageOut:
+            # retrieving userIdToken
+            userIdToken = content.userIdToken
+            if userIdToken is None:
+                e = Error()
+                e.set_error(12, "User Id Token is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
 
-        # retrieving userIdToken
-        userIdToken = content.userIdToken
-        if userIdToken is None:
-            e = Error()
-            e.set_error(12, "User Id Token is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
+            # retrieving resource manager workspace prefix
+            rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
 
-        # retrieving resource manager workspace prefix
-        rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
+            # retrieving rm endpoint and user
+            resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
+            resource_manager_user = content.username
 
-        # retrieving rm endpoint and user
-        resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
-        resource_manager_user = content.username
+            platform_domain = os.getenv('ADES_PLATFORM_DOMAIN', None)
 
-        platform_domain = os.getenv('ADES_PLATFORM_DOMAIN', None)
+            if resource_manager_endpoint is None:
+                e = Error()
+                e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
 
-        if resource_manager_endpoint is None:
-            e = Error()
-            e.set_error(12, "Resource Manager endpoint is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
+            if platform_domain is None:
+                e = Error()
+                e.set_error(12, "Platform domain is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
 
-        if platform_domain is None:
-            e = Error()
-            e.set_error(12, "Platform domain is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
+            if resource_manager_user is None:
+                e = Error()
+                e.set_error(12, "Username is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
 
-        if resource_manager_user is None:
-            e = Error()
-            e.set_error(12, "Username is missing or is invalid")
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return e
+            # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
+            workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
 
-        # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
-        workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
-
-        # register results
-        registrationDetails = helpers.registerResults(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id,result_url= content.registerResultUrl, user_id_token=userIdToken)
+            # register results
+            registrationDetails = helpers.registerResults(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id,result_url= content.registerResultUrl, user_id_token=userIdToken)
 
     except ApiException as err:
-    e = Error()
-    e.set_error(12, err.body)
-    response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    return e
+        e = Error()
+        e.set_error(12, err.body)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return e
 
 """
 Removes Kubernetes namespace

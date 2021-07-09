@@ -160,7 +160,7 @@ def registerResults(resource_manager_endpoint,platform_domain, workspace_name, r
 
     print("Calling workspace api")
     workspace_access_token = None
-    response, workspace_access_token = demo.register_client(service_base_url= resource_manager_endpoint,
+    response, workspace_access_token = demo.workspace_register(service_base_url= resource_manager_endpoint,
                                                             workspace_name= workspace_name,
                                                             result_url= result_url,
                                                             id_token=user_id_token,
