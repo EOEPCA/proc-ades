@@ -241,12 +241,13 @@ def read_execute(content: ExecuteContent, response: Response):
         # retrieve workspace details
         workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id, user_id_token=userIdToken)
         try:
-            endpoint = workspaceDetails._storage._credentials["endpoint"]
-            access = workspaceDetails._storage._credentials["access"]
-            bucketname = workspaceDetails._storage._credentials["bucketname"]
-            projectid = workspaceDetails._storage._credentials["projectid"]
-            secret = workspaceDetails._storage._credentials["secret"]
-            region = workspaceDetails._storage._credentials["region"]
+            endpoint = workspaceDetails["storage"]["credentials"]["endpoint"]
+            access = workspaceDetails["storage"]["credentials"]["access"]
+            bucketname = workspaceDetails["storage"]["credentials"]["bucketname"]
+            projectid = workspaceDetails["storage"]["credentials"]["projectid"]
+            secret = workspaceDetails["storage"]["credentials"]["secret"]
+            region = workspaceDetails["storage"]["credentials"]["region"]
+
 
             cwl_inputs["STAGEOUT_AWS_SERVICEURL"] = endpoint
             cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access

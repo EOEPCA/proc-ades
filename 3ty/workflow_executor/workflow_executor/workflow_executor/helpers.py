@@ -8,7 +8,9 @@ import yaml
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
-from urllib.parse import urljoin
+
+from workflow_executor import eoepcaclient
+import json
 
 def get_api_client():
     proxy_url = os.getenv('HTTP_PROXY', None)
@@ -123,41 +125,11 @@ def storeLogs(logs, path):
     f.close()
 
 
-def getResourceManagerWorkspaceDetailsOld(resource_manager_endpoint, workspace_id):
-    '''
-    Deprecated
-    :param resource_manager_endpoint:
-    :param workspace_id:
-    :return:
-    '''
-    print("calling resource manager api")
-
-    if not resource_manager_endpoint:
-        raise ApiException(reason="Resource manager endpoint could not be found")
-
-    # Configure API key authorization: ApiKeyAuth
-    configuration = rm_client.Configuration()
-    configuration.host = resource_manager_endpoint
-    # create an instance of the API class
-    api_instance = rm_client.DefaultApi(rm_client.ApiClient(configuration))
-
-    try:
-        # Get Workspace
-        api_response = api_instance.get_workspace_workspaces_workspace_name_get(workspace_id)
-        # pprint(api_response)
-
-    except rm_client.rest.ApiException as e:
-        print("Exception when calling DefaultApi->get_workspace_workspaces_workspace_name_get: %s\n" % e)
-        raise e
-
-    return api_response
-
-
 def getResourceManagerWorkspaceDetails(resource_manager_endpoint,platform_domain, workspace_name, user_id_token= None):
     print("getResourceManagerWorkspaceDetails start")
 
     print("Registering client")
-    demo = client.DemoClient(platform_domain)
+    demo = eoepcaclient.DemoClient(platform_domain)
     demo.register_client()
     demo.save_state()
     print("Client succesfully registered")
