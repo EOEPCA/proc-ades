@@ -187,14 +187,16 @@ class DemoClient:
             "client_secret": client_secret,
             "scope": "openid"
         }
+        print(f"data: {data}")
+        print(f"headers: {headers}")
         token_endpoint = self.get_token_endpoint()
-        self.trace(log_prefix, f"Calling token endpoint with ID Token + ticket: POST => {token_endpoint}")
+        print(f"Calling token endpoint with ID Token + ticket: POST => {token_endpoint}")
         r = self.http_request("POST", token_endpoint, headers=headers, data=data)
         try:
             access_token = r.json()["access_token"]
-            self.trace(log_prefix, "Successfully exchanged ticket for RPT")
+            print( "Successfully exchanged ticket for RPT")
         except:
-            self.trace(log_prefix, "ERROR - exchanging ticket for RPT")
+            print( "ERROR - exchanging ticket for RPT")
             return None
         return access_token
 
@@ -234,21 +236,20 @@ class DemoClient:
                 headers = {}
             # use access token if we have one
             if access_token is not None:
-                self.trace(log_prefix, "Attempting to use existing access token")
+                print( "Attempting to use existing access token")
                 headers["Authorization"] = f"Bearer {access_token}"
             else:
-                self.trace(log_prefix, "No existing access token - making a naive attempt")
-                print("No existing access token - making a naive attempt")
+                print( "No existing access token - making a naive attempt")
             # attempt access
             print(f"{method} url: {url}\nheaders: {headers}\njson:{json}\ndata: {data}")
             r = self.http_request(method, url, headers=headers, json=json, data=data)
             print(f"RESPONSE:\nheaders: {r.headers}")
             # if response is OK then nothing else to do
             if r.ok:
-                self.trace(log_prefix, "Successfully accessed resource")
+                print("Successfully accessed resource")
             # if we got a 401 then initiate the UMA flow
             elif r.status_code == 401:
-                self.trace(log_prefix, "Received a 401 (Unauthorized) response to access attempt")
+                print( "Received a 401 (Unauthorized) response to access attempt")
                 # need an id token for the UMA flow
                 if id_token is not None:
                     # get ticket from the supplied header
@@ -259,11 +260,11 @@ class DemoClient:
                             break
                     # if we have a ticket then request an access token
                     if ticket is not None:
-                        self.trace(log_prefix, "Got ticket from response. Using ID Token + ticket to request an RPT")
+                        print("Got ticket from response. Using ID Token + ticket to request an RPT")
                         access_token = self.get_access_token_from_ticket(ticket, id_token)
                         repeat = True
                 else:
-                    self.trace(log_prefix, "No ID Token, so cannot proceed with UMA flow")
+                    print("No ID Token, so cannot proceed with UMA flow")
             # unhandled response code
             else:
                 print(f"UNEXPECTED status code: {r.status_code} for resource {url}")
