@@ -652,12 +652,21 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 wfpm->userIdToken = resource->getJwt();
                 std::cerr << "Retrieving username from JWT \n";
                 auto decoded = jwt::decode(resource->getJwt());
-
                 auto claims = decoded.get_payload_claims();
+
+
+                // there are 2 possible structure of jwt
+                //1
+                auto pct_claims_json = claims["pct_claims"].to_json();
+
+                //2
                 std::string key = "user_name";
                 auto count = claims.count(key);
-                std::cout << count << std::endl;
-                if(count) {
+
+                if(pct_claims_json.contains("user_name")) {
+                    wfpm->username = pct_claims_json.get(key).to_str();
+                    std::cerr << "Retrieving username from JWT success. Username: " << pct_claims_json.get(key).to_str() << std::endl;
+                } else if(count) {
                     wfpm->username = claims[key].as_string();
                     std::cerr << "Retrieving username from JWT success. Username: " << claims[key].as_string() << std::endl;
                 }else {
