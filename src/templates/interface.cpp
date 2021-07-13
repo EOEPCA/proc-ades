@@ -651,30 +651,36 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
                 wfpm->userIdToken = resource->getJwt();
                 std::cerr << "Retrieving username from JWT \n";
+
                 auto decoded = jwt::decode(resource->getJwt());
+                std::string username;
                 auto claims = decoded.get_payload_claims();
-
-
-                // there are 2 possible structure of jwt
-                //1
-                auto pct_claims_json = claims["pct_claims"].to_json();
-
-                //2
                 std::string key = "user_name";
-                auto count = claims.count(key);
+                auto count = decoded.get_payload_claims().count(key);
 
-                if(pct_claims_json.contains("user_name")) {
-                    wfpm->username = pct_claims_json.get(key).to_str();
-                    std::cerr << "Retrieving username from JWT success. Username: " << pct_claims_json.get(key).to_str() << std::endl;
-                } else if(count) {
-                    wfpm->username = claims[key].as_string();
-                    std::cerr << "Retrieving username from JWT success. Username: " << claims[key].as_string() << std::endl;
-                }else {
+                if(count) {
+                    username = claims[key].as_string();
+                    std::cout << "user: " << username << std::endl;
+                } else {
+                    if (claims.count("pct_claims")) {
+                        auto pct_claims_json = claims["pct_claims"].to_json();
+                        if (pct_claims_json.contains(key)) {
+                            username = pct_claims_json.get(key).to_str();
+                            std::cout << "user: " << pct_claims_json.get(key) << std::endl;
+                        }
+                    }
+                }
+
+                if (username.empty() ) {
                     std::string err{
                             "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
                     err.append(" on ").append(resource->getIconUri()).append(" ");
                     setStatus(conf, "failed", err.c_str());
                     updateStatus(conf, 100, err.c_str());
+                    return SERVICE_FAILED;
+                } else {
+                    wfpm->username = username;
+                    std::cerr << "Retrieving username from JWT success. Username: " << username << std::endl;
                 }
             }
             //register get Status and Get Results
