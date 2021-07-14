@@ -1,6 +1,6 @@
 import requests
 import base64
-import os 
+import os
 import sys
 from time import sleep
 from datetime import datetime
@@ -31,7 +31,7 @@ class DemoClient:
         self.trace_flow = False
         self.trace_requests = True
         self.load_state()
-    
+
     def load_state(self):
         """Load state from file 'state.json'.
         """
@@ -44,7 +44,7 @@ class DemoClient:
             pass
         except json.decoder.JSONDecodeError:
             print(f"ERROR loading state from file. Using clean state...")
-    
+
     @keyword(name='Client Save State')
     def save_state(self):
         """Save state to file 'state.json'.
@@ -157,7 +157,7 @@ class DemoClient:
             headers = { 'content-type': "application/json", "Authorization": f"Bearer {id_token}" }
             data = { "resource_scopes":scopes, "icon_uri":uri, "name":name}
             r = self.http_request("POST", f"{resource_api_url}/resources", headers=headers, json=data)
-            
+
             a= json.loads(r.text)
             resource_id= a['id']
             if resource_id:
@@ -187,10 +187,10 @@ class DemoClient:
             "client_secret": client_secret,
             "scope": "openid"
         }
-        print(f"data: {data}")
-        print(f"headers: {headers}")
         token_endpoint = self.get_token_endpoint()
         print(f"Calling token endpoint with ID Token + ticket: POST => {token_endpoint}")
+        print(f"request data: {data}")
+        print(f"request headers: {headers}")
         r = self.http_request("POST", token_endpoint, headers=headers, data=data)
         try:
             access_token = r.json()["access_token"]
@@ -229,6 +229,7 @@ class DemoClient:
         repeat = True
         # max 2 loops. Repeat if we got a 401 and used UMA to get a new access token
         while repeat and count < 2:
+            print(f"\nattempt #{str(count)}")
             count += 1
             repeat = False
             # init headers if needed
@@ -454,7 +455,7 @@ class DemoClient:
         res=""
         if policy_id:
             res = self.http_request("PUT", pdp_base_url + "/policy/" + policy_id, headers=headers, json=policy_cfg, verify=False)
-        elif resource_id: 
+        elif resource_id:
             data={"resource_id": str(resource_id)}
             res = self.http_request("GET", pdp_base_url+"/policy/", headers=headers, json=data, verify=False)
             policyId= json.loads(res.text)
@@ -467,7 +468,7 @@ class DemoClient:
         if res.status_code == 200:
             return 200, print(f"[Update Policy] = {res.status_code} ({res.reason})")
         return 500, print(f"[Update Policy] = {res.status_code} ({res.reason})")
-    
+
     @keyword(name='Get Ownership Id')
     def get_ownership_id(self, id_token):
         """Get ownership id
@@ -530,7 +531,7 @@ class DemoClient:
         url = service_base_url + "/workspaces/" + workspace_name
         headers = { "Accept": "application/json" }
         r, access_token = self.uma_http_request("GET", url, headers=headers, id_token=id_token, access_token=access_token)
-        print(f"[Workspace Details] = {r.status_code} ({r.reason})")
+        print(f"[Workspace Details] = {r.status_code} ({r.reason}) \n\n")
         return r, access_token
 
 
