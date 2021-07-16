@@ -1,6 +1,5 @@
 import os
 
-import rm_client
 import sys
 from pprint import pprint
 

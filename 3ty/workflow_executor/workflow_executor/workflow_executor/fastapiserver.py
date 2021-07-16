@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
 import yaml
-import rm_client
 from fastapi.exceptions import RequestValidationError
 
 

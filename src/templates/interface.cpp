@@ -73,7 +73,6 @@ std::string userIdToken(maps *&conf){
     if (eoUserMap){
         return eoUserMap->value;
         }
-    }
     return  "";
 }
 
