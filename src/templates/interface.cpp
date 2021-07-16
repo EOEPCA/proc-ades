@@ -68,6 +68,17 @@ std::string authorizationBearer(maps *&conf){
     return  "";
 }
 
+std::string userIdToken(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+    if (eoUserMap){
+        return eoUserMap->value;
+        }
+    }
+    return  "";
+}
+
+
+
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
     std::ifstream infile(filePath);
     if (infile.good()) {
@@ -463,7 +474,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         getConfigurationFromZooMapConfig(conf, "pep", confPep);
         bool usepep=confPep["usepep"]=="true";
         bool pepStopOnError=confPep["stopOnError"]=="true";
-        std::string pephost = "http://ades.test.185.52.193.87.nip.io"; //confPep["pephost"];
+        std::string pephost = confPep["pephost"];
         std::unique_ptr<mods::PepRegisterResources> pepRegisterResources= nullptr;
         std::unique_ptr<mods::PepResource> resource = nullptr;
 
@@ -649,10 +660,10 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                     }
                 }
 
-                wfpm->userIdToken = resource->getJwt();
+                wfpm->userIdToken = userIdToken(conf);
                 std::cerr << "Retrieving username from JWT \n";
 
-                auto decoded = jwt::decode(resource->getJwt());
+                auto decoded = jwt::decode(userIdToken(conf));
                 std::string username;
                 auto claims = decoded.get_payload_claims();
                 std::string key = "user_name";

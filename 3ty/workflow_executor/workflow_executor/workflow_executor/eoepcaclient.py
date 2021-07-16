@@ -235,6 +235,8 @@ class DemoClient:
             # init headers if needed
             if headers is None:
                 headers = {}
+            # Set ID Token in header
+            headers["X-User-Id"] = id_token
             # use access token if we have one
             if access_token is not None:
                 print( "Attempting to use existing access token")
