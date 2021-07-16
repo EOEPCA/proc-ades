@@ -314,6 +314,18 @@ from_json(const json &j,
   if (exists_key(j, "jobID")) {
     x.jobID = j.at("jobID").get<std::string>();
   }
+
+  if (exists_key(j, "username")) {
+    x.jobID = j.at("username").get<std::string>();
+  }
+
+  if (exists_key(j, "userIdToken")) {
+        x.jobID = j.at("userIdToken").get<std::string>();
+  }
+
+    if (exists_key(j, "registerResultUrl")) {
+        x.jobID = j.at("registerResultUrl").get<std::string>();
+    }
 }
 
 inline void
@@ -326,6 +338,10 @@ to_json(json &j,
   j["jobID"] = x.runID;
   j["cwl"] = x.cwl;
   j["inputs"] = x.inputs;
+  j["username"] = x.username;
+  j["userIdToken"] = x.userIdToken;
+  j["registerResultUrl"] = x.registerResultUrl;
+
 }
 
 } // namespace nlohmann
@@ -494,6 +510,36 @@ webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
   return ret;
 
 };
+
+
+
+extern "C" long
+webRegisterResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
+
+    std::cerr << "**************************************webExecute\n";
+//  wfpm.dump();
+
+    std::string buffer;
+    std::string request{wfpm.hostName};
+    request.append("/register");
+    nlohmann::json json;
+    nlohmann::to_json(json,wfpm);
+
+    auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
+    if (ret==201){
+        mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
+                nlohmann::json::parse(buffer);
+        data.dump();
+        wfpm.jobID=data.jobID;
+    }else{
+        parseError(buffer);
+    }
+
+    wfpm.dump();
+    return 0;
+};
+
+
 
 /*
 

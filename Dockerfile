@@ -1,19 +1,18 @@
 FROM centos/devtoolset-7-toolchain-centos7
 USER root
 
-RUN yum install -y epel-release
-RUN yum update -y
-RUN yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3
+SHELL ["/bin/bash", "-c"]
 
-RUN yum install -y bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh
-
-RUN yum install -y git
-
-RUN yum install -y automake && \
-	cd && \
-	wget http://ftp.gnu.org/gnu/cgicc/cgicc-3.2.19.tar.gz && \
-	tar -zxvf cgicc-3.2.19.tar.gz && \
-	cd cgicc-3.2.19 && ./autogen && ./configure && make && make install && \
+RUN yum install -y epel-release                                                                 && \
+    yum update -y                                                                               && \
+    yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3 && \
+    yum install -y bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh && \
+    yum install -y git                                                                          && \
+    yum install -y automake                                                                     && \
+	cd                                                                                          && \
+	wget http://ftp.gnu.org/gnu/cgicc/cgicc-3.2.19.tar.gz                                       && \
+	tar -zxvf cgicc-3.2.19.tar.gz                                                               && \
+	cd cgicc-3.2.19 && ./autogen && ./configure && make && make install                         && \
 	cd && rm -fvR cgicc*
 ENV PATH "$PATH:/usr/local/bin"
 
@@ -30,9 +29,9 @@ WORKDIR /project
 RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
 ### Apply patches
-RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c
-RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c
-RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c            && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c    && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c
 ### Make libcgi
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
 ### Configure ZOO
@@ -46,8 +45,8 @@ RUN mkdir -p /opt/t2service /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/
 ### Make job status service
 RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make 
 ### Copy it as a service
-RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/
-RUN cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl /var/www/data/updateStatus.xsl
+RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/ && \
+    cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl /var/www/data/updateStatus.xsl
 ### Copy watchjob source
 RUN cp -r 3ty/proc-comm-zoo-1.2-alpha/src/* /opt/watchjob/
 ### Make watchjob
@@ -56,8 +55,8 @@ RUN cd /opt/watchjob/ && make && make install
 ## Make ADES
 RUN  rm -rf build && mkdir -p build && cd build
 WORKDIR /project/build/
-RUN cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" ..
-RUN make eoepcaows workflow_executor pep_resource && mkdir -p /project/zooservice
+RUN cmake3 -DCMAKE_BUILD_TYPE=release -G "CodeBlocks - Unix Makefiles" .. && \
+    make eoepcaows workflow_executor pep_resource && mkdir -p /project/zooservice
 
 ## Make deploy/undeploy service
 RUN make -C ../src/deployundeploy/zoo/
@@ -85,22 +84,40 @@ COPY 3ty/proc-comm-zoo-1.2-alpha/assets/oas.cfg /etc/zoo-project/oas.cfg
 COPY src /project/src
 COPY 3ty/proc-comm-lib-ows-1.04 /project/3ty/proc-comm-lib-ows-1.04
 COPY 3ty/nlohmann /project/3ty/nlohmann
+COPY 3ty/jwt-cpp /project/3ty/jwt-cpp
 WORKDIR /project/zooservice
 
 RUN make -C ../src/templates interface
 
 ## Install Workflow executor
+# COPY 3ty/workflow_executor /usr/local/workflow_executor
+# RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+# ENV PATH="/opt/miniconda/bin:$PATH"
+# RUN conda config --add channels eoepca                                      && \
+#     conda config --add channels conda-forge                                 && \
+#     conda install python-kubernetes click fastapi=0.65.0 uvicorn=0.13.4     && \
+#     conda install -c eoepca cwl-wrapper=0.8.0                               && \
+#     cd /usr/local/workflow_executor/rm_client && python setup.py install    && \
+#     cd /usr/local/workflow_executor/workflow_executor && python setup.py install
+
+
+## Install Workflow executor
+ENV BASH_ENV=~/.bashrc                                          \
+    MAMBA_ROOT_PREFIX=/srv/conda                                \
+    PATH=/srv/conda/envs/workflow_executor_env/bin:$PATH
+
 COPY 3ty/workflow_executor /usr/local/workflow_executor
+RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1 && \
+    ./micromamba shell init -s bash -p ~/micromamba                                                                         && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                    && \
+    cp ./micromamba /usr/bin                                                                                                && \
+    cd /usr/local/workflow_executor/workflow_executor                                                                       && \
+    micromamba create -f environment.yml -y                                                                                 && \
+    /srv/conda/envs/workflow_executor_env/bin/python setup.py install                                                       && \
+    rm -fr /srv/conda/pkgs                                                                                                  && \
+    rm -fr /tmp/*
 
-RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
-ENV PATH="/opt/miniconda/bin:$PATH"
-RUN conda config --add channels eoepca
-RUN conda config --add channels conda-forge
-RUN conda install python-kubernetes click fastapi uvicorn
-RUN conda install -c eoepca/label/dev cwl-wrapper
-RUN cd /usr/local/workflow_executor/ && python setup.py install
-
-# COPY assets/main.cfg /opt/t2service/main.cfg
+COPY assets/main.cfg /opt/t2service/main.cfg
 COPY assets/oas.cfg /opt/t2service/oas.cfg
 
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
@@ -111,18 +128,17 @@ COPY src/templates/template.cpp /opt/t2template/template.cpp
 COPY src/templates/Makefile /opt/t2template/Makefile
 RUN cp /project/src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/
 COPY src/deployundeploy/zoo/*.zcfg /opt/t2service/
-RUN mkdir -p /opt/t2libs && cp /project/src/templates/libinterface.so /opt/t2libs/libinterface.so
-RUN cp /project/build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
+RUN mkdir -p /opt/t2libs && cp /project/src/templates/libinterface.so /opt/t2libs/libinterface.so   && \
+    cp /project/build/3ty/proc-comm-lib-ows-1.04/libeoepcaows.so /opt/t2libs/
 
-RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so
-RUN cp /project/build/libpep_resource.so /opt/t2service/libpep_resource.so
-RUN mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
+RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so                && \
+    cp /project/build/libpep_resource.so /opt/t2service/libpep_resource.so                          && \
+    mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
 COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
-RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh
-
-RUN echo "alias ll='ls -ltr'" >> $HOME/.bashrc
-RUN yum install mlocate -y
+RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh                     && \
+    echo "alias ll='ls -ltr'" >> $HOME/.bashrc                                                      && \
+    yum install mlocate -y
 
 CMD ["/opt/t2scripts/entrypoint.sh"]
 

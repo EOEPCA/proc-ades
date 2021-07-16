@@ -234,8 +234,13 @@ extern "C" long pepRemoveFromZoo(const char *path, const char *host/*base uri*/,
 
     long ret = pepGets_(resource, &resources);
     if (ret != 200) {
-        if (stopOnError)
+        if ( ret == 404 ){
+            std::cerr << "pep service did not find the deployed app and returned 404.\n The Ades will proceed anyway with the undeploy.\n";
+            return 200;
+        }
+        else if (stopOnError) {
             return ret;
+        }
         else
             return 200;
     }

@@ -124,6 +124,10 @@ workflowExecutor:
     env: {}
       # HTTP_PROXY: http://1.2.3.4:8534
 
+  useResourceManager: false
+  resourceManagerEndpoint: "https://resourcemanager-api.com"
+  resourceManagerWorkspacePrefix: "rm-user"
+
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
   usePep: "false"

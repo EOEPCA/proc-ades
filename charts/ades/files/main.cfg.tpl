@@ -67,6 +67,10 @@ pathStatus=/%s/watchjob/processes/%s/jobs/%s
 pathResult=/%s/watchjob/processes/%s/jobs/%s/result
 stopOnError=true
 
+[resourcemanager]
+useResourceManager={{ .Values.workflowExecutor.useResourceManager }}
+resourceManagerEndpoint={{ .Values.workflowExecutor.resourceManagerEndpoint }}
+resourceManagerWorkspacePrefix= {{ .Values.workflowExecutor.resourceManagerWorkspacePrefix }}
 
 [eoepca]
 owsparser=/opt/t2libs/libeoepcaows.so

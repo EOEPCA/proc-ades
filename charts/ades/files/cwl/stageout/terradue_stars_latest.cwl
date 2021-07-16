@@ -4,7 +4,7 @@ doc: "Run Stars for staging results"
 class: CommandLineTool
 hints:
   DockerRequirement:
-    dockerPull: terradue/stars:latest
+    dockerPull: terradue/stars-t2:0.6.18.19
 id: stars
 arguments:
 - copy
@@ -49,8 +49,9 @@ requirements:
       # AWS__Profile: $(inputs.ADES_STAGEOUT_AWS_PROFILE)
       # AWS__ProfilesLocation: $(inputs.aws_profiles_location.path)
       AWS__ServiceURL: $(inputs.ADES_STAGEOUT_AWS_SERVICEURL)
+      AWS__SignatureVersion: "2"
       AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEOUT_AWS_ACCESS_KEY_ID)
       AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY)
-      AWS__Region: $(inputs.ADES_STAGEOUT_AWS_REGION)
-      AWS__AuthenticationRegion: $(inputs.ADES_STAGEOUT_AWS_REGION)
+      #AWS__Region: $(inputs.ADES_STAGEOUT_AWS_REGION)
+      #AWS__AuthenticationRegion: $(inputs.ADES_STAGEOUT_AWS_REGION)
   ResourceRequirement: {}

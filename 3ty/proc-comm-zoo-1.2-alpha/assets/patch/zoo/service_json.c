@@ -32,6 +32,10 @@
 #include "service_internal.h"
 #include <dirent.h>
 
+#include <sys/time.h>
+#include <time.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,10 +45,10 @@ extern "C" {
   const char* rangeCorrespondances[4][2]={
     { "rangeMin", "minimumValue" },
     { "rangeMax", "maximumValue"},
-    { "rangeSpacing", "spacing" }, 
+    { "rangeSpacing", "spacing" },
     { "rangeClosure", "rangeClosure" }
   };
-  
+
 
   /**
    * Convert a map to a json object
@@ -143,7 +147,7 @@ extern "C" {
 	}
 	json_object_object_add(cres,"supported",resi);
       }
-      
+
       json_object_object_add(cres,"child",elementsToJson(cur->child));
 
       json_object_object_add(res,cur->name,cres);
@@ -151,7 +155,7 @@ extern "C" {
     }
     return res;
   }
-  
+
   /**
    * Convert an service to a json object
    * @param myService the service pointer to be converted into a json object
@@ -199,14 +203,14 @@ extern "C" {
 	      currentValue=(char*)realloc(currentValue,(strlen(tmpS1)+strlen(tmpS)+2)*sizeof(char));
 	      sprintf(currentValue,"%s-%s",tmpS1,tmpS);
 	    }
-	  }	      
+	  }
 	  json_object_object_add(prop4,rangeCorrespondances[i][1],json_object_new_string(currentValue));
 	}
       }
     }
     json_object_array_add(prop,prop4);
   }
-  
+
   /**
    * Add literalDataDomains property to a json_object
    * @param m the main configuration maps pointer
@@ -245,7 +249,7 @@ extern "C" {
 	tmpMap1=getMap(in->defaults->content,"range");
 	if(tmpMap1!=NULL){
 	  // TODO: parse range = [rangeMin,rangeMax]
-	}else{ 
+	}else{
 	  // AllowedValues
 	  tmpMap1=getMap(in->defaults->content,"AllowedValues");
 	  if(tmpMap1!=NULL){
@@ -257,7 +261,7 @@ extern "C" {
 	      tmps = strtok_r (NULL, ",", &saveptr);
 	    }
 	    json_object_object_add(prop3,"allowedValues",prop5);
-	    
+
 	  }else{
 	    json_object_object_add(prop3,"anyValue",json_object_new_boolean(true));
 	  }
@@ -356,7 +360,7 @@ extern "C" {
   /**
    * Add metadata properties to a json_object
    * @param m the main configuration maps pointer
-   * @param io a string 
+   * @param io a string
    * @param in an elements pointer to the current input/output
    * @param inputs the json_object pointer to add the property to
    * @param serv the service pointer to extract the metadata from
@@ -413,7 +417,7 @@ extern "C" {
 	      json_object_object_add(prop1,"crs",json_object_new_string(tmpMap1->value));
 	      json_object_array_add(prop0,prop1);
 	      sup=sup->next;
-	    }	      
+	    }
 	    json_object_object_add(input1,"supportedCRS",prop0);
 	  }
 	}
@@ -421,10 +425,10 @@ extern "C" {
       }
       printJMetadata(m,in->metadata,input);
       printJAdditionalParameters(m,in->additional_parameters,input);
-      json_object_array_add(inputs,input);	
+      json_object_array_add(inputs,input);
       in=in->next;
     }
-    
+
   }
 
   /**
@@ -556,10 +560,10 @@ extern "C" {
   }
 
   /**
-   * Print an OWS ExceptionReport Document and HTTP headers (when required) 
+   * Print an OWS ExceptionReport Document and HTTP headers (when required)
    * depending on the code.
    * Set hasPrinted value to true in the [lenv] section.
-   * 
+   *
    * @param m the maps containing the settings of the main.cfg file
    * @param s the map containing the text,code,locator keys (or a map array of the same keys)
    */
@@ -571,7 +575,7 @@ extern "C" {
 
     maps* tmpMap=getMaps(m,"main");
     const char *exceptionCode;
-    
+
     map* tmp=getMap(s,"code");
     if(tmp!=NULL){
       if(strcmp(tmp->value,"OperationNotSupported")==0 ||
@@ -674,8 +678,8 @@ extern "C" {
    */
   void parseJComplex(maps* conf,json_object* req,elements* element,maps* output,const char* name){
     json_object* json_cinput=NULL;
-    
-    
+
+
     if (json_object_object_get_ex(req,"href",&json_cinput)!=FALSE){
 	  output->content=createMap("xlink:href",json_object_get_string(json_cinput));
 	  int len=0;
@@ -732,7 +736,7 @@ extern "C" {
 	  output->content=createMap(key,json_object_get_string(val));
 	else
 	  addToMap(output->content,key,json_object_get_string(val));
-	
+
       }
     }
     if(json_object_object_get_ex(req,"transmissionMode",&json_cinput)!=FALSE){
@@ -785,12 +789,12 @@ extern "C" {
    * @param conf the maps containing the settings of the main.cfg file
    * @param req json_object pointing to the input/output
    * @param ioElements the elements extracted from the zcfg
-   * @param ioMaps the produced maps containing inputs (or outputs) 
+   * @param ioMaps the produced maps containing inputs (or outputs)
    * @param ioType the char* set to inputs or outputs
    */
   void parseJIO(maps* conf, json_object* req, elements* ioElements, maps** ioMaps,const char* ioType){
     json_object* json_io=NULL;
-    if(json_object_object_get_ex(req,ioType,&json_io)!=FALSE){	    
+    if(json_object_object_get_ex(req,ioType,&json_io)!=FALSE){
       json_object* json_current_io=NULL;
       size_t len=json_object_array_length(json_io);
       for(int i=0;i<len;i++){
@@ -867,7 +871,7 @@ extern "C" {
 		  else
 		    addToMap(cMaps->content,key,json_object_get_string(val));
 		}
-	      }	      
+	      }
 	    }
 	  }
 	}
@@ -941,9 +945,9 @@ extern "C" {
       }
     }
   }
-    
-      
-  
+
+
+
   /**
    * Parse Json Request
    * @param conf the maps containing the settings of the main.cfg file
@@ -966,7 +970,7 @@ extern "C" {
       if(json_object_object_get_ex(req,"outputs",&json_io)!=FALSE){
 	parseJIO(conf,req,s->outputs,outputs,"outputs");
       }
-    }      
+    }
   }
 
   /**
@@ -1015,7 +1019,7 @@ extern "C" {
 	    int s=zStat(tmps1, &f_status);
 	    char* mystring=(char*)malloc((f_status.st_size+1)*sizeof(char));
 	    fread(mystring,1,f_status.st_size,cdat);
-	    mystring[f_status.st_size]=0;	    
+	    mystring[f_status.st_size]=0;
 	    json_object *jobj = NULL;
 	    int slen = 0;
 	    enum json_tokener_error jerr;
@@ -1044,6 +1048,23 @@ extern "C" {
     return res;
   }
 
+
+  /**
+   * Returns current UTC timestamp
+   * @param dest
+   * @return
+   */
+    char *getUtcTimestamp(char *dest)
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        struct tm *tmp = gmtime(&tv.tv_sec);
+        char fmt[128];
+        strftime(fmt, sizeof(fmt), "%Y-%m-%dT%H:%M:%S.%%06uZ", tmp);
+        sprintf(dest, fmt, tv.tv_usec);
+        return dest;
+    }
+
   /**
    * Print the result of an execution
    *
@@ -1062,6 +1083,12 @@ extern "C" {
     while(resu!=NULL){
       json_object* res1=json_object_new_object();
       json_object_object_add(res1,"id",json_object_new_string(resu->name));
+
+      // UTC timestamp of the time of the job completion
+      // the value is temporary as it is not 100% OGC compliant
+      char dest[12];
+      json_object_object_add(res1,"time",json_object_new_string(getUtcTimestamp(dest)));
+
       map* tmpMap=NULL;
       if((tmpMap=getMap(resu->content,"value"))!=NULL ||
 	 (getMap(resu->content,"generated_file"))!=NULL){
@@ -1084,7 +1111,7 @@ extern "C" {
 		return eres1;
 	      }
 	      if (tok->char_offset < slen){
-		return eres1;		
+		return eres1;
 	      }
 	      json_object_object_add(res2,"inlineValue",jobj);
 	    }else
@@ -1111,19 +1138,19 @@ extern "C" {
 	      map *usid=getMapFromMaps(conf,"lenv","usid");
 	      map *ext=getMap(resu->content,"extension");
 	      if(gfile==NULL){
-		char file_ext[32];	    
+		char file_ext[32];
 		if( ext != NULL && ext->value != NULL) {
 		  strncpy(file_ext, ext->value, 32);
 		}
 		else {
-		  // Obtain default file extension (see mimetypes.h).	      
+		  // Obtain default file extension (see mimetypes.h).
 		  // If the MIME type is not recognized, txt is used as the default extension
 		  map* mtype=getMap(resu->content,"mimeType");
 		  getFileExtension(mtype != NULL ? mtype->value : NULL, file_ext, 32);
 		}
 		if(file_name!=NULL)
 		  free(file_name);
-	      
+
 		file_name=(char*)malloc((strlen(s->name)+strlen(usid->value)+strlen(file_ext)+strlen(resu->name)+45)*sizeof(char));
 		sprintf(file_name,"ZOO_DATA_%s_%s_%s_%d.%s",s->name,resu->name,usid->value,itn,file_ext);
 
@@ -1133,10 +1160,10 @@ extern "C" {
 		file_path=(char*)malloc((strlen(gfile->value)+1)*sizeof(char));
 		sprintf(file_path,"%s",gfile->value);
 	      }
-		
-	      
+
+
 	      itn++;
-	      
+
 	      file_url=(char*)malloc((strlen(tmpUrl->value)+
 				      strlen(file_name)+2)*sizeof(char));
 	      sprintf(file_url,"%s/%s",tmpUrl->value,file_name);
@@ -1184,12 +1211,12 @@ extern "C" {
 	      free(file_url);
 	      free(file_name);
 	      free(file_path);
-	      
+
 	    }
-	    
+
 	  }
 	}
-	json_object_object_add(res1,"value",res2);	
+	json_object_object_add(res1,"value",res2);
 	json_object_array_add(eres,res1);
       }
       resu=resu->next;
@@ -1394,9 +1421,9 @@ extern "C" {
 
     return tmp1;
   }
-  
+
   /**
-   * Create the status file 
+   * Create the status file
    *
    * @param conf the maps containing the settings of the main.cfg file
    * @param status an integer (SERVICE_ACCEPTED,SERVICE_STARTED...)
@@ -1446,13 +1473,13 @@ extern "C" {
     }
     setMapInMaps(conf,"lenv","message",message);
     setMapInMaps(conf,"lenv","status",rstatus);
-	
+
     map* mess=getMapFromMaps(conf,"lenv","message");
     if(mess!=NULL)
       json_object_object_add(res,"message",json_object_new_string(mess->value));
 
     createStatusLinks(conf,needResult,res);
-    
+
     FILE* foutput1=fopen(tmp1,"w+");
     if(foutput1!=NULL){
       const char* jsonStr1=json_object_to_json_string_ext(res,JSON_C_TO_STRING_PLAIN);
@@ -1469,7 +1496,7 @@ extern "C" {
   }
 
   /**
-   * Create the status file 
+   * Create the status file
    *
    * @param conf the maps containing the settings of the main.cfg file
    * @return an integer (0 in case of success, 1 in case of failure)
@@ -1553,12 +1580,12 @@ extern "C" {
       json_object_object_add(res4,"name",json_object_new_string(tmpMap->value));
       tmpMap=getMapFromMaps(conf,"main","license_url");
       if(tmpMap!=NULL){
-	json_object_object_add(res4,"url",json_object_new_string(tmpMap->value));      
+	json_object_object_add(res4,"url",json_object_new_string(tmpMap->value));
       }
     }
     json_object_object_add(res1,"license",res4);
 
-    json_object_object_add(res,"info",res1);    
+    json_object_object_add(res,"info",res1);
   }
 
   /**
@@ -1606,14 +1633,14 @@ extern "C" {
 	  json_object_object_add(res6,"type",json_object_new_string(tmpMap->value));
 	else
 	  json_object_object_add(res6,"type",json_object_new_string("string"));
-	
+
 	json_object_object_add(res8,"schema",res6);
-	
+
       }
-	
+
       json_object_object_add(res9,tmps12,res8);
       tmps12 = strtok_r (NULL, ",", &saveptr12);
-    }    
+    }
     tmpMap2=getMapFromMaps(conf,"openapi","header_parameters");
     char *saveptr13;
     char *tmps13 = strtok_r (tmpMap2->value, ",", &saveptr13);
@@ -1658,22 +1685,22 @@ extern "C" {
 	    char *saveptr11;
 	    char *tmps11 = strtok_r (tmpMap->value, ",", &saveptr11);
 	    json_object *res71=json_object_new_array();
-	    while(tmps11!=NULL){		
+	    while(tmps11!=NULL){
 	      json_object_array_add(res71,json_object_new_string(tmps11));
 	      tmps11 = strtok_r (NULL, ",", &saveptr11);
 	    }
-	    json_object_object_add(res6,"enum",res71);				  
+	    json_object_object_add(res6,"enum",res71);
 	  }
 	}
-	
+
 	json_object_object_add(res8,"schema",res6);
-	
+
       }
-	
+
       json_object_object_add(res9,tmpId,res8);
       tmps13 = strtok_r (NULL, ",", &saveptr13);
-    } 
-    json_object_object_add(res,"parameters",res9);    
+    }
+    json_object_object_add(res,"parameters",res9);
   }
 
   void produceApiComponents(maps*conf,json_object* res){
@@ -1721,7 +1748,7 @@ extern "C" {
 	  if(getMap(tmpMaps->content,"length")==NULL)
 	    addToMap(tmpMaps->content,"length","1");
 	  map* len=getMap(tmpMaps->content,"length");
-	    
+
 	  for(int i=0;i<atoi(len->value);i++){
 	    json_object *methodc=json_object_new_object();
 	    map* cMap=getMapArray(tmpMaps->content,"method",i);
@@ -1866,17 +1893,18 @@ extern "C" {
       }
       json_object_object_add(res,"paths",paths);
     }
-      
+
     tmpMap=getMapFromMaps(conf,"openapi","links");
     if(tmpMap!=NULL){
-	
+
     }
-    
+
     json_object *res3=json_object_new_array();
     json_object_array_add(res3,res4);
     json_object_object_add(res,"servers",res3);
   }
-  
+
+
 #ifdef __cplusplus
 }
 #endif

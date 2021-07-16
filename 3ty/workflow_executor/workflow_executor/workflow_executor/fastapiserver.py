@@ -2,7 +2,7 @@ import json
 import os
 import tempfile
 import uvicorn
-from fastapi import FastAPI, Form, File, status, Response
+from fastapi import FastAPI, Form, File, status, Response, Request
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import workflow_executor
@@ -11,6 +11,10 @@ from pydantic import BaseModel
 from kubernetes.client.rest import ApiException
 from pprint import pprint
 import yaml
+from fastapi.exceptions import RequestValidationError
+
+
+
 
 app = FastAPI(
     title="the title",
@@ -20,6 +24,12 @@ app = FastAPI(
     docs_url="/api/docs", redoc_url="/api/redoc"
 )
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
 
 class Error:
 
@@ -44,11 +54,13 @@ class PrepareContent(BaseModel):
     runID: str
     cwl: str
 
-
 class ExecuteContent(PrepareContent):
     prepareID: str
     cwl: str
     inputs: str
+    username: str
+    userIdToken: str
+    registerResultUrl: str
 
 
 def sanitize_k8_parameters(value: str):
@@ -181,9 +193,73 @@ def read_execute(content: ExecuteContent, response: Response):
     with open(os.getenv('ADES_POD_ENV_VARS', None)) as f:
         pod_env_vars = yaml.load(f, Loader=yaml.FullLoader)
 
-    # retrieve config params and store them in json
-    # these will be used in the stageout phase
-    default_value = ""
+    # read USE_RESOURCE_MANAGER variable
+    useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
+    useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
+
+    # read RESOURCE MANAGER stageout variables
+    if useResourceManagerStageOut:
+
+        # retrieving userIdToken
+        userIdToken = content.userIdToken
+        if userIdToken is None:
+            e = Error()
+            e.set_error(12, "User Id Token is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        # retrieving resource manager workspace prefix
+        rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
+
+        # retrieving rm endpoint and user
+        resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
+        resource_manager_user = content.username
+
+        platform_domain = os.getenv('ADES_PLATFORM_DOMAIN', None)
+
+        if resource_manager_endpoint is None:
+            e = Error()
+            e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        if platform_domain is None:
+            e = Error()
+            e.set_error(12, "Platform domain is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        if resource_manager_user is None:
+            e = Error()
+            e.set_error(12, "Username is missing or is invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
+
+        # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
+        workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
+
+        # retrieve workspace details
+        workspaceDetails = helpers.getResourceManagerWorkspaceDetails(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id, user_id_token=userIdToken)
+        try:
+            endpoint = workspaceDetails["storage"]["credentials"]["endpoint"]
+            access = workspaceDetails["storage"]["credentials"]["access"]
+            bucketname = workspaceDetails["storage"]["credentials"]["bucketname"]
+            projectid = workspaceDetails["storage"]["credentials"]["projectid"]
+            secret = workspaceDetails["storage"]["credentials"]["secret"]
+            region = workspaceDetails["storage"]["credentials"]["region"]
+
+
+            cwl_inputs["STAGEOUT_AWS_SERVICEURL"] = endpoint
+            cwl_inputs["STAGEOUT_AWS_ACCESS_KEY_ID"] = access
+            cwl_inputs["STAGEOUT_AWS_SECRET_ACCESS_KEY"] = secret
+            cwl_inputs["STAGEOUT_AWS_REGION"] = region
+            cwl_inputs["STAGEOUT_OUTPUT"] = f"s3://{projectid}:{bucketname}"
+
+        except KeyError:
+            e = Error()
+            e.set_error(12, "Resource Manager access credentials are missing or are invalid")
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return e
 
     for k, v in cwl_inputs.items():
         inputs_content["inputs"].append({
@@ -251,6 +327,7 @@ def read_execute(content: ExecuteContent, response: Response):
                                                         max_cores=max_cores)
         except ApiException as e:
             response.status_code = e.status
+            response.body = e.body
             resp_status = {"status": "failed", "error": e.body}
 
     return {"jobID": workflow_name}
@@ -267,7 +344,7 @@ def read_getstatus(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     workflow_name = sanitize_k8_parameters(f"wf-{run_id}")
 
     keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
-    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+    keepworkspaceiffailed = str(keepworkspaceiffailedString).lower() in ['true', '1', 'y', 'yes']
 
     state = client.State()
     print('Status GET')
@@ -334,7 +411,7 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
     state = client.State()
 
     keepworkspaceiffailedString = os.getenv('JOB_KEEPWORKSPACE_IF_FAILED', "True")
-    keepworkspaceiffailed = keepworkspaceiffailedString.lower() in ['true', '1', 'y', 'yes']
+    keepworkspaceiffailed = str(keepworkspaceiffailedString).lower() in ['true', '1', 'y', 'yes']
 
     print('Result GET')
 
@@ -348,13 +425,16 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
         print("getresult success")
         pprint(resp_status)
 
+        # retrieving s3 path containing the catalog.json file
+        s3ResultPath = os.path.dirname(resp_status['StacCatalogUri'])
+
         json_compatible_item_data = {'wf_output': json.dumps(resp_status)}
         print("wf_output json: ")
         pprint(json_compatible_item_data)
         print("job success")
 
         keepworkspaceString = os.getenv('JOB_KEEPWORKSPACE', "False")
-        keepworkspace = keepworkspaceString.lower() in ['true', '1', 'y', 'yes']
+        keepworkspace = str(keepworkspaceString).lower() in ['true', '1', 'y', 'yes']
 
         if not keepworkspace:
             print('Removing Workspace')
@@ -382,9 +462,70 @@ def read_getresult(service_id: str, run_id: str, prepare_id: str, job_id: str, r
 
         return e
 
-
     return JSONResponse(content=json_compatible_item_data)
 
+
+
+"""
+Registers results
+"""
+
+
+@app.post("/register", status_code=status.HTTP_201_CREATED)
+def read_register_results(content: ExecuteContent, response: Response):
+    try:
+        # read USE_RESOURCE_MANAGER variable
+        useResourceManagerStageOut = os.getenv('USE_RESOURCE_MANAGER', False)
+        useResourceManagerStageOut = str(useResourceManagerStageOut).lower() in ['true', '1', 'y', 'yes']
+        # read RESOURCE MANAGER stageout variables
+        if useResourceManagerStageOut:
+
+            # retrieving userIdToken
+            userIdToken = content.userIdToken
+            if userIdToken is None:
+                e = Error()
+                e.set_error(12, "User Id Token is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            # retrieving resource manager workspace prefix
+            rmWorkspacePrefix = os.getenv('RESOURCE_MANAGER_WORKSPACE_PREFIX', "rm-user")
+
+            # retrieving rm endpoint and user
+            resource_manager_endpoint = os.getenv('RESOURCE_MANAGER_ENDPOINT', None)
+            resource_manager_user = content.username
+
+            platform_domain = os.getenv('ADES_PLATFORM_DOMAIN', None)
+
+            if resource_manager_endpoint is None:
+                e = Error()
+                e.set_error(12, "Resource Manager endpoint is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            if platform_domain is None:
+                e = Error()
+                e.set_error(12, "Platform domain is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            if resource_manager_user is None:
+                e = Error()
+                e.set_error(12, "Username is missing or is invalid")
+                response.status_code = status.HTTP_400_BAD_REQUEST
+                return e
+
+            # temporary naming convention for resource mananeger workspace name: "rm-user-<username>"
+            workspace_id= f"{rmWorkspacePrefix}-{resource_manager_user}".lower()
+
+            # register results
+            registrationDetails = helpers.registerResults(resource_manager_endpoint=resource_manager_endpoint , platform_domain=platform_domain, workspace_name=workspace_id,result_url= content.registerResultUrl, user_id_token=userIdToken)
+
+    except ApiException as err:
+        e = Error()
+        e.set_error(12, err.body)
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return e
 
 """
 Removes Kubernetes namespace

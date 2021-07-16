@@ -13,11 +13,14 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <jwt-cpp/jwt.h>
 
 #include <json.h>
 #include "workflow_executor.hpp"
+#include "nlohmann/json.hpp"
 
 #include "pepresources.hpp"
+#include "../deployundeploy/includes/httpfuntions.hpp"
 
 //https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
 struct InputParameter{
@@ -64,6 +67,16 @@ std::string authorizationBearer(maps *&conf){
     }
     return  "";
 }
+
+std::string userIdToken(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+    if (eoUserMap){
+        return eoUserMap->value;
+        }
+    return  "";
+}
+
+
 
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
     std::ifstream infile(filePath);
@@ -230,6 +243,129 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     free(flenv);
 }
 
+
+
+
+
+/*        void registerClient(std::string clientName, std::string grantTypes, std::string redirectURIs, std::string logoutURI, std::string responseTypes, std::string scopes, std::string token_endpoint_auth_method, bool useJWT, std::string sectorIdentifier  ){
+            std::cerr << "Registering new client..." << std::endl;
+
+            headers = { 'content-type': "application/scim+json"}
+            payload = self.clientPayloadCreation(clientName, grantTypes, redirectURIs, logoutURI, responseTypes, scopes, sectorIdentifier, token_endpoint_auth_method, useJWT)
+
+        }*/
+
+
+/***
+ *
+ */
+nlohmann::json registerClient(char *baseUrl){
+
+    nlohmann::json registrationJson;
+
+    // GET TOKEN ENDPOINT
+    // Get the URL of the token endpoint
+    // Requires no authentication.
+    std::cerr << "registerClient called!\n";
+    char uma2confpath[] = "/.well-known/uma2-configuration";
+    strcat(baseUrl,uma2confpath);
+    std::cerr << "Get the URL of the token endpoint. Requires no authentication.\n";
+    std::cerr << baseUrl << std::endl;
+    std::string contentTypeHeader{"content-type: application/json"};
+    std::list <std::string> list;
+    list.push_back(contentTypeHeader);
+    std::string buffer;
+    auto ret = getFromWeb(buffer, baseUrl, &list);
+    std::cerr << "get url of the token endpoint:\treturn: " << ret << " json:" << buffer << "\n";
+
+    std::string tokenEndpoint;
+    std::string registration_endpoint;
+    switch (ret) {
+        case 404: {
+            std::cerr << "An error occured retrrieving the tokenEndpoint" << std::endl;
+        }
+        case 200: {
+            auto responseJson = nlohmann::json::parse(buffer);
+            std::cerr << responseJson.dump() << std::endl;
+
+            tokenEndpoint = responseJson["token_endpoint"].get<std::string>();
+            std::cerr << tokenEndpoint << std::endl;
+
+            // registration_endpoint
+            registration_endpoint = responseJson["registration_endpoint"].get<std::string>();
+            std::cerr << registration_endpoint << std::endl;
+
+            // id_token
+            //https://test.185.52.193.87.nip.io/oxauth/restv1/token
+
+            break;
+        }
+    }
+
+
+    // REGISTER CLIENT
+    // check if state.json file exists
+    bool stateJsonExists = false;
+
+
+    if (stateJsonExists){
+
+        std::cerr << "State json exists" << std::endl;
+
+    } else {
+
+        std::cerr << "State json does not exist" << std::endl;
+        // POST
+        // https://test.185.52.193.87.nip.io/oxauth/restv1/register
+        // REGISTER PAYLOAD: { "client_name": "Demo Client", "grant_types":["client_credentials", "password", "urn:ietf:params:oauth:grant-type:uma-ticket"], "redirect_uris" : [""], "post_logout_redirect_uris": [""], "scope": "openid email user_name uma_protection permission", "response_types": [  "code",  "token",  "id_token",], "token_endpoint_auth_method": "client_secret_post"}
+        // REGISTER HEADERS: {'content-type': 'application/scim+json'}
+
+
+
+        std::cerr << "Registering client.\n";
+        std::cerr << registration_endpoint << std::endl;
+        std::string contentTypeHeader{"content-type: application/scim+json"};
+        std::list <std::string> list;
+        list.push_back(contentTypeHeader);
+        std::string buffer;
+        //auto ret = postputToWeb(buffer, registration_endpoint, &list);
+        //std::cerr << "get url of the token endpoint:\treturn: " << ret << " json:" << buffer << "\n";
+
+
+        nlohmann::json json;
+        nlohmann::json bodyjson;
+        bodyjson["client_name"] = "Demo Client";
+        bodyjson["grant_types"] = {"client_credentials", "password", "urn:ietf:params:oauth:grant-type:uma-ticket"};
+        bodyjson["redirect_uris"] = {""};
+        bodyjson["post_logout_redirect_uris"] = {""};
+        bodyjson["scope"] = "openid email user_name uma_protection permission";
+        bodyjson["response_types"] = {"code",  "token",  "id_token"};
+        bodyjson["token_endpoint_auth_method"] = "client_secret_post";
+
+
+        std::cerr << "POST\n json payload" << bodyjson.dump() << std::endl;
+        auto ret = postputToWeb(buffer, bodyjson.dump(), registration_endpoint.c_str(), "POST", &list);
+        std::cerr << "Client registration:\nreturn: " << ret << " json:" << buffer <<"\n";
+
+
+        registrationJson = nlohmann::json::parse(buffer);
+
+        // save state.json
+        /* example:
+          {
+              "client_id": "928910a0-7a44-4b24-b2d1-cdf3c0c1ee7f",
+              "client_secret": "c9af85d9-f853-4031-bac8-44417aa73e26"
+          }
+         */
+
+
+
+    }
+
+    return registrationJson;
+
+}
+
 extern "C" {
 
 //  auto configFile = std::make_unique<char[]>(M1024);
@@ -320,6 +456,16 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             std::cerr << "\nlibworkflow_executor.so: VALID!\n\n";
         }
         //==================================GET CONFIGURATION
+
+        //================ RESOURCE MANAGER
+        std::map<std::string, std::string> confRm;
+        getConfigurationFromZooMapConfig(conf, "resourcemanager", confRm);
+        bool useResourceManager=confRm["useResourceManager"]=="true";
+        std::string resourceManagerWorkspacePrefix = confRm["resourceManagerWorkspacePrefix"];
+        if(resourceManagerWorkspacePrefix.empty()){
+            resourceManagerWorkspacePrefix = "rm-user";
+        }
+
 
 
         //================ PEP
@@ -484,6 +630,9 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             wfpm->runID = lenv["uusid"];
             wfpm->perc = -1;
             wfpm->message = "";
+            wfpm->username = "";
+            wfpm->userIdToken = "";
+            wfpm->registerResultUrl = "";
             wfpm->cwl=cwlBuffer.str();
 
             //==========PEP
@@ -508,7 +657,40 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                     }else{
                         usepep = false;
                     }
+                }
 
+                wfpm->userIdToken = userIdToken(conf);
+                std::cerr << "Retrieving username from JWT \n";
+
+                auto decoded = jwt::decode(userIdToken(conf));
+                std::string username;
+                auto claims = decoded.get_payload_claims();
+                std::string key = "user_name";
+                auto count = decoded.get_payload_claims().count(key);
+
+                if(count) {
+                    username = claims[key].as_string();
+                    std::cout << "user: " << username << std::endl;
+                } else {
+                    if (claims.count("pct_claims")) {
+                        auto pct_claims_json = claims["pct_claims"].to_json();
+                        if (pct_claims_json.contains(key)) {
+                            username = pct_claims_json.get(key).to_str();
+                            std::cout << "user: " << pct_claims_json.get(key) << std::endl;
+                        }
+                    }
+                }
+
+                if (username.empty() ) {
+                    std::string err{
+                            "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
+                    err.append(" on ").append(resource->getIconUri()).append(" ");
+                    setStatus(conf, "failed", err.c_str());
+                    updateStatus(conf, 100, err.c_str());
+                    return SERVICE_FAILED;
+                } else {
+                    wfpm->username = username;
+                    std::cerr << "Retrieving username from JWT success. Username: " << username << std::endl;
                 }
             }
             //register get Status and Get Results
@@ -576,6 +758,40 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             std::cerr << "workflowExecutor->webGetResults init\n";
             workflowExecutor->webGetResults(*wfpm,outPutList);
             std::cerr << "workflowExecutor->webGetResults end\n";
+
+            if (usepep && useResourceManager){
+                std::cerr << "Registering results to resource manager init\n";
+
+                // retrieving resource manager endpoint
+                std::string resourceManagerEndpoint=confRm["resourceManagerEndpoint"];
+
+                // username to lowecase
+                std::string username = wfpm->username;
+                transform(username.begin(), username.end(), username.begin(), ::tolower);
+
+                std::string outputString;
+                for (auto &[k, p] : outPutList) {
+                    std::cerr << "output: " << k<< " " << p << std::endl;
+                    if(k == "wf_outputs"){
+                        outputString = p;
+                        break;
+                    }
+                }
+                // retrieving S3 path
+                std::string stacCatalogUri = nlohmann::json::parse(outputString)["StacCatalogUri"].get<std::string>();
+                Util::innerReplace(stacCatalogUri, "/catalog.json", "/");
+                std::cerr << "Registering " << stacCatalogUri << std::endl;
+
+                wfpm->registerResultUrl = stacCatalogUri;
+                std::cerr << "workflowExecutor->webRegisterResults init\n";
+                workflowExecutor->webRegisterResults(*wfpm);
+                std::cerr << "workflowExecutor->webRegisterResults end\n";
+
+
+                std::cerr << "Registering results to resource manager end\n";
+            }
+
+
 
             std::cerr << "getresults finished" << std::endl;
             for (auto &[k, p] : outPutList) {

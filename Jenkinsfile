@@ -10,7 +10,7 @@ pipeline {
         script {
           def descriptor = readDescriptor()
           def mType=getTypeOfVersion(env.BRANCH_NAME)
-          def testsuite = docker.build(descriptor.docker_image_name + ":${mType}" + descriptor.docker_image_version, ".")
+          def testsuite = docker.build(descriptor.docker_image_name + ":${mType}" + descriptor.docker_image_version, "--no-cache .")
           testsuite.tag("${mType}latest")
           docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-emmanuelmathot') {
             testsuite.push("${mType}" + descriptor.docker_image_version)

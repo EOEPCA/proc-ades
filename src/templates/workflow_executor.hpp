@@ -77,22 +77,29 @@ public:
     std::string inputs;
     int perc;
     std::string message;
+    std::string username;
+    std::string userIdToken;
 
     std::string hostName;
+    std::string registerResultUrl;
+
     ~WorkflowExecutorWebParameters()=default;
 
     void dump() const{
       std::cerr<< "WorkflowExecutorWebParameters: \n";
       std::cerr << "\thostName: " << hostName << "\n";
+      std::cerr << "\tusername: " << username << "\n";
       std::cerr << "\tserviceID: " << serviceID << "\n";
       std::cerr << "\trunID: " << runID << "\n";
       std::cerr << "\tprepareID: " << prepareID << "\n";
       std::cerr << "\tjobID: " << jobID << "\n";
       std::cerr << "\tcwl: " << cwl << "\n";
       std::cerr << "\tinputs: " << inputs << "\n";
+      std::cerr << "\tuserIdToken: " << userIdToken << "\n";
 
       std::cerr << "\tperc: " << perc << "\n";
       std::cerr << "\tmessage: " << message << "\n";
+      std::cerr << "\tregisterResultUrl: " << registerResultUrl << "\n";
 
     }
 
@@ -211,7 +218,16 @@ public:
       }
     }
 
-
+      if (isValid()) {
+          webRegisterResults =
+                  (long (*)(WorkflowExecutorWebParameters& wfpm))dlsym(handle, "webRegisterResults");
+          if (!clear) {
+              std::cerr << "can't load 'webRegisterResults' function\n";
+              setValid(false);
+              setLastError("can't load 'webRegisterResults' function");
+              return;
+          }
+      }
 
   }
 
@@ -262,6 +278,8 @@ public:
   long (*webGetResults)(WorkflowExecutorWebParameters& wfpm,
                         std::list<std::pair<std::string, std::string>> &outPutList
                         ){nullptr};
+  long (*webRegisterResults)(WorkflowExecutorWebParameters& wfpm){nullptr};
+
 };
 
 } // namespace mods

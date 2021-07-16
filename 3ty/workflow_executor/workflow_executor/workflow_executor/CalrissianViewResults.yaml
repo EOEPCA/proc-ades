@@ -11,7 +11,7 @@ spec:
         fsGroup: 2000
       containers:
       - name: view-results
-        image: dukegcb/calrissian:latest
+        image: terradue/calrissian:0.9.1
         command:
         - "sh"
         - "-c"
