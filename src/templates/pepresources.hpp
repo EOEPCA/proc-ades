@@ -159,10 +159,6 @@ protected:
     void addScopes(std::map<std::string, std::string>& conf){
 
         std::string sScoops = conf["scopes"];
-        if (sScoops.empty()){
-            sScoops="public";
-        }
-
         std::vector<std::string> scoops = split(sScoops,'|');
         for(auto&s: scoops){
             scopes_.push_back(s);
