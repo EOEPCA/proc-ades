@@ -90,30 +90,16 @@ WORKDIR /project/zooservice
 RUN make -C ../src/templates interface
 
 ## Install Workflow executor
-# COPY 3ty/workflow_executor /usr/local/workflow_executor
-# RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
-# ENV PATH="/opt/miniconda/bin:$PATH"
-# RUN conda config --add channels eoepca                                      && \
-#     conda config --add channels conda-forge                                 && \
-#     conda install python-kubernetes click fastapi=0.65.0 uvicorn=0.13.4     && \
-#     conda install -c eoepca cwl-wrapper=0.8.0                               && \
-#     cd /usr/local/workflow_executor/rm_client && python setup.py install    && \
-#     cd /usr/local/workflow_executor/workflow_executor && python setup.py install
-
-
-## Install Workflow executor
 ENV BASH_ENV=~/.bashrc                                          \
     MAMBA_ROOT_PREFIX=/srv/conda                                \
     PATH=/srv/conda/envs/workflow_executor_env/bin:$PATH
 
-COPY 3ty/workflow_executor /usr/local/workflow_executor
 RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1 && \
     ./micromamba shell init -s bash -p ~/micromamba                                                                         && \
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                    && \
     cp ./micromamba /usr/bin                                                                                                && \
-    cd /usr/local/workflow_executor/workflow_executor                                                                       && \
-    micromamba create -f environment.yml -y                                                                                 && \
-    /srv/conda/envs/workflow_executor_env/bin/python setup.py install                                                       && \
+    micromamba env create -n workflow_executor_env                                                                          && \
+    micromamba install workflow-executor=1.0.0 -c eoepca -c conda-forge -c terradue -n workflow_executor_env                                       && \
     rm -fr /srv/conda/pkgs                                                                                                  && \
     rm -fr /tmp/*
 
