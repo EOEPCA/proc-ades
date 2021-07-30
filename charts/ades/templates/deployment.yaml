@@ -110,6 +110,10 @@ spec:
             - name: ADES_PLATFORM_DOMAIN
               value: {{ .Values.workflowExecutor.platformDomain| quote }}
             {{- end }}
+            { { - if .Values.wps.pepClientStatePath } }
+            - name: PEP_CLIENT_STATE_PATH
+              value: { { .Values.wps.pepClientStatePath| quote } }
+            { { - end } }
 
           volumeMounts:
             - name: ades-config
