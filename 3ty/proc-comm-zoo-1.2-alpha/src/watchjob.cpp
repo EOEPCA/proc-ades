@@ -21,6 +21,9 @@
 #include <string>
 #include <vector>
 
+#include <sys/time.h>
+#include <time.h>
+
 using cgicc::HTTPHTMLHeader;
 using cgicc::HTTPRedirectHeader;
 using cgicc::HTTPResponseHeader;
@@ -76,11 +79,16 @@ static std::vector<std::string> split(const std::string &s, char delim) {
   return elems;
 }
 
-void sendStatus(const char* status,const char *uri, const std::string &jobID,
+
+
+void sendStatus(const char* status,const char *uri, const std::string &jobID,const std::string &started,
                 std::vector<std::string> &params) {
 
   std::string progress("0");
   std::string message("Process started");
+
+
+
 
   if (params.size() == 0) {
 
@@ -99,6 +107,7 @@ void sendStatus(const char* status,const char *uri, const std::string &jobID,
   std::unique_ptr<json_object, decltype(&json_object_put)> arrayV(
       json_object_new_array(), &json_object_put);
 
+
   json_object_object_add(links.get(), "href", json_object_new_string(uri));
   json_object_object_add(links.get(), "rel", json_object_new_string("self"));
   json_object_object_add(links.get(), "type",
@@ -110,8 +119,13 @@ void sendStatus(const char* status,const char *uri, const std::string &jobID,
 
   std::cout << "Content-Type: application/json;charset=UTF-8\r\n\r\n";
 
+
+
   json_object_object_add(js.get(), "jobID",
                          json_object_new_string(jobID.c_str()));
+
+  json_object_object_add(js.get(),"started",json_object_new_string(started.c_str()));
+
   json_object_object_add(js.get(), "status",
                          json_object_new_string(status));
   json_object_object_add(js.get(), "message",
@@ -196,6 +210,7 @@ int main(int argc, char **argv, char **envp) {
   INIReader info(std::string(configFile.get()));
   std::string theStatus = info.Get("lenv", "status", "none");
   std::string theMessage = info.Get("lenv", "status", "none");
+  std::string theStart = info.Get("lenv", "started", "none");
 
   std::stringstream statusBuffer;
   std::stringstream finalBuffer;
@@ -224,7 +239,7 @@ int main(int argc, char **argv, char **envp) {
 
     if (loadFile(statusFile.get(), statusBuffer) == 0) {
       auto statusV = split(statusBuffer.str(), '|');
-      sendStatus(theStatus.c_str(), uri.get(), processId, statusV);
+      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, statusV);
 
     } else {
 
@@ -236,12 +251,12 @@ int main(int argc, char **argv, char **envp) {
 
       if (theStatus=="running"){
         std::vector<std::string> vMessage{"0",theMessage};
-        sendStatus(theStatus.c_str(), uri.get(), processId, vMessage);
+        sendStatus(theStatus.c_str(), uri.get(), processId, theStart, vMessage);
         return 0;
       }
 
       std::vector<std::string> vMessage{"100",theMessage};
-      sendStatus(theStatus.c_str(), uri.get(), processId, vMessage);
+      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, vMessage);
 
     }
   }
