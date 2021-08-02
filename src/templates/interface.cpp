@@ -22,6 +22,10 @@
 #include "pepresources.hpp"
 #include "../deployundeploy/includes/httpfuntions.hpp"
 
+#include <sys/time.h>
+#include <time.h>
+
+
 //https://gist.github.com/alan-mushi/19546a0e2c6bd4e059fd
 struct InputParameter{
     std::string id{""};
@@ -229,6 +233,22 @@ void log(const char *log) {
     fflush(stderr);
 }
 
+/**
+ * Returns current UTC timestamp
+ * @param dest
+ * @return
+ */
+char *getUtcTimestamp(char *dest)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm *tmp = gmtime(&tv.tv_sec);
+    char fmt[128];
+    strftime(fmt, sizeof(fmt), "%Y-%m-%dT%H:%M:%S.%%06uZ", tmp);
+    sprintf(dest, fmt, tv.tv_usec);
+    return dest;
+}
+
 void setStatus(maps *&conf, const char *status, const char *message) {
     map *usid = getMapFromMaps(conf, "lenv", "uusid");
     map *r_inputs = NULL;
@@ -238,6 +258,10 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     sprintf(flenv, "%s/%s_lenv.cfg", r_inputs->value, usid->value);
     setMapInMaps(conf, "lenv", "message", message);
     setMapInMaps(conf, "lenv", "status", status);
+    if(status == "successful"){
+        char dest[12];
+        setMapInMaps (m, "lenv", "finished", getUtcTimestamp(dest));
+    }
     maps *lenvMaps = getMaps(conf, "lenv");
     dumpMapsToFile(lenvMaps, flenv, 0);
     free(flenv);

@@ -3050,9 +3050,6 @@ runRequest (map ** inputs)
     createStatusFile(m,eres);
 		printHeaders(m);
 
-		char dest[12];
-		setMapInMaps (m, "lenv", "finished", getUtcTimestamp(dest));
-
     if (eres==SERVICE_SUCCEEDED){
       printf("Status: 201 Created \r\n\r\n");
     }else{
