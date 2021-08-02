@@ -258,10 +258,7 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     sprintf(flenv, "%s/%s_lenv.cfg", r_inputs->value, usid->value);
     setMapInMaps(conf, "lenv", "message", message);
     setMapInMaps(conf, "lenv", "status", status);
-    if(status == "successful"){
-        char dest[12];
-        setMapInMaps (m, "lenv", "finished", getUtcTimestamp(dest));
-    }
+
     maps *lenvMaps = getMaps(conf, "lenv");
     dumpMapsToFile(lenvMaps, flenv, 0);
     free(flenv);
@@ -828,6 +825,8 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         }
 
 
+        char dest[12];
+        setMapInMaps(conf, "lenv", "finished", getUtcTimestamp(dest));
 
         updateStatus(conf, 100, "Done");
         setStatus(conf, "successful", "");
