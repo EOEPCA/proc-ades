@@ -82,7 +82,7 @@ static std::vector<std::string> split(const std::string &s, char delim) {
 
 
 void sendStatus(const char* status,const char *uri, const std::string &jobID,const std::string &started,
-                std::vector<std::string> &params) {
+                const std::string &finished, std::vector<std::string> &params) {
 
   std::string progress("0");
   std::string message("Process started");
@@ -125,6 +125,10 @@ void sendStatus(const char* status,const char *uri, const std::string &jobID,con
                          json_object_new_string(jobID.c_str()));
 
   json_object_object_add(js.get(),"started",json_object_new_string(started.c_str()));
+
+  if( finished != "none") {
+      json_object_object_add(js.get(),"finished",json_object_new_string(finished.c_str()));
+  }
 
   json_object_object_add(js.get(), "status",
                          json_object_new_string(status));
@@ -211,6 +215,7 @@ int main(int argc, char **argv, char **envp) {
   std::string theStatus = info.Get("lenv", "status", "none");
   std::string theMessage = info.Get("lenv", "status", "none");
   std::string theStart = info.Get("lenv", "started", "none");
+  std::string theFinish = info.Get("lenv", "finished", "none");
 
   std::stringstream statusBuffer;
   std::stringstream finalBuffer;
@@ -239,7 +244,7 @@ int main(int argc, char **argv, char **envp) {
 
     if (loadFile(statusFile.get(), statusBuffer) == 0) {
       auto statusV = split(statusBuffer.str(), '|');
-      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, statusV);
+      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, theFinish, statusV);
 
     } else {
 
@@ -251,12 +256,12 @@ int main(int argc, char **argv, char **envp) {
 
       if (theStatus=="running"){
         std::vector<std::string> vMessage{"0",theMessage};
-        sendStatus(theStatus.c_str(), uri.get(), processId, theStart, vMessage);
+        sendStatus(theStatus.c_str(), uri.get(), processId, theStart, theFinish, vMessage);
         return 0;
       }
 
       std::vector<std::string> vMessage{"100",theMessage};
-      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, vMessage);
+      sendStatus(theStatus.c_str(), uri.get(), processId, theStart, theFinish, vMessage);
 
     }
   }
