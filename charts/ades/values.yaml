@@ -130,6 +130,7 @@ workflowExecutor:
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
+  pepClientStatePath: "/opt/zooservices_user/pepclient"
   usePep: "false"
   maincfgtpl: "files/main.cfg.tpl"
 
