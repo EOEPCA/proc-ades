@@ -292,6 +292,8 @@ public:
 
 int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
+
+    std::cerr << "DEBUG-BLA " << std::endl;
     std::string theMimeType{"application/atom+xml"};
 
     std::map<std::string, std::string> confEoepca;
@@ -482,6 +484,8 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             }
         }
 
+
+        std::cerr << "OWS ori " << owsOri << std::endl;
         std::string bufferOWSFile;
         auto found = owsOri.find("://");
         if (found == std::string::npos) {

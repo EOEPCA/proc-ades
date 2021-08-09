@@ -40,6 +40,7 @@ services:
         published: 9999
         protocol: tcp
         mode: host
+      - "2222:22"
     volumes:
       # configuration volume
       - ./config:/var/etc/ades:ro

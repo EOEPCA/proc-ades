@@ -126,6 +126,13 @@ RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh 
     echo "alias ll='ls -ltr'" >> $HOME/.bashrc                                                      && \
     yum install mlocate -y
 
+
+RUN yum -y install openssh openssh-server openssh-clients sudo initscripts
+
+# Generate keys
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+EXPOSE 22
+
 CMD ["/opt/t2scripts/entrypoint.sh"]
 
 EXPOSE 80
