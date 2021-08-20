@@ -99,7 +99,7 @@ RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | t
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                    && \
     cp ./micromamba /usr/bin                                                                                                && \
     micromamba env create -n workflow_executor_env                                                                          && \
-    micromamba install workflow-executor=1.0.1 -c eoepca -c conda-forge -c terradue -n workflow_executor_env                                       && \
+    micromamba install workflow-executor=1.0.4 -c eoepca -c conda-forge -c terradue -n workflow_executor_env                                       && \
     rm -fr /srv/conda/pkgs                                                                                                  && \
     rm -fr /tmp/*
 
@@ -125,13 +125,6 @@ COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
 RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh                     && \
     echo "alias ll='ls -ltr'" >> $HOME/.bashrc                                                      && \
     yum install mlocate -y
-
-
-RUN yum -y install openssh openssh-server openssh-clients sudo initscripts
-
-# Generate keys
-RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
-EXPOSE 22
 
 CMD ["/opt/t2scripts/entrypoint.sh"]
 

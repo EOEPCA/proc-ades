@@ -229,6 +229,18 @@ public:
           }
       }
 
+
+      if (isValid()) {
+          webGetWorkspaceDetails = (long (*)(WorkflowExecutorWebParameters& wfpm,std::list<std::pair<std::string, std::string>> &workspaceDetails))dlsym(
+                  handle, "webGetWorkspaceDetails");
+          if (!clear) {
+              std::cerr << "can't load 'webGetWorkspaceDetails' function\n";
+              setValid(false);
+              setLastError("can't load 'webGetWorkspaceDetails' function");
+              return;
+          }
+      }
+
   }
 
 public:
@@ -279,6 +291,10 @@ public:
                         std::list<std::pair<std::string, std::string>> &outPutList
                         ){nullptr};
   long (*webRegisterResults)(WorkflowExecutorWebParameters& wfpm){nullptr};
+
+  long (*webGetWorkspaceDetails)(WorkflowExecutorWebParameters& wfpm,
+          std::list<std::pair<std::string, std::string>> &workspaceDetails
+          ){nullptr};
 
 };
 

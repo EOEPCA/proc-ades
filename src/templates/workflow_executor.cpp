@@ -541,6 +541,34 @@ webRegisterResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) 
 
 
 
+extern "C" long
+webGetWorkspaceDetails(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
+                       std::list<std::pair<std::string, std::string>> &workspaceDetails) {
+
+    std::cerr << "**************************************webGetResults\n";
+    std::string buffer;
+
+    std::stringstream request;
+    request<< wfpm.hostName << "/workspace";
+
+    auto ret=getFromWeb(buffer,request.str().c_str());
+    if(ret==200){
+
+        wfexe::SingleResult msgWeb= nlohmann::json::parse(buffer);
+        std::cerr << "buffer: " << buffer<<"\n";
+
+        workspaceDetails.emplace_back("wf_outputs",msgWeb.result);
+
+    }else {
+        parseError(buffer);
+        ret=0;
+    }
+
+    return ret;
+
+};
+
+
 /*
 
 docker cp workflow_executor.cpp   zoo:/project/src/templates/ && docker cp workflow_executor.hpp   zoo:/project/src/templates/ && docker cp interface.cpp   zoo:/project/src/templates/ && docker cp  ../deployundeploy/zoo/httpfuntions.hpp  zoo:/project/src/deployundeploy/zoo/httpfuntions.hpp

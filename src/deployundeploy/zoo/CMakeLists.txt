@@ -17,6 +17,16 @@ include_directories(${LIBXML2_INCLUDE_DIR})
 include_directories(${LIBXSLT_INCLUDE_DIR})
 #--------------------------------------------------------
 
+# nlohmann
+include_directories(3ty/nlohmann)
+# Jwt Parser
+add_subdirectory(3ty/jwt-cpp)
+include_directories(3ty/jwt-cpp/include)
+
+# aws-cpp-sdk-s3
+list(APPEND CMAKE_PREFIX_PATH "3ty/aws-cpp-sdk-s3")
+find_package(AWSSDK REQUIRED COMPONENTS s3)
+
 #${LIBXML2_LIBRARIES}
 
 include_directories(includes)
@@ -33,7 +43,7 @@ SET(MODS_LIBS z m dl)
 
 add_library(epcatransactional SHARED ${LIB_SRC})
 TARGET_LINK_LIBRARIES(epcatransactional /work/build/libzooconverter.a ${CURL_LIBRARIES} zoo_service ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${MODS_LIBS} ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES})
-
+target_link_libraries(${PROJECT_NAME} ${AWSSDK_LINK_LIBRARIES})
 
 install(TARGETS epcatransactional DESTINATION /work/zooservices/)
 

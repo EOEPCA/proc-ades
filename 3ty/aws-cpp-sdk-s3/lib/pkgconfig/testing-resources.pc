@@ -1,0 +1,10 @@
+includedir=/home/bla/dev/CLionProjects/s3client_1/3ty/aws/include
+libdir=/home/bla/dev/CLionProjects/s3client_1/3ty/aws/lib
+
+Name: testing-resources
+Description: 
+Version: 1.9.72
+Cflags: -I${includedir} -fno-exceptions -std=c++11
+Libs: -L${libdir} -ltesting-resources 
+Libs.private: 
+Requires:  aws-cpp-sdk-core
