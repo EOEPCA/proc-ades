@@ -1,2 +1,2 @@
 docker_image_name: eoepca/proc-ades
-docker_image_version: 1.0.0
+docker_image_version: 0.9.3
