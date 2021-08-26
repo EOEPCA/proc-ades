@@ -359,7 +359,7 @@ int createUserSpace(maps* conf,const char* User){
   if (statusInfoPathMAP && statusInfoPathMAP->value && strlen(statusInfoPathMAP->value)>0){
     sprintf(statusInfoPath,"%s/statusInfos/%s",statusInfoPathMAP->value,User);
   }else{
-    sprintf(statusInfoPath,"/var/www/html/res/statusInfos/%s",User);
+      sprintf(statusInfoPath,"/var/www/_run/res/statusInfos/%s",User);
   }
 
 

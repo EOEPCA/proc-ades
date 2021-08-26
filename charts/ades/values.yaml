@@ -128,6 +128,8 @@ workflowExecutor:
   resourceManagerEndpoint: "https://resourcemanager-api.com"
   resourceManagerWorkspacePrefix: "rm-user"
 
+  jobNamespaceLabels:
+    app: "app-namespace"
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
   pepClientStatePath: "/opt/zooservices_user/pepclient"
