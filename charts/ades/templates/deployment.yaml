@@ -119,7 +119,7 @@ spec:
             - name: ades-config
               mountPath: /var/etc/ades
             - name: ades-user-data
-              mountPath: /var/www/html/res
+              mountPath: /var/www/_run/res/
             - name: ades-processing-services
               mountPath: /opt/zooservices_user
             - name: ades-config
