@@ -116,7 +116,7 @@ spec:
             {{- end }}
             {{- if .Values.workflowExecutor.jobNamespaceLabels }}
             - name: ADES_JOB_NAMESPACE_LABELS
-              value: {{ toJson .Values.jobNamespaceLabels| quote }}
+              value: {{ toJson .Values.workflowExecutor.jobNamespaceLabels| quote }}
             {{- end }}
 
           volumeMounts:
