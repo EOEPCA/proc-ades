@@ -114,12 +114,16 @@ spec:
             - name: PEP_CLIENT_STATE_PATH
               value: {{ .Values.wps.pepClientStatePath| quote }}
             {{- end }}
+            {{- if .Values.workflowExecutor.jobNamespaceLabels }}
+            - name: ADES_JOB_NAMESPACE_LABELS
+              value: {{ toJson .Values.workflowExecutor.jobNamespaceLabels| quote }}
+            {{- end }}
 
           volumeMounts:
             - name: ades-config
               mountPath: /var/etc/ades
             - name: ades-user-data
-              mountPath: /var/www/_run/res/
+              mountPath: /var/www/_run/res
             - name: ades-processing-services
               mountPath: /opt/zooservices_user
             - name: ades-config
