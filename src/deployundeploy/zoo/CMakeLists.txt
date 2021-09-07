@@ -42,7 +42,7 @@ SET(MODS_LIBS z m dl)
 
 
 add_library(epcatransactional SHARED ${LIB_SRC})
-TARGET_LINK_LIBRARIES(epcatransactional /work/build/libzooconverter.a ${CURL_LIBRARIES} zoo_service ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${MODS_LIBS} ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES})
+TARGET_LINK_LIBRARIES(epcatransactional /work/build/libzooconverter.a ${CURL_LIBRARIES} zoo_service ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${MODS_LIBS} ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${AWSSDK_LINK_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${AWSSDK_LINK_LIBRARIES})
 
 install(TARGETS epcatransactional DESTINATION /work/zooservices/)

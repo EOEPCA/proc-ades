@@ -1,4 +1,3 @@
-
 #include "../includes/httpfuntions.hpp"
 #include "xmlmemorywritewrapper.hpp"
 #include <cstdio>
@@ -29,22 +28,12 @@
 
 #include <iostream>
 
-#include <aws/core/Aws.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <aws/s3/S3Client.h>
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/s3/model/GetObjectRequest.h>
 
-
-
-#include <aws/s3/model/ListObjectsRequest.h>
-
-#include <aws/core/auth/AWSCredentialsProvider.h>
 #include <nlohmann/json.hpp>
 
 
 static std::string replaceStr(std::string &str, const std::string &from,
-                                const std::string &to) {
+                              const std::string &to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
         str.replace(start_pos, from.length(), to);
@@ -314,75 +303,11 @@ public:
     }
 };
 
-extern "C" {
-    void GetS3Object(
-            Aws::String object_name,
-            Aws::String bucket_name,
-            Aws::String region,
-            Aws::String access_key,
-            Aws::String secret_key,
-            Aws::String endpoint,
-            std::string &s3ObjectString) {
-
-
-        Aws::SDKOptions options;
-        options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Debug;
-
-
-        replaceStr(object_name,"s3://"+bucket_name+"/","" );
-
-        //The AWS SDK for C++ must be initialized by calling Aws::InitAPI.
-        Aws::InitAPI(options);
-        {
-            // config
-            Aws::Client::ClientConfiguration config;
-
-            // endpoint
-            config.endpointOverride = endpoint;
-
-            // aws credentials
-            Aws::Auth::AWSCredentials credentials;
-            credentials.SetAWSAccessKeyId(access_key);
-            credentials.SetAWSSecretKey(secret_key);
-
-            // region
-            config.region = region;
-
-            // client
-            Aws::S3::S3Client s3_client(credentials, config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, false);
-
-            Aws::S3::Model::GetObjectRequest* object_request;
-            object_request->SetBucket(bucket_name);
-            object_request->SetKey(object_name);
-
-
-            Aws::S3::Model::GetObjectOutcome get_object_outcome =
-                    s3_client.GetObject(*object_request);
-
-            if (get_object_outcome.IsSuccess()) {
-                auto &retrieved_file = get_object_outcome.GetResultWithOwnership().GetBody();
-                std::ostringstream ss;
-                ss << retrieved_file.rdbuf();
-                s3ObjectString = ss.str();
-            } else {
-                auto err = get_object_outcome.GetError();
-                std::cout << "Error: GetObject: " <<
-                err.GetExceptionName() << ": " << err.GetMessage() << std::endl;
-            }
-
-
-        }
-        //Before the application terminates, the SDK must be shut down.
-        Aws::ShutdownAPI(options);
-
-    }
-}
-
 
 int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
 
-    std::cerr << "DEBUG-BLA " << std::endl;
+
     std::string theMimeType{"application/atom+xml"};
 
     std::map<std::string, std::string> confEoepca;
@@ -597,29 +522,21 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             } else {
                 ////////////////////////////
                 // s3
-
                 // START RETRIEVE USERNAME
-                std::cerr << "Retrieving username from JWT \n";
-                std::cerr << "1" << std::endl;
+                std::cerr << "Retrieving username from User Id token \n";
                 _userIdToken = userIdToken(conf);
                 auto decoded = jwt::decode(_userIdToken);
-                std::cerr << "2" << std::endl;
                 std::string username;
                 auto claims = decoded.get_payload_claims();
                 std::string key = "user_name";
                 auto count = decoded.get_payload_claims().count(key);
-                std::cerr << "3" << std::endl;
                 if (count) {
-                    std::cerr << "3.1" << std::endl;
                     username = claims[key].as_string();
                     std::cerr << "user: " << username << std::endl;
                 } else {
-                    std::cerr << "3.2" << std::endl;
                     if (claims.count("pct_claims")) {
-                        std::cerr << "3.3" << std::endl;
                         auto pct_claims_json = claims["pct_claims"].to_json();
                         if (pct_claims_json.contains(key)) {
-                            std::cerr << "3.4" << std::endl;
                             username = pct_claims_json.get(key).to_str();
                             std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
                         }
@@ -629,50 +546,13 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                 auto wfpm = std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
                 wfpm->username = username;
                 wfpm->userIdToken = _userIdToken;
+                wfpm->hostName = confEoepca["WorkflowExecutorHost"];
+                wfpm->workspaceResource = owsOri.c_str();
 
-                std::list <std::pair<std::string, std::string>> workspaceDetails{};
-                std::cerr << "workflowExecutor->webGetWorkspaceDetails init\n";
-                workflowExecutor->webGetWorkspaceDetails(*wfpm, workspaceDetails);
-                std::cerr << "workflowExecutor->webGetWorkspaceDetails end\n";
+                std::cerr << "workflowExecutor->webGetWorkspaceResource init\n";
+                workflowExecutor->webGetWorkspaceResource(*wfpm, bufferOWSFile);
+                std::cerr << "workflowExecutor->webGetWorkspaceResource end\n";
 
-
-                Aws::String bucket_name;
-                Aws::String region;
-                Aws::String access_key;
-                Aws::String secret_key;
-                Aws::String endpoint;
-
-
-                for (auto &[k, p] : workspaceDetails) {
-                    std::cerr << "output: " << k << " " << p << std::endl;
-                    if (k == "access") {
-                        access_key = p;
-                        break;
-                    } else if (k == "bucketname") {
-                        bucket_name = p;
-                        break;
-                    } else if (k == "secret") {
-                        secret_key = p;
-                        break;
-                    } else if (k == "endpoint") {
-                        endpoint = p;
-                        break;
-                    } else if (k == "region") {
-                        region = p;
-                        break;
-                    }
-                }
-
-                Aws::String object_name = owsOri;
-
-
-                //GetS3Object(object_name,bucket_name,region,access_key,secret_key,endpoint,bufferOWSFile);
-                //Aws::S3::Model::GetObjectRequest object_request;
-
-
-                std::cerr << "4" << std::endl;
-
-                //////
             }
         }
 
@@ -687,7 +567,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         std::list<std::pair<std::string, std::string>> metadata;
         metadata.emplace_back("owsOrigin", std::string(owsOri));
 
-        std::string applicationFile=bufferOWSFile;
+        std::string applicationFile=bufferOWSFile.c_str();
         if (theMimeType=="application/cwl"){
             std::string head=R"(<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><owc:offering xmlns:owc="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/eoc/applicationContext/cwl"><owc:content type="application/cwl"><![CDATA[)";
             std::string tail=R"(]]></owc:content></owc:offering></entry></feed>)";
@@ -696,8 +576,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             applicationFile.append(tail);
         }
 
+        std::cerr << "Application feed: \n" << applicationFile << std::endl;
         std::unique_ptr<EOEPCA::OWS::OWSContext,
-                std::function<void(EOEPCA::OWS::OWSContext *)>>
+        std::function<void(EOEPCA::OWS::OWSContext *)>>
                 ptrContext(
                 lib->parseFromMemory(applicationFile.c_str(), applicationFile.size()),
                 lib->releaseParameter);
@@ -775,14 +656,12 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
                                         std::string COMPILE =
                                                 ("make -C " + buildPath +  " USERPATH=\"" +user->getPath() +"\" COMPILE=\"" +
-                                                        service_name_to_build + "\"  SERVICENAMEFILE=\"" + zoo->getIdentifier()  + "\"    1>&2  ");
+                                                 service_name_to_build + "\"  SERVICENAMEFILE=\"" + zoo->getIdentifier()  + "\"    1>&2  ");
 
                                         std::cerr << "\n*** COMPILE SERVICE 2: " << COMPILE << "\n";
                                         int COMPILERES = system((char *)COMPILE.c_str());
                                         std::cerr << "\n*** COMPILE SERVICE END: " << COMPILE << "\n";
 //                                        service_name_to_build.append(".zo");
-
-
                                     }
 
                                     if (!fileExist(zooRef.c_str())) {
@@ -927,18 +806,18 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 }
 extern "C" {
 
-    ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
-                                               maps *&outputs){
-        dumpMaps(inputs);
-        dumpMaps(conf);
+ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
+                                 maps *&outputs){
+    dumpMaps(inputs);
+    dumpMaps(conf);
 
-        return job(conf, inputs, outputs, Operation::DEPLOY);
-    }
+    return job(conf, inputs, outputs, Operation::DEPLOY);
+}
 
-    ZOO_DLL_EXPORT int UndeployProcess(maps *&conf, maps *&inputs,
-                                                 maps *&outputs) {
-        dumpMaps(inputs);
-        dumpMaps(conf);
-        return job(conf, inputs, outputs, Operation::UNDEPLOY);
-    }
+ZOO_DLL_EXPORT int UndeployProcess(maps *&conf, maps *&inputs,
+                                   maps *&outputs) {
+    dumpMaps(inputs);
+    dumpMaps(conf);
+    return job(conf, inputs, outputs, Operation::UNDEPLOY);
+}
 }
