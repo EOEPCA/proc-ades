@@ -184,330 +184,335 @@ extern "C" void clear(const std::string &configFile, const std::string &serviceI
 };
 
 namespace wfexe {
-using nlohmann::json;
+    using nlohmann::json;
 
-inline json get_untyped(const json &j, const char *property) {
-  if (j.find(property) != j.end()) {
-    return j.at(property).get<json>();
-  }
-  return json();
-}
+    inline json get_untyped(const json &j, const char *property) {
+        if (j.find(property) != j.end()) {
+            return j.at(property).get<json>();
+        }
+        return json();
+    }
 
-inline json get_untyped(const json &j, std::string property) {
-  return get_untyped(j, property.data());
-}
+    inline json get_untyped(const json &j, std::string property) {
+        return get_untyped(j, property.data());
+    }
 
-struct error {
-  int64_t code;
-  std::string message;
+    struct error {
+        int64_t code;
+        std::string message;
 
-  void dump()const{
-    std::cerr << "\tcode:" << code <<"\n";
-    std::cerr << "\tmessage:" << message <<"\n";
-  }
+        void dump()const{
+            std::cerr << "\tcode:" << code <<"\n";
+            std::cerr << "\tmessage:" << message <<"\n";
+        }
 
 
-};
+    };
 
-struct workflowExecutorWebError {
-  struct error error;
+    struct workflowExecutorWebError {
+        struct error error;
 
-  void dump()const{
-    std::cerr << "error:\n";
-    error.dump();
-  }
+        void dump()const{
+            std::cerr << "error:\n";
+            error.dump();
+        }
 
-};
+    };
 
-struct SingleResult{
-  std::string result;
-};
+    struct SingleResult{
+        std::string result;
+    };
 
-struct statusWebJob {
-  int64_t percent;
-  std::string msg;
+    struct statusWebJob {
+        int64_t percent;
+        std::string msg;
 
-   void dump()const{
-    std::cerr << "dump:\n";
-     std::cerr << "\tpercent:" << percent <<"\n";
-     std::cerr << "\tmsg:" << msg <<"\n";
-  }
+        void dump()const{
+            std::cerr << "dump:\n";
+            std::cerr << "\tpercent:" << percent <<"\n";
+            std::cerr << "\tmsg:" << msg <<"\n";
+        }
 
-};
+    };
 
 
 } // namespace wfexe
 
 namespace nlohmann {
 
-bool exists_key(const json &j, const std::string &key) {
-  return j.find(key) != j.end();
-}
-
-
-void from_json(const json & j, wfexe::error & x);
-
-void from_json(const json & j, wfexe::SingleResult & x);
-void from_json(const json & j, wfexe::workflowExecutorWebError & x);
-void from_json(const json & j, wfexe::statusWebJob & x);
-void from_json(const json &j,
-               mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
-void to_json(json &j,
-             const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
-
-
-inline void from_json(const json & j, wfexe::SingleResult& x) {
-  if (exists_key(j, "wf_output"))
-    x.result=j.at("wf_output").get<std::string>();
-}
-
-inline void from_json(const json & j, wfexe::statusWebJob& x) {
-
-  if (exists_key(j, "percent"))
-    x.percent = j.at("percent").get<int64_t>();
-
-  if (exists_key(j, "msg"))
-    x.msg = j.at("msg").get<std::string>();
-}
-
-
-
-inline void from_json(const json & j, wfexe::error& x) {
-
-  if (exists_key(j, "code")) {
-    x.code = j.at("code").get<int64_t>();
-  }else{
-    x.code=-199;
-  }
-
-  if (exists_key(j, "message")) {
-    x.message = j.at("message").get<std::string>();
-  }
-}
-
-inline void from_json(const json & j, wfexe::workflowExecutorWebError& x) {
-  if (exists_key(j, "error")) {
-    x.error = j.at("error").get<wfexe::error>();
-  }else{
-    x.error.code=-199;
-  }
-}
-
-
-
-inline void
-from_json(const json &j,
-          mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
-
-  if (exists_key(j, "prepareID")) {
-    x.prepareID = j.at("prepareID").get<std::string>();
-  }
-
-  if (exists_key(j, "serviceID")) {
-    x.serviceID = j.at("serviceID").get<std::string>();
-  }
-
-  if (exists_key(j, "runID")) {
-    x.runID = j.at("runID").get<std::string>();
-  }
-
-  if (exists_key(j, "jobID")) {
-    x.jobID = j.at("jobID").get<std::string>();
-  }
-
-  if (exists_key(j, "username")) {
-    x.jobID = j.at("username").get<std::string>();
-  }
-
-  if (exists_key(j, "userIdToken")) {
-        x.jobID = j.at("userIdToken").get<std::string>();
-  }
-
-    if (exists_key(j, "registerResultUrl")) {
-        x.jobID = j.at("registerResultUrl").get<std::string>();
+    bool exists_key(const json &j, const std::string &key) {
+        return j.find(key) != j.end();
     }
-}
 
-inline void
-to_json(json &j,
-        const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
-  j = json::object();
-  j["runID"] = x.runID;
-  j["serviceID"] = x.serviceID;
-  j["prepareID"] = x.prepareID;
-  j["jobID"] = x.runID;
-  j["cwl"] = x.cwl;
-  j["inputs"] = x.inputs;
-  j["username"] = x.username;
-  j["userIdToken"] = x.userIdToken;
-  j["registerResultUrl"] = x.registerResultUrl;
 
-}
+    void from_json(const json & j, wfexe::error & x);
+
+    void from_json(const json & j, wfexe::SingleResult & x);
+    void from_json(const json & j, wfexe::workflowExecutorWebError & x);
+    void from_json(const json & j, wfexe::statusWebJob & x);
+    void from_json(const json &j,
+                   mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+    void to_json(json &j,
+                 const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x);
+
+
+    inline void from_json(const json & j, wfexe::SingleResult& x) {
+        if (exists_key(j, "wf_output"))
+            x.result=j.at("wf_output").get<std::string>();
+    }
+
+    inline void from_json(const json & j, wfexe::statusWebJob& x) {
+
+        if (exists_key(j, "percent"))
+            x.percent = j.at("percent").get<int64_t>();
+
+        if (exists_key(j, "msg"))
+            x.msg = j.at("msg").get<std::string>();
+    }
+
+
+
+    inline void from_json(const json & j, wfexe::error& x) {
+
+        if (exists_key(j, "code")) {
+            x.code = j.at("code").get<int64_t>();
+        }else{
+            x.code=-199;
+        }
+
+        if (exists_key(j, "message")) {
+            x.message = j.at("message").get<std::string>();
+        }
+    }
+
+    inline void from_json(const json & j, wfexe::workflowExecutorWebError& x) {
+        if (exists_key(j, "error")) {
+            x.error = j.at("error").get<wfexe::error>();
+        }else{
+            x.error.code=-199;
+        }
+    }
+
+
+
+    inline void
+    from_json(const json &j,
+              mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
+
+        if (exists_key(j, "prepareID")) {
+            x.prepareID = j.at("prepareID").get<std::string>();
+        }
+
+        if (exists_key(j, "serviceID")) {
+            x.serviceID = j.at("serviceID").get<std::string>();
+        }
+
+        if (exists_key(j, "runID")) {
+            x.runID = j.at("runID").get<std::string>();
+        }
+
+        if (exists_key(j, "jobID")) {
+            x.jobID = j.at("jobID").get<std::string>();
+        }
+
+        if (exists_key(j, "username")) {
+            x.jobID = j.at("username").get<std::string>();
+        }
+
+        if (exists_key(j, "userIdToken")) {
+            x.jobID = j.at("userIdToken").get<std::string>();
+        }
+
+        if (exists_key(j, "registerResultUrl")) {
+            x.jobID = j.at("registerResultUrl").get<std::string>();
+        }
+
+        if (exists_key(j, "workspaceResource")) {
+            x.jobID = j.at("workspaceResource").get<std::string>();
+        }
+    }
+
+    inline void
+    to_json(json &j,
+            const mods::WorkflowExecutor::WorkflowExecutorWebParameters &x) {
+        j = json::object();
+        j["runID"] = x.runID;
+        j["serviceID"] = x.serviceID;
+        j["prepareID"] = x.prepareID;
+        j["jobID"] = x.runID;
+        j["cwl"] = x.cwl;
+        j["inputs"] = x.inputs;
+        j["username"] = x.username;
+        j["userIdToken"] = x.userIdToken;
+        j["registerResultUrl"] = x.registerResultUrl;
+        j["workspaceResource"] = x.workspaceResource;
+
+    }
 
 } // namespace nlohmann
 
 
 void parseError(const std::string& buffer){
 
-  wfexe::workflowExecutorWebError data =
-      nlohmann::json::parse(buffer);
-  data.dump();
+    wfexe::workflowExecutorWebError data =
+            nlohmann::json::parse(buffer);
+    data.dump();
 
-  if(data.error.code==-199){
+    if(data.error.code==-199){
 
-    if (buffer.empty()){
-      throw std::runtime_error("unexpected error [webcall]");
+        if (buffer.empty()){
+            throw std::runtime_error("unexpected error [webcall]");
+        }
+
+        throw std::runtime_error(buffer);
+    }else{
+        throw std::runtime_error(data.error.message);
     }
-
-    throw std::runtime_error(buffer);
-  }else{
-    throw std::runtime_error(data.error.message);
-  }
 
 }
 
 extern "C" long
 webPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-  std::cerr << "**************************************webPrepare\n";
-  std::string buffer;
-  std::string request{wfpm.hostName};
-  request.append("/prepare");
+    std::cerr << "**************************************webPrepare\n";
+    std::string buffer;
+    std::string request{wfpm.hostName};
+    request.append("/prepare");
 
-  nlohmann::json json;
-  nlohmann::to_json(json,wfpm);
+    nlohmann::json json;
+    nlohmann::to_json(json,wfpm);
 //  std::string content = R"({"runID": "string","serviceID": "string"})";
 
-  auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
-  std::cerr << "webPrepare:\treturn: " << ret << " json:" << buffer <<"\n";
+    auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
+    std::cerr << "webPrepare:\treturn: " << ret << " json:" << buffer <<"\n";
 
-  if (ret==201){
-    mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
-        nlohmann::json::parse(buffer);
-    data.dump();
+    if (ret==201){
+        mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
+                nlohmann::json::parse(buffer);
+        data.dump();
 
-    wfpm.prepareID=data.prepareID;
+        wfpm.prepareID=data.prepareID;
 
-  }else{
-    parseError(buffer);
-  }
+    }else{
+        parseError(buffer);
+    }
 
-  return ret;
+    return ret;
 };
 
 extern "C" long
 webGetPrepare(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-  std::cerr << "**************************************webGetPrepare\n";
-  wfpm.dump();
+    std::cerr << "**************************************webGetPrepare\n";
+    wfpm.dump();
 
-  std::string buffer;
-  std::string request{wfpm.hostName};
-  request.append("/prepare/").append(wfpm.prepareID);
-  std::cerr  << "request: "<< request <<"\n";
+    std::string buffer;
+    std::string request{wfpm.hostName};
+    request.append("/prepare/").append(wfpm.prepareID);
+    std::cerr  << "request: "<< request <<"\n";
 
-  std::string bufffer;
-  auto ret=getFromWeb(bufffer,request.c_str());
-  if(ret==200){
-    ret=0;
-  }else if (ret!=100){
-    parseError(buffer);
-  }
+    std::string bufffer;
+    auto ret=getFromWeb(bufffer,request.c_str());
+    if(ret==200){
+        ret=0;
+    }else if (ret!=100){
+        parseError(buffer);
+    }
 
 
-  return ret;
+    return ret;
 };
 
 extern "C" long
 webExecute(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-  std::cerr << "**************************************webExecute\n";
+    std::cerr << "**************************************webExecute\n";
 //  wfpm.dump();
 
-  std::string buffer;
-  std::string request{wfpm.hostName};
-  request.append("/execute");
-  nlohmann::json json;
-  nlohmann::to_json(json,wfpm);
+    std::string buffer;
+    std::string request{wfpm.hostName};
+    request.append("/execute");
+    nlohmann::json json;
+    nlohmann::to_json(json,wfpm);
 
-  auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
-  if (ret==201){
-    mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
-        nlohmann::json::parse(buffer);
-    data.dump();
-    wfpm.jobID=data.jobID;
-  }else{
-    parseError(buffer);
-  }
+    auto ret = postputToWeb(buffer, json.dump(), request.c_str(), "POST");
+    if (ret==201){
+        mods::WorkflowExecutor::WorkflowExecutorWebParameters data =
+                nlohmann::json::parse(buffer);
+        data.dump();
+        wfpm.jobID=data.jobID;
+    }else{
+        parseError(buffer);
+    }
 
-  wfpm.dump();
-  return 0;
+    wfpm.dump();
+    return 0;
 };
 
 extern "C" long
 webGetStatus(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) {
 
-  std::cerr << "**************************************webGetStatus\n";
-  std::string buffer;
+    std::cerr << "**************************************webGetStatus\n";
+    std::string buffer;
 
-  std::stringstream request;
-  request<< wfpm.hostName << "/status/"
-          <<wfpm.serviceID<<"/"
-          <<wfpm.runID<<"/"
-          << wfpm.prepareID
-          <<"/"<<wfpm.jobID;
+    std::stringstream request;
+    request<< wfpm.hostName << "/status/"
+           <<wfpm.serviceID<<"/"
+           <<wfpm.runID<<"/"
+           << wfpm.prepareID
+           <<"/"<<wfpm.jobID;
 
-  auto ret=getFromWeb(buffer,request.str().c_str());
-  if(ret==200){
+    auto ret=getFromWeb(buffer,request.str().c_str());
+    if(ret==200){
 
-    wfexe::statusWebJob msgWeb= nlohmann::json::parse(buffer);
-    std::cerr << "buffer: " << buffer<<"\n";
-    msgWeb.dump();
+        wfexe::statusWebJob msgWeb= nlohmann::json::parse(buffer);
+        std::cerr << "buffer: " << buffer<<"\n";
+        msgWeb.dump();
 
-    wfpm.perc = msgWeb.percent;
-    wfpm.message  = msgWeb.msg;
-    
-    if (msgWeb.percent==100){
-      ret=0;
+        wfpm.perc = msgWeb.percent;
+        wfpm.message  = msgWeb.msg;
+
+        if (msgWeb.percent==100){
+            ret=0;
+        }
+
+    }else {
+        parseError(buffer);
+        ret=0;
     }
 
-  }else {
-    parseError(buffer);
-    ret=0;
-  }
-
-  return ret;
+    return ret;
 };
 
 extern "C" long
 webGetResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
               std::list<std::pair<std::string, std::string>> &outPutList) {
 
-  std::cerr << "**************************************webGetResults\n";
-  std::string buffer;
+    std::cerr << "**************************************webGetResults\n";
+    std::string buffer;
 
-  std::stringstream request;
-  request<< wfpm.hostName << "/result/"
-         <<wfpm.serviceID<<"/"
-         <<wfpm.runID<<"/"
-         << wfpm.prepareID
-         <<"/"<<wfpm.jobID;
+    std::stringstream request;
+    request<< wfpm.hostName << "/result/"
+           <<wfpm.serviceID<<"/"
+           <<wfpm.runID<<"/"
+           << wfpm.prepareID
+           <<"/"<<wfpm.jobID;
 
 
-  auto ret=getFromWeb(buffer,request.str().c_str());
-  if(ret==200){
+    auto ret=getFromWeb(buffer,request.str().c_str());
+    if(ret==200){
 
-    wfexe::SingleResult msgWeb= nlohmann::json::parse(buffer);
-    std::cerr << "buffer: " << buffer<<"\n";
+        wfexe::SingleResult msgWeb= nlohmann::json::parse(buffer);
+        std::cerr << "buffer: " << buffer<<"\n";
 
-    outPutList.emplace_back("wf_outputs",msgWeb.result);
+        outPutList.emplace_back("wf_outputs",msgWeb.result);
 
-  }else {
-    parseError(buffer);
-    ret=0;
-  }
+    }else {
+        parseError(buffer);
+        ret=0;
+    }
 
-  return ret;
+    return ret;
 
 };
 
@@ -537,6 +542,84 @@ webRegisterResults(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm) 
 
     wfpm.dump();
     return 0;
+};
+
+
+
+extern "C" long
+webGetWorkspaceDetails(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
+                       std::list<std::pair<std::string, std::string>> &workspaceDetails) {
+
+    std::cerr << "**************************************webGetWorkspaceDetails\n";
+
+    std::string buffer;
+    std::stringstream request;
+    request<< wfpm.hostName << "/workspace_details";
+
+
+    nlohmann::json json;
+    nlohmann::to_json(json,wfpm);
+
+    std::cerr << "buffer: " << json.dump() << std::endl;
+
+    std::string contentTypeHeader{"Content-Type: application/javascript"};
+    std::list <std::string> list;
+    list.push_back(contentTypeHeader);
+
+    std::cerr << "workflow_executor url: " << request.str().c_str() << std::endl;
+
+    auto ret = postputToWeb(buffer, json.dump(), request.str().c_str(), "POST", &list);
+    if(ret==200){
+
+        auto  msgWeb = nlohmann::json::parse(buffer);
+        std::cerr << "buffer: " << buffer<<"\n";
+
+        for (auto& [key, value] : msgWeb.items()) {
+            workspaceDetails.emplace_back( key , value );
+        }
+    }else {
+        parseError(buffer);
+        ret=0;
+    }
+
+    return ret;
+
+};
+
+
+extern "C" long
+webGetWorkspaceResource(mods::WorkflowExecutor::WorkflowExecutorWebParameters &wfpm,
+                       std::string &workspaceResource) {
+
+    std::cerr << "**************************************webGetWorkspaceResource\n";
+
+    std::string buffer;
+    std::stringstream request;
+    request<< wfpm.hostName << "/workspace_resource";
+
+
+    nlohmann::json json;
+    nlohmann::to_json(json,wfpm);
+
+    std::cerr << "buffer: " << json.dump() << std::endl;
+
+    std::string contentTypeHeader{"Content-Type: application/javascript"};
+    std::list <std::string> list;
+    list.push_back(contentTypeHeader);
+
+    std::cerr << "workflow_executor url: " << request.str().c_str() << std::endl;
+
+    auto ret = postputToWeb(buffer, json.dump(), request.str().c_str(), "POST", &list);
+    if(ret==200){
+        std::cerr << "buffer: " << buffer<<"\n";
+        workspaceResource = buffer;
+    } else {
+        parseError(buffer);
+        ret=0;
+    }
+
+    return ret;
+
 };
 
 

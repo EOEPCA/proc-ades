@@ -82,6 +82,7 @@ public:
 
     std::string hostName;
     std::string registerResultUrl;
+    std::string workspaceResource;
 
     ~WorkflowExecutorWebParameters()=default;
 
@@ -100,6 +101,7 @@ public:
       std::cerr << "\tperc: " << perc << "\n";
       std::cerr << "\tmessage: " << message << "\n";
       std::cerr << "\tregisterResultUrl: " << registerResultUrl << "\n";
+      std::cerr << "\tworkspaceResource: " << workspaceResource << "\n";
 
     }
 
@@ -229,6 +231,30 @@ public:
           }
       }
 
+
+      if (isValid()) {
+          webGetWorkspaceDetails = (long (*)(WorkflowExecutorWebParameters& wfpm,std::list<std::pair<std::string, std::string>> &workspaceDetails))dlsym(
+                  handle, "webGetWorkspaceDetails");
+          if (!clear) {
+              std::cerr << "can't load 'webGetWorkspaceDetails' function\n";
+              setValid(false);
+              setLastError("can't load 'webGetWorkspaceDetails' function");
+              return;
+          }
+      }
+
+
+      if (isValid()) {
+          webGetWorkspaceResource = (long (*)(WorkflowExecutorWebParameters& wfpm, std::string &workspaceDetails))dlsym(
+                  handle, "webGetWorkspaceResource");
+          if (!clear) {
+              std::cerr << "can't load 'webGetWorkspaceResource' function\n";
+              setValid(false);
+              setLastError("can't load 'webGetWorkspaceResource' function");
+              return;
+          }
+      }
+
   }
 
 public:
@@ -279,6 +305,14 @@ public:
                         std::list<std::pair<std::string, std::string>> &outPutList
                         ){nullptr};
   long (*webRegisterResults)(WorkflowExecutorWebParameters& wfpm){nullptr};
+
+  long (*webGetWorkspaceDetails)(WorkflowExecutorWebParameters& wfpm,
+          std::list<std::pair<std::string, std::string>> &workspaceDetails
+          ){nullptr};
+
+    long (*webGetWorkspaceResource)(WorkflowExecutorWebParameters& wfpm,
+                                   std::string &workspaceDetails
+    ){nullptr};
 
 };
 
