@@ -340,10 +340,8 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     }
 
     auto workflowExecutor = std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
-    std::cout << "Checking usepep " << std::endl;
     std::string _userIdToken;
     if (usepep) {
-        std::cout << "usepep is true " << std::endl;
         resource->setJwt(authorizationBearer(conf));
         if (resource->jwt_empty()) {
             if (pepStopOnError) {

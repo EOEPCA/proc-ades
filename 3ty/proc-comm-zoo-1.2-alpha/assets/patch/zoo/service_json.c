@@ -1319,10 +1319,10 @@ extern "C" {
     json_object_object_add(val,"href",json_object_new_string(Url0));
     json_object_array_add(res,val);
     if(result>0){
-        fprintf(stderr, "Setting Result Location");
+        fprintf(stderr, "Setting Result Location\n");
       free(Url0);
 
-      fprintf(stderr, (wpLen>0?"workspace name is greater than 1":""));
+      fprintf(stderr, (wpLen>0?" workspace name length is greater than 0\n":""));
       fprintf(stderr, "workspace is %s", wp);
 
       Url0=(char*) malloc(wpLen*(strlen(tmpPath->value)+
