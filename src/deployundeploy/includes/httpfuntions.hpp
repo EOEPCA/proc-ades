@@ -121,6 +121,7 @@ long getFromWeb(std::string &buffer, const char *path,std::list<std::string>* he
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);  // only for https
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);  // only for https
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);  //
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
                      CurlWrite_CallbackFunc_StdString);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);

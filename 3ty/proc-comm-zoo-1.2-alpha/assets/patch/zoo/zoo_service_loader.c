@@ -68,6 +68,12 @@ extern "C" int crlex ();
 #include "server_internal.h"
 #include "response_print.h"
 #include "request_parser.h"
+
+
+#include <sys/time.h>
+#include <time.h>
+
+
 #ifdef USE_JSON
 #include "caching.h"
 #endif
@@ -353,7 +359,7 @@ int createUserSpace(maps* conf,const char* User){
   if (statusInfoPathMAP && statusInfoPathMAP->value && strlen(statusInfoPathMAP->value)>0){
     sprintf(statusInfoPath,"%s/statusInfos/%s",statusInfoPathMAP->value,User);
   }else{
-    sprintf(statusInfoPath,"/var/www/html/res/statusInfos/%s",User);
+      sprintf(statusInfoPath,"/var/www/_run/res/statusInfos/%s",User);
   }
 
 
@@ -1277,6 +1283,23 @@ int loadHttpRequests(maps* conf,maps* inputs){
 }
 
 /**
+ * Returns current UTC timestamp
+ * @param dest
+ * @return
+ */
+char *getUtcTimestamp(char *dest)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm *tmp = gmtime(&tv.tv_sec);
+    char fmt[128];
+    strftime(fmt, sizeof(fmt), "%Y-%m-%dT%H:%M:%S.%%06uZ", tmp);
+    sprintf(dest, fmt, tv.tv_usec);
+    return dest;
+}
+
+
+/**
  * Initialize environment sections, load env, and populate lenv and renv.
  *
  * @param conf the maps pointing to the main.cfg file content
@@ -1386,6 +1409,10 @@ void initAllEnvironment(maps* conf,map* request_inputs,
   addToMap (_tmpMaps->content, "usid", tmpUuid);
   free(tmpUuid);
   addToMap (_tmpMaps->content, "status", "0");
+
+  // UTC timestamp of the time of the job start
+  char dest[12];
+  addToMap (_tmpMaps->content, "started", getUtcTimestamp(dest));
   map* cwdMap0=getMapFromMaps(conf,"main","servicePath");
   if(cwdMap0!=NULL){
     addToMap (_tmpMaps->content, "cwd", cwdMap0->value);

@@ -1,4 +1,3 @@
-
 #include "../includes/httpfuntions.hpp"
 #include "xmlmemorywritewrapper.hpp"
 #include <cstdio>
@@ -13,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <zooconverter.hpp>
+#include <jwt-cpp/jwt.h>
 
 // LINUX MKDIR
 #include <sys/stat.h>
@@ -23,11 +23,17 @@
 #include "service_internal.h"
 
 #include "../../templates/pepresources.hpp"
+#include "../../templates/workflow_executor.hpp"
 
+
+#include <iostream>
+
+
+#include <nlohmann/json.hpp>
 
 
 static std::string replaceStr(std::string &str, const std::string &from,
-                                const std::string &to) {
+                              const std::string &to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
         str.replace(start_pos, from.length(), to);
@@ -49,6 +55,14 @@ std::string authorizationBearer(maps *&conf){
         }
     }
     return  "";
+}
+
+std::string userIdToken(maps *&conf) {
+    map *eoUserMap = getMapFromMaps(conf, "renv", "HTTP_X_USER_ID");
+    if (eoUserMap) {
+        return eoUserMap->value;
+    }
+    return "";
 }
 
 int mkpath(char *file_path, mode_t mode) {
@@ -292,6 +306,8 @@ public:
 
 int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
+
+
     std::string theMimeType{"application/atom+xml"};
 
     std::map<std::string, std::string> confEoepca;
@@ -323,8 +339,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             resource = std::make_unique<mods::PepResource>();
     }
 
-
-    if (usepep){
+    auto workflowExecutor = std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
+    std::string _userIdToken;
+    if (usepep) {
         resource->setJwt(authorizationBearer(conf));
         if (resource->jwt_empty()) {
             if (pepStopOnError) {
@@ -341,7 +358,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
 
     int steps = 0;
-    
+
     std::map<std::string, std::string> confMain;
     getT2ConfigurationFromZooMapConfig(conf, "main", confMain);
 
@@ -352,25 +369,25 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         return setZooError(conf, message, "NoApplicableCode");
     }
 
-    
+
     if (confMain["servicePath"].empty()) {
         std::string message{"zoo servicePath empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-    
+
     if (confEoepca["userworkspace"].empty()) {
         std::string message{"zoo userworkspace empty()"};
         setStatus(conf, "failed", message.c_str());
         updateStatus(conf, 100, message.c_str());
         return setZooError(conf, message, "NoApplicableCode");
     }
-    
+
     if (*confEoepca["userworkspace"].rbegin() != '/') {
         confEoepca["userworkspace"].append("/");
     }
-    
+
     std::map<std::string, std::string> userEoepca;
     getT2ConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
 
@@ -387,7 +404,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     for(auto& [k,q]:userEoepca){
         fprintf(stderr, "-----> %s,%s  \n",k.c_str(),q.c_str());
     }
-    
+
     if (userEoepca["grant"].empty()) {
         std::string message{"Grants for this user are not  defined"};
         setStatus(conf, "failed", message.c_str());
@@ -403,7 +420,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             updateStatus(conf, 100, message.c_str());
             return setZooError(conf, message, "NoApplicableCode");
         }
-        
+
         std::cerr << "user: "<< userEoepca["user"] << " grants: "  << grant << "\n";
 
         if(grant.at(2) == '-'){
@@ -482,16 +499,58 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             }
         }
 
+
+        std::cerr << "OWS ori " << owsOri << std::endl;
         std::string bufferOWSFile;
         auto found = owsOri.find("://");
         if (found == std::string::npos) {
             bufferOWSFile = owsOri;
         } else {
-            auto ret = getFromWeb(bufferOWSFile, owsOri.c_str());
-            if (ret != 200) {
-                std::string err{"Can't download the file: "};
-                err.append(applicationPackageZooMap->value);
-                throw std::runtime_error(err);
+
+            // check if protocol is http, https or s3
+            auto isS3 = owsOri.find("s3://");
+            if (isS3 == std::string::npos) {
+                // http or https
+                auto ret = getFromWeb(bufferOWSFile, owsOri.c_str());
+                if (ret != 200) {
+                    std::string err{"Can't download the file: "};
+                    err.append(applicationPackageZooMap->value);
+                    throw std::runtime_error(err);
+                }
+            } else {
+                ////////////////////////////
+                // s3
+                // START RETRIEVE USERNAME
+                std::cerr << "Retrieving username from User Id token \n";
+                _userIdToken = userIdToken(conf);
+                auto decoded = jwt::decode(_userIdToken);
+                std::string username;
+                auto claims = decoded.get_payload_claims();
+                std::string key = "user_name";
+                auto count = decoded.get_payload_claims().count(key);
+                if (count) {
+                    username = claims[key].as_string();
+                    std::cerr << "user: " << username << std::endl;
+                } else {
+                    if (claims.count("pct_claims")) {
+                        auto pct_claims_json = claims["pct_claims"].to_json();
+                        if (pct_claims_json.contains(key)) {
+                            username = pct_claims_json.get(key).to_str();
+                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
+                        }
+                    }
+                }
+
+                auto wfpm = std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
+                wfpm->username = username;
+                wfpm->userIdToken = _userIdToken;
+                wfpm->hostName = confEoepca["WorkflowExecutorHost"];
+                wfpm->workspaceResource = owsOri.c_str();
+
+                std::cerr << "workflowExecutor->webGetWorkspaceResource init\n";
+                workflowExecutor->webGetWorkspaceResource(*wfpm, bufferOWSFile);
+                std::cerr << "workflowExecutor->webGetWorkspaceResource end\n";
+
             }
         }
 
@@ -506,7 +565,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
         std::list<std::pair<std::string, std::string>> metadata;
         metadata.emplace_back("owsOrigin", std::string(owsOri));
 
-        std::string applicationFile=bufferOWSFile;
+        std::string applicationFile=bufferOWSFile.c_str();
         if (theMimeType=="application/cwl"){
             std::string head=R"(<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><owc:offering xmlns:owc="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/eoc/applicationContext/cwl"><owc:content type="application/cwl"><![CDATA[)";
             std::string tail=R"(]]></owc:content></owc:offering></entry></feed>)";
@@ -515,8 +574,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             applicationFile.append(tail);
         }
 
+        std::cerr << "Application feed: \n" << applicationFile << std::endl;
         std::unique_ptr<EOEPCA::OWS::OWSContext,
-                std::function<void(EOEPCA::OWS::OWSContext *)>>
+        std::function<void(EOEPCA::OWS::OWSContext *)>>
                 ptrContext(
                 lib->parseFromMemory(applicationFile.c_str(), applicationFile.size()),
                 lib->releaseParameter);
@@ -594,14 +654,12 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 
                                         std::string COMPILE =
                                                 ("make -C " + buildPath +  " USERPATH=\"" +user->getPath() +"\" COMPILE=\"" +
-                                                        service_name_to_build + "\"  SERVICENAMEFILE=\"" + zoo->getIdentifier()  + "\"    1>&2  ");
+                                                 service_name_to_build + "\"  SERVICENAMEFILE=\"" + zoo->getIdentifier()  + "\"    1>&2  ");
 
                                         std::cerr << "\n*** COMPILE SERVICE 2: " << COMPILE << "\n";
                                         int COMPILERES = system((char *)COMPILE.c_str());
                                         std::cerr << "\n*** COMPILE SERVICE END: " << COMPILE << "\n";
 //                                        service_name_to_build.append(".zo");
-
-
                                     }
 
                                     if (!fileExist(zooRef.c_str())) {
@@ -747,7 +805,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
 extern "C" {
 
 ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
-                                           maps *&outputs){
+                                 maps *&outputs){
     dumpMaps(inputs);
     dumpMaps(conf);
 
@@ -755,7 +813,7 @@ ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
 }
 
 ZOO_DLL_EXPORT int UndeployProcess(maps *&conf, maps *&inputs,
-                                             maps *&outputs) {
+                                   maps *&outputs) {
     dumpMaps(inputs);
     dumpMaps(conf);
     return job(conf, inputs, outputs, Operation::UNDEPLOY);
