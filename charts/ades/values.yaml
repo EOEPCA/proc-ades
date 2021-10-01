@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev0.9.6"
+  tag: "0.9.6"
 
 imagePullSecrets: []
 nameOverride: ""
