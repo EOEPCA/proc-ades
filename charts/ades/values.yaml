@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "dev0.9.6"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -41,7 +41,7 @@ service:
   port: 80
 
 ingress:
-  enabled: true
+  enabled: false
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -91,20 +91,26 @@ workflowExecutor:
   inputs:
     APP: ades
 
+    #STAGEOUT_AWS_SERVICEURL: https://mys3repositoryendpoint.com
+    #STAGEOUT_AWS_ACCESS_KEY_ID: myAccesKeyId
+    #STAGEOUT_AWS_SECRET_ACCESS_KEY: mySecretAccessKey
+    #STAGEOUT_AWS_REGION: RegionOne
+    #STAGEOUT_OUTPUT: s3://processing_results
+
   main:
     cwl: ""
 
   stagein:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl"
 
   stageout:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stageout/terradue_stars_latest.cwl"
 
   rulez:
     cwl: ""
     
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
-  processingStorageClass: glusterfs-storage
+  processingStorageClass: standard
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"
   # Size of the Kubernetes Output Volumes
@@ -128,8 +134,10 @@ workflowExecutor:
   resourceManagerEndpoint: "https://resourcemanager-api.com"
   resourceManagerWorkspacePrefix: "rm-user"
 
+  # adds a label to the job namespace
   jobNamespaceLabels:
-    app: "app-namespace"
+    app: "ades-app"
+
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
   pepClientStatePath: "/opt/zooservices_user/pepclient"
