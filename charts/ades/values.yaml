@@ -101,15 +101,15 @@ workflowExecutor:
     cwl: ""
 
   stagein:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl"
 
   stageout:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stageout/terradue_stars_latest.cwl"
 
   rulez:
     cwl: ""
     
-  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
+  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (longhorn)
   processingStorageClass: longhorn
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"
@@ -149,7 +149,7 @@ persistence:
   enabled: true
   # existingUserDataClaim:
   # existingProcServicesClaim:
-  storageClass: "longhorn"
+  storageClass: longhorn
   userDataAccessMode: ReadWriteOnce
   userDataSize: 10Gi
   procServicesAccessMode: ReadWriteOnce
@@ -158,3 +158,8 @@ persistence:
 # installs longhorn storageClass using ades-longhorn chart
 ades-longhorn:
   enabled: true
+  persistence:
+    defaultClassReplicaCount: 1
+ #defaultSettings:
+ #  systemManagedComponentsNodeSelector: "longhorn:yes"
+
