@@ -110,7 +110,7 @@ workflowExecutor:
     cwl: ""
     
   # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
-  processingStorageClass: standard
+  processingStorageClass: longhorn
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"
   # Size of the Kubernetes Output Volumes
@@ -149,9 +149,12 @@ persistence:
   enabled: true
   # existingUserDataClaim:
   # existingProcServicesClaim:
-  storageClass: "standard"
+  storageClass: "longhorn"
   userDataAccessMode: ReadWriteOnce
   userDataSize: 10Gi
   procServicesAccessMode: ReadWriteOnce
   procServicesSize: 5Gi
 
+# installs longhorn storageClass using ades-longhorn chart
+ades-longhorn:
+  enabled: true
