@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev0.9.6"
+  tag: "dev0.9.7"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -101,16 +101,16 @@ workflowExecutor:
     cwl: ""
 
   stagein:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl"
 
   stageout:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stageout/terradue_stars_latest.cwl"
 
   rulez:
     cwl: ""
     
-  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (glusterfs-storage)
-  processingStorageClass: standard
+  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (longhorn)
+  processingStorageClass: longhorn
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"
   # Size of the Kubernetes Output Volumes
@@ -149,9 +149,17 @@ persistence:
   enabled: true
   # existingUserDataClaim:
   # existingProcServicesClaim:
-  storageClass: "standard"
+  storageClass: longhorn
   userDataAccessMode: ReadWriteOnce
   userDataSize: 10Gi
   procServicesAccessMode: ReadWriteOnce
   procServicesSize: 5Gi
+
+# installs longhorn storageClass using ades-longhorn chart
+ades-longhorn:
+  enabled: true
+  persistence:
+    defaultClassReplicaCount: 1
+ #defaultSettings:
+ #  systemManagedComponentsNodeSelector: "longhorn:yes"
 
