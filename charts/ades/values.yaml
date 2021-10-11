@@ -101,10 +101,10 @@ workflowExecutor:
     cwl: ""
 
   stagein:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl"
 
   stageout:
-    cwl: ""
+    cwl: "charts/ades/files/cwl/stageout/terradue_stars_latest.cwl"
 
   rulez:
     cwl: ""
