@@ -74,19 +74,31 @@ The configuration parameters in this section control the resources requested and
 
 | Parameter                               | Description                                                                                    | Default                          |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------- |
+|image.repository | Docker image repository | `eoepca/proc-ades` |
+|image.pullPolicy | Determines if the image should be pulled prior to starting the container. Three possible values: Always, IfNotPresent, Never' | `Always` |
+|image.tag | Docker image tag | `0.9.7` |
 | clusterAdminRoleName                    | Name of the role binding for the ades service account that provision resources for processing  | `cluster-admin`                              |
+|nodeSelector | Constrain on which nodes the Ades is eligible to run based on the node label | `{}` | 
 | useKubeProxy                            | If the ADES interacts with the kubernetes cluster via proxy or not. If false, workflowExecutor.kubeconfig file location must be provided | `true`                        |
 | workflowExecutor.kubeconfig             | kube config file to be used by the ADES to connect to th cluster where to provision resource for the processing. | `files/kubeconfig` |
 | workflowExecutor.inputs            | Key/Value Dictionary of input values to be passed to all nodes of the application workflow. They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades' | `[Empty dictionary]`        |
-| workflowExecutor.main/stagein/stageout/rulez  | data structure for defining the CWL parameter used by [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper) | `empty`  |
-| workflowExecutor.processingStorageClass | kubernetes storage class to be used for provisioning volumes for processing. Must be ReadWriteMany compliant  | `glusterfs-storage`                       |
+| workflowExecutor.processingStorageClass | kubernetes storage class to be used for provisioning volumes for processing. Must be ReadWriteMany compliant  | `longhorn`                       |
 | workflowExecutor.processingVolumeTmpSize | Size of the volumes for processing result of one workflow nodeouput                                                       | `5Gi`  
 | workflowExecutor.processingVolumeOutputSize | Size of the volumes for processing result for the whole workflow ouput                                                       | `10Gi`                   |
 | workflowExecutor.processingMaxRam       | Total maximum RAM pool available for all pods running concurrently                             | `16Gi`                  |
 | workflowExecutor.processingMaxCores       | Total maximum CPU cores pool available for all pods running concurrently                             | `8`                  |
 | workflowExecutor.processingKeepWorkspace | Name of the secret to use to pull docker images  | `false`                          |
-| workflowExecutor.stageincwl             | Stage-in CWL workflo file path                                                                 | `files/stageincwl.cwl`                            |
+| workflowExecutor.main.cwl             | Main CWL workflow file path used by [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper)                                                          | `empty` |
+| workflowExecutor.stagein.cwl             | Stage-in CWL workflow file path                                                                 | `charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl`                            |
+| workflowExecutor.stageout.cwl             | Stage-out CWL workflow file path                                                                 | `charts/ades/files/cwl/stageout/terradue_stars_latest.cwl`                            |
+| workflowExecutor.rulez.cwl  | Data structure for defining the CWL parameter used by [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper) | `empty`  |
 | workflowExecutor.imagePullSecrets       | ImagePullSecrets is an optional list of references to secrets for the processing namespace to use for pulling any of the images used by the processing pods. If specified, these secrets will be passed to individual puller implementations for them to use. For example, in the case of docker, only DockerConfig type secrets are honored. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod                                                                                     | `[]`                            |
+|workflowExecutor.pod.env | Environmental variables in the pod context | `{}` |
+|workflowExecutor.userResourceManager | Enables resource manager | `false` |
+|workflowExecutor.resourceManagerEndpoint | Resource manager endpoint |`"https://resourcemanager-api.com"`|
+|workflowExecutor.resourceManagerWorkspacePrefix | Resource manager workspace prefix |`rm-user`|
+|workflowExecutor.jobNamespaceLabels.app | Adds a label to the job namespace | `"ades-app"`|
+|workflowExecutor.backofflimit| Number of retries before considering a Job as failed | `Commented Out` |
 | wps.maincfgtpl                          | Main config file template for WPS interface                                                         | `files/main.cfg.tpl`                            |
 | wps.usePep                              | Use the policy Enforcement Point for registering resources                                                              | `false`                            |
 | wps.pepBaseUrl                          | Policy Enforcement Point Base Url                                                              | `https://pep.eoepca.terradue.com`                            |
@@ -100,7 +112,10 @@ The configuration parameters in this section control the resources requested and
 | persistence.procServicesSize            | PVC Size for user data Directory                                                               | `5Gi`                            |
 | tolerations                             | List of node taints to tolerate                                                                | `[]`                             |
 | affinity                                | Map of node/pod affinities                                                                     | `{}`                             |
-| podSecurityContext                      | SecurityContext to apply to the pod                                                            | `{}`                             |
+| podSecurityContext                      | SecurityContext to apply to the pod                                                            | `{}`|
+|ades-longhorn.enabled | Installs ades-longhorn subchart | `true` |
+|ades-longhorn.persistence.defaultClassReplicaCount | Number of replicas when creating the volume from Longhorn | `1`|
+
 
 ## Liveness and Readiness
 
