@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "dev0.9.7"
+  tag: "0.9.7"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -137,6 +137,9 @@ workflowExecutor:
   # adds a label to the job namespace
   jobNamespaceLabels:
     app: "ades-app"
+
+  # Number of retries before considering a Job as failed
+  #backofflimit: 3
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
