@@ -65,6 +65,8 @@ config/kubeconfig-*
 charts/ades/values.eoepca-dev.terradue.yaml
 charts/ades/values.eoepca-ref.terradue.yaml
 charts/ades/values.eoepca-ref.terradue.yaml
+charts/ades/values.eoepca-dev.terradue2.yaml
+
 # workflow executor test not yet ready
 3ty/workflow_executor/workflow_executor/workflow_executor/test
 charts/ades/files/maincwlmetrics.cwl
@@ -74,3 +76,4 @@ charts/ades/values.eoepca-creodias.yaml
 t2regcred.yaml
 
 workspace.code-workspace
+
