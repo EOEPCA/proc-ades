@@ -146,7 +146,7 @@ workflowExecutor:
       class: CommandLineTool
       hints:
         DockerRequirement:
-          dockerPull: terradue/stars-t2:0.6.18.19
+          dockerPull: terradue/stars-t2:0.9.46
       id: stars
       arguments:
       - copy
@@ -231,7 +231,7 @@ workflowExecutor:
     app: "ades-app"
 
   # Number of retries before considering a Job as failed
-  #backofflimit: 3
+  backofflimit: 3
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
