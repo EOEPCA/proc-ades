@@ -1,104 +1,65 @@
-# Default values for ades.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
-
-image:
-  repository: eoepca/proc-ades
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "0.9.7"
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: ades.eoepca.com
-      paths: ["/"]
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources:
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 2
-  #   memory: 4Gi
-  # requests:
-  #   cpu: 1
-  #   memory: 2Gi
-
+USER-SUPPLIED VALUES:
+affinity: {}
 autoscaling:
   enabled: false
-  minReplicas: 1
   maxReplicas: 3
+  minReplicas: 1
   targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
 clusterAdminRoleName: cluster-admin
-
+fullnameOverride: ""
+image:
+  pullPolicy: Always
+  tag: 0.9.7
+ingress:
+  annotations: {}
+  enabled: true
+  hosts:
+  - host: ades-open.demo.eoepca.org
+    paths:
+    - /
+  tls: []
+nameOverride: ""
 nodeSelector: {}
-
+persistence:
+  enabled: true
+  procServicesAccessMode: ReadWriteOnce
+  procServicesSize: 5Gi
+  storageClass: managed-nfs-storage
+  userDataAccessMode: ReadWriteOnce
+  userDataSize: 10Gi
+podAnnotations: {}
+podSecurityContext: {}
+replicaCount: 1
+resources:
+  limits:
+    cpu: 2
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 2Gi
+securityContext: {}
+service:
+  port: 80
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ""
+storageClassName: managed-nfs-storage
 tolerations: []
-
-affinity: {}
-
 useKubeProxy: true
-
 workflowExecutor:
-  # Necessary if useKubeProxy set to false
-  kubeconfig: ""
-
-  # Here specify fixed inputs to all workflows execution in all stages (main, stage-in/out)
-  # They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades'
+  backofflimit: 3
+  imagePullSecrets: []
   inputs:
     APP: ades
-
-    #STAGEOUT_AWS_SERVICEURL: https://mys3repositoryendpoint.com
-    #STAGEOUT_AWS_ACCESS_KEY_ID: myAccesKeyId
-    #STAGEOUT_AWS_SECRET_ACCESS_KEY: mySecretAccessKey
-    #STAGEOUT_AWS_REGION: RegionOne
-    #STAGEOUT_OUTPUT: s3://processing_results
-
+    STAGEIN_AWS_ACCESS_KEY_ID: test
+    STAGEIN_AWS_SECRET_ACCESS_KEY: test
+    STAGEIN_AWS_SERVICEURL: http://data.cloudferro.com
+    STAGEOUT_AWS_SERVICEURL: https://cf2.cloudferro.com:8080
   main:
     cwl: ""
+<<<<<<< Updated upstream
 
   stagein:
     cwl: |
@@ -233,28 +194,54 @@ workflowExecutor:
   # Number of retries before considering a Job as failed
   backofflimit: 3
 
+=======
+  platformDomain: https://test.demo.eoepca.org
+  pod:
+    env: {}
+  pod_env_vars:
+    yaml: '{}'
+  processingKeepWorkspace: "False"
+  processingMaxCores: "4"
+  processingMaxRam: 8Gi
+  processingStorageClass: managed-nfs-storage
+  processingVolumeOutputSize: 6Gi
+  processingVolumeTmpSize: 6Gi
+  resourceManagerEndpoint: https://workspace-api.test.demo.eoepca.org
+  resourceManagerWorkspacePrefix: demo-user
+  rulez:
+    cwl: ""
+  stagein:
+    cwl: "cwlVersion: v1.0\nbaseCommand: Stars\ndoc: \"Run Stars for staging input
+      data\"\nclass: CommandLineTool\nhints:\n  DockerRequirement:\n    dockerPull:
+      terradue/stars:1.0.0-beta.7\nid: stars\narguments:\n- copy\n- -v\n- -rel\n-
+      -r\n- '4'\n- -o\n- ./\n- --harvest\ninputs: \n  ADES_STAGEIN_AWS_SERVICEURL:
+      \n    type: string?\n  ADES_STAGEIN_AWS_ACCESS_KEY_ID:\n    type: string?\n
+      \ ADES_STAGEIN_AWS_SECRET_ACCESS_KEY:\n    type: string?\noutputs: {}\nrequirements:\n
+      \ EnvVarRequirement:\n    envDef:\n      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n
+      \     # AWS__Profile: $(inputs.aws_profile)\n      # AWS__ProfilesLocation:
+      $(inputs.aws_profiles_location.path)\n      AWS__ServiceURL: $(inputs.ADES_STAGEIN_AWS_SERVICEURL)\n
+      \     AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEIN_AWS_ACCESS_KEY_ID)\n      AWS_SECRET_ACCESS_KEY:
+      $(inputs.ADES_STAGEIN_AWS_SECRET_ACCESS_KEY)\n  ResourceRequirement: {}\n"
+  stageout:
+    cwl: "cwlVersion: v1.0\nbaseCommand: Stars\ndoc: \"Run Stars for staging results\"\nclass:
+      CommandLineTool\nhints:\n  DockerRequirement:\n    dockerPull: terradue/stars:1.0.0-beta.7\nid:
+      stars\narguments:\n- copy\n- -v\n- -r\n- '4'\ninputs: \n  ADES_STAGEOUT_AWS_PROFILE:\n
+      \   type: string?\n  ADES_STAGEOUT_AWS_SERVICEURL: \n    type: string?\n  ADES_STAGEOUT_AWS_ACCESS_KEY_ID:
+      \n    type: string?\n  ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY: \n    type: string?\n
+      \ aws_profiles_location:\n    type: File?\n  result_directory:\n    type: Directory?\n
+      \   inputBinding:\n      position: 7\n  ADES_STAGEOUT_OUTPUT:\n    type: string?\n
+      \   inputBinding:\n      position: 5\n      prefix: -o\n      valueFrom: $(
+      self + \"/\" + inputs.process )\n  ADES_STAGEOUT_AWS_REGION:\n    type: string?\n
+      \ process:\n    type: string?\n    inputBinding:\n      position: 6\n      prefix:
+      -res\n      valueFrom: $( inputs.process + \".res\" )\noutputs: {}\nrequirements:\n
+      \ InlineJavascriptRequirement: {}\n  EnvVarRequirement:\n    envDef:\n      PATH:
+      /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n      AWS__ServiceURL:
+      $(inputs.ADES_STAGEOUT_AWS_SERVICEURL)\n      AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEOUT_AWS_ACCESS_KEY_ID)\n
+      \     AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY)\n
+      \     AWS__SignatureVersion: \"2\"\n  ResourceRequirement: {}\n"
+  useResourceManager: "true"
+>>>>>>> Stashed changes
 wps:
-  pepBaseUrl: "https://pep.eoepca.terradue.com"
-  pepClientStatePath: "/opt/zooservices_user/pepclient"
-  usePep: "false"
-  maincfgtpl: "files/main.cfg.tpl"
-
-
-persistence:
-  enabled: true
-  # existingUserDataClaim:
-  # existingProcServicesClaim:
-  storageClass: longhorn
-  userDataAccessMode: ReadWriteOnce
-  userDataSize: 10Gi
-  procServicesAccessMode: ReadWriteOnce
-  procServicesSize: 5Gi
-
-# installs longhorn storageClass using ades-longhorn chart
-ades-longhorn:
-  enabled: true
-  persistence:
-    defaultClassReplicaCount: 1
- #defaultSettings:
- #  systemManagedComponentsNodeSelector: "longhorn:yes"
-
+  maincfgtpl: files/main.cfg.tpl
+  pepBaseUrl: http://proc-ades-pep:5576
+  usePep: "true"

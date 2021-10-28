@@ -575,6 +575,42 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         }
 
         std::cerr << "User cwl:\n" <<  cwlBuffer.str() << "\n";
+        //==================================GET CWL starting workflowId
+
+        // parse cwl and look for #workflowid
+        std::string userworkspacePath(confEoepca["userworkspace"]);
+        userworkspacePath.append("/").append(userEoepca["user"]).append("/");
+        userworkspacePath.append(lenv["Identifier"]).append(".zcfg");
+        std::stringstream zcfgBuffer;
+
+        if (loadFile(userworkspacePath.c_str(), zcfgBuffer)) {
+            std::string err("ZCFG file ");
+            err.append(userworkspacePath);
+            err.append(" not found!");
+            setStatus(conf, "failed", err.c_str());
+            return SERVICE_FAILED;
+        }
+
+
+        std::string line;
+        std::string prefix = "\towsOri = ";
+        std::string workflowIdHashtag;
+        while(std::getline(testBuffer, line)) {
+            if (line.compare(0, prefix.size(), prefix) == 0) {
+                std::cout << "owsOri line found: " << line << '\n';
+
+                if (line.find("#") != std::string::npos) {
+                    std::cout << "workflow id hashtag found!" << '\n';
+                    std::string last_element(line.substr(line.rfind("#") + 1));
+                    std::cout << "workflowId: " << last_element << '\n';
+                    workflowIdHashtag = last_element;
+                } else {
+                    std::cout << "workflowId not specified " << '\n';
+                }
+            }
+        }
+
+
         //==================================GET CWL CONTENT
 
         setStatus(conf, "running", "the service is started");
