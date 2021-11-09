@@ -29,10 +29,13 @@ int main(int argc, const char** argv) {
 
   std::cout << "LIB name: " << theName.get() << "\n";
   std::cout << "Run: \n";
+  std::string emtpyString("");
+
+
 
   std::unique_ptr<EOEPCA::OWS::OWSContext,
                   std::function<void(EOEPCA::OWS::OWSContext*)>>
-      ptrContext(lib->parseFromFile(argv[1]), lib->releaseParameter);
+      ptrContext(lib->parseFromFile(argv[1]), lib->releaseParameter,emtpyString.c_str());
 
   if (ptrContext) {
     for (auto& theParams : ptrContext->getEntries()) {
