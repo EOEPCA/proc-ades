@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "id": "applicationPackage",
+      "input": {
+        "format": {
+          "mimeType": "application/cwl"
+        },
+        "value": {
+          "href": "https://gitlab.com/app-packages/terradue/dnbr-sentinel-2-cog/-/package_files/22215658/download#dnbr"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "deployResult",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "auto",
+  "response": "raw"
+}
