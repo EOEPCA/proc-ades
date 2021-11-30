@@ -7,7 +7,7 @@
           "mimeType": "application/cwl"
         },
         "value": {
-          "href": "https://gitlab.com/app-packages/terradue/dnbr-sentinel-2-cog/-/package_files/22215658/download#dnbr"
+          "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/dNBR/dNBR.cwl#dnbr"
         }
       }
     }
