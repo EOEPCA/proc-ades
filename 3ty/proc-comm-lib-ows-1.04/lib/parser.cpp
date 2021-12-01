@@ -791,6 +791,8 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering, const cha
 
         } else {
           // NO WORKFLOW!!
+            std::string err("Workflow id not found.");
+            throw std::runtime_error(err);
         }
       }
     }
