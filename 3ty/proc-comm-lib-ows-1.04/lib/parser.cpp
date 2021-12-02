@@ -936,6 +936,7 @@ OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size, const char* m
   } catch (...) {
     std::cerr << "CATCH!!!\n";
     owsContext.reset(nullptr);
+    throw;
   }
 
   xmlCleanupParser();
