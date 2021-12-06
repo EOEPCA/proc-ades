@@ -594,7 +594,10 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                 lib->parseFromMemory(applicationFile.c_str(), applicationFile.size(), workflowIdHashtag.c_str()),
                 lib->releaseParameter);
 
-        if (ptrContext) {
+            if(!ptrContext->getErrorMessage().empty()){
+                std::cerr << "Parsing error: " << ptrContext->getErrorMessage() << std::endl;
+                throw std::runtime_error(ptrContext->getErrorMessage());
+            } else if (ptrContext ) {
 
             auto converter = std::make_unique<ZOO::ZooConverter>();
 
@@ -796,7 +799,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             }
 
         } else {
-            throw std::runtime_error("Error during ows parse!");
+                throw std::runtime_error("Error during ows parse!");
         }
 
     } catch (std::runtime_error &err) {

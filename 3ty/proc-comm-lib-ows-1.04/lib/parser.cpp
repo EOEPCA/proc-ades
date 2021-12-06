@@ -707,8 +707,18 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering, const cha
         const TOOLS::Object* pWorkflow;
         if (*mainWorkflowId == 0){
             pWorkflow = cwl->find("class", "Workflow");
+            if(!pWorkflow){
+                std::string err("Tool definition failed validation: no workflow or command line tool was found in cwl file.");
+                throw std::runtime_error(err);
+            }
         } else {
             pWorkflow = cwl->find("id", mainWorkflowId);
+            if(!pWorkflow){
+                std::string err("Tool definition failed validation: Reference `#");
+                err.append(mainWorkflowId);
+                err.append("` not found in cwl file.");
+                throw std::runtime_error(err);
+            }
         }
 
 
@@ -920,8 +930,13 @@ OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size, const char* m
               } else if (inner_entry_node->type == XML_ELEMENT_NODE) {
                 if (IS_CHECK(inner_entry_node, "entry", XMLNS_ATOM)) {
                   auto owsEntry = std::make_unique<OWS::OWSEntry>();
-                  parseEntry(inner_entry_node, owsEntry, mainWorkflowId);
-                  owsContext->moveAddEntry(owsEntry);
+                  try {
+                      parseEntry(inner_entry_node, owsEntry, mainWorkflowId);
+                      owsContext->moveAddEntry(owsEntry);
+                  } catch ( std::runtime_error err){
+                      std::cerr << "Catching errror " << err.what() << std::endl;
+                      owsContext->setErrorMessage(err.what());
+                  }
                 }
               }
             }
@@ -936,7 +951,6 @@ OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size, const char* m
   } catch (...) {
     std::cerr << "CATCH!!!\n";
     owsContext.reset(nullptr);
-    throw;
   }
 
   xmlCleanupParser();

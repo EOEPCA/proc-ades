@@ -522,6 +522,7 @@ class OWSEntry {
 
 class OWSContext {
   std::list<std::unique_ptr<OWSEntry>> entries;
+  std::string errorMessage{""};
 
  public:
   OWSContext() = default;
@@ -540,6 +541,11 @@ class OWSContext {
       entries.emplace_back(std::move(entry));
     }
   }
+
+
+  const std::string& getErrorMessage() const { return errorMessage; }
+  void setErrorMessage(const std::string& errorMsg)  { errorMessage = errorMsg; }
+
 };
 
 }  // namespace EOEPCA::OWS
