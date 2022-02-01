@@ -684,7 +684,7 @@ std::unique_ptr<OWS::Param> CWLTypeEnum(const NamespaceCWL* namespaces,
   return CWLTypeParserSpecialization(namespaces, obj, descriptor, typeCWL);
 }
 
-void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering) {
+void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering, const char* mainWorkflowId) {
   if (ptrOffering) {
     MAP_PARSER_CWL mapParser{};
     for (auto& s : CWLTYPE_LIST) mapParser.emplace(FNCMAPS(s, CWLTypeParser));
@@ -700,7 +700,28 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering) {
             std::make_unique<NamespaceCWL>(cwl->find("$namespaces", ""));
 
         //        dumpCWLMODEL(namespaces,0);
-        auto pWorkflow = cwl->find("class", "Workflow");
+
+        // mainWorkflowId is specified, look for the desired workflow,
+        // else take the first one found
+
+        const TOOLS::Object* pWorkflow;
+        if (*mainWorkflowId == 0){
+            pWorkflow = cwl->find("class", "Workflow");
+            if(!pWorkflow){
+                std::string err("Tool definition failed validation: no workflow or command line tool was found in cwl file.");
+                throw std::runtime_error(err);
+            }
+        } else {
+            pWorkflow = cwl->find("id", mainWorkflowId);
+            if(!pWorkflow){
+                std::string err("Tool definition failed validation: Reference `#");
+                err.append(mainWorkflowId);
+                err.append("` not found in cwl file.");
+                throw std::runtime_error(err);
+            }
+        }
+
+
         if (pWorkflow) {
           auto processDescription =
               std::make_unique<OWS::OWSProcessDescription>();
@@ -780,6 +801,8 @@ void parserOfferingCWL(std::unique_ptr<OWS::OWSOffering>& ptrOffering) {
 
         } else {
           // NO WORKFLOW!!
+            std::string err("Workflow id not found.");
+            throw std::runtime_error(err);
         }
       }
     }
@@ -836,7 +859,7 @@ void parseOffering(xmlNode* offering_node,
   }
 }
 
-void parseEntry(xmlNode* entry_node, std::unique_ptr<OWS::OWSEntry>& owsEntry) {
+void parseEntry(xmlNode* entry_node, std::unique_ptr<OWS::OWSEntry>& owsEntry, const char*  mainWorkflowId) {
   FOR(inner_cur_node, entry_node) {
     if (inner_cur_node->type == XML_COMMENT_NODE) {
       continue;
@@ -867,7 +890,7 @@ void parseEntry(xmlNode* entry_node, std::unique_ptr<OWS::OWSEntry>& owsEntry) {
         }
 
         if (ptrOffering->getCode() == OFFERING_CODE_CWL) {
-          parserOfferingCWL(ptrOffering);
+          parserOfferingCWL(ptrOffering,mainWorkflowId);
         }
         owsEntry->moveAddOffering(ptrOffering);
       }
@@ -875,7 +898,7 @@ void parseEntry(xmlNode* entry_node, std::unique_ptr<OWS::OWSEntry>& owsEntry) {
   }
 }
 
-OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size) {
+OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size, const char* mainWorkflowId) {
   int ret = 0;
   xmlDoc* doc = nullptr;
   xmlNode* root_element = nullptr;
@@ -907,8 +930,13 @@ OWS::OWSContext* Parser::parseXml(const char* bufferXml, int size) {
               } else if (inner_entry_node->type == XML_ELEMENT_NODE) {
                 if (IS_CHECK(inner_entry_node, "entry", XMLNS_ATOM)) {
                   auto owsEntry = std::make_unique<OWS::OWSEntry>();
-                  parseEntry(inner_entry_node, owsEntry);
-                  owsContext->moveAddEntry(owsEntry);
+                  try {
+                      parseEntry(inner_entry_node, owsEntry, mainWorkflowId);
+                      owsContext->moveAddEntry(owsEntry);
+                  } catch ( std::runtime_error err){
+                      std::cerr << "Catching errror " << err.what() << std::endl;
+                      owsContext->setErrorMessage(err.what());
+                  }
                 }
               }
             }

@@ -20,7 +20,7 @@ extern "C" void getParserName(char* buffer, int maxSize) {
   std::strncpy(buffer, parser->getName().c_str(), len);
 }
 
-extern "C" EOEPCA::OWS::OWSContext* parseFromFile(const char* fileName) {
+extern "C" EOEPCA::OWS::OWSContext* parseFromFile(const char* fileName,const char* workflowIdHashtag) {
   auto parser = std::make_unique<EOEPCA::Parser>();
 
   std::ifstream infile(fileName);
@@ -28,7 +28,7 @@ extern "C" EOEPCA::OWS::OWSContext* parseFromFile(const char* fileName) {
     std::stringstream sBuffer;
     sBuffer << infile.rdbuf();
 
-    return parser->parseXml(sBuffer.str().c_str(), sBuffer.str().size());
+    return parser->parseXml(sBuffer.str().c_str(), sBuffer.str().size(), workflowIdHashtag);
 
   } else {
     std::string err("failed to open ");
@@ -37,10 +37,9 @@ extern "C" EOEPCA::OWS::OWSContext* parseFromFile(const char* fileName) {
   }
 }
 
-extern "C" EOEPCA::OWS::OWSContext* parseFromMemory(const char* xmlBuffer,
-                                                      int size) {
+extern "C" EOEPCA::OWS::OWSContext* parseFromMemory(const char* xmlBuffer, int size, const char* workflowIdHashtag) {
   auto parser = std::make_unique<EOEPCA::Parser>();
-  return parser->parseXml(xmlBuffer, size);
+  return parser->parseXml(xmlBuffer, size, workflowIdHashtag);
 }
 
 
