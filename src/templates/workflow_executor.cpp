@@ -330,6 +330,10 @@ namespace nlohmann {
         if (exists_key(j, "workspaceResource")) {
             x.jobID = j.at("workspaceResource").get<std::string>();
         }
+
+        if (exists_key(j, "workflowIdHashtag")) {
+            x.jobID = j.at("workflowIdHashtag").get<std::string>();
+        }
     }
 
     inline void
@@ -346,6 +350,7 @@ namespace nlohmann {
         j["userIdToken"] = x.userIdToken;
         j["registerResultUrl"] = x.registerResultUrl;
         j["workspaceResource"] = x.workspaceResource;
+        j["workflowIdHashtag"] = x.workflowIdHashtag;
 
     }
 

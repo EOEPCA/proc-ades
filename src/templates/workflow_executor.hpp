@@ -83,6 +83,7 @@ public:
     std::string hostName;
     std::string registerResultUrl;
     std::string workspaceResource;
+    std::string workflowIdHashtag;
 
     ~WorkflowExecutorWebParameters()=default;
 
@@ -102,6 +103,8 @@ public:
       std::cerr << "\tmessage: " << message << "\n";
       std::cerr << "\tregisterResultUrl: " << registerResultUrl << "\n";
       std::cerr << "\tworkspaceResource: " << workspaceResource << "\n";
+      std::cerr << "\tworkflowIdHashtag: " << workflowIdHashtag << "\n";
+
 
     }
 
