@@ -232,6 +232,7 @@ workflowExecutor:
   pod:
     env: {}
     # HTTP_PROXY: http://1.2.3.4:8534
+    nodeSelector: {}
 
   useResourceManager: false
   resourceManagerEndpoint: "https://resourcemanager-api.com"
