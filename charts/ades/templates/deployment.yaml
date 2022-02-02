@@ -64,6 +64,8 @@ spec:
               value: /var/etc/ades/wfinputs.yaml
             - name: ADES_POD_ENV_VARS
               value: /var/etc/ades/pod_env_vars.yaml
+            - name: ADES_POD_NODESELECTORS
+              value: /var/etc/ades/pod_nodeselectors.yaml
             - name: STORAGE_CLASS
               value: {{ .Values.workflowExecutor.processingStorageClass | quote }}
             - name: VOLUME_TMP_SIZE
