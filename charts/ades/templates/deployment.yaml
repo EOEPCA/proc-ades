@@ -123,6 +123,11 @@ spec:
             - name: ADES_JOB_NAMESPACE_LABELS
               value: {{ toJson .Values.workflowExecutor.jobNamespaceLabels| quote }}
             {{- end }}
+            {{- if .Values.workflowExecutor.calrissianImage }}
+            - name: CALRISSIAN_IMAGE
+              value: {{ .Values.workflowExecutor.calrissianImage | quote }}
+            {{- end }}
+
 
           volumeMounts:
             - name: ades-config
