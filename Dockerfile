@@ -99,7 +99,7 @@ RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | t
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                    && \
     cp ./micromamba /usr/bin                                                                                                && \
     micromamba create -n workflow_executor_env                                                                              && \
-    micromamba install workflow-executor=1.0.19 -c eoepca -c conda-forge -n workflow_executor_env                           && \
+    micromamba install workflow-executor=1.0.23 -c eoepca -c conda-forge -n workflow_executor_env                           && \
     rm -fr /srv/conda/pkgs                                                                                                  && \
     rm -fr /tmp/*
 
