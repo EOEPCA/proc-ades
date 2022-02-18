@@ -229,7 +229,7 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
   # Calrissian image tag
-  calrissianImage: "terradue/calrissian:0.10.0"
+  calrissianImage: "terradue/calrissian:0.11.0-sprint1"
   # some configuration values for submitted pod
   pod:
     env: {}
