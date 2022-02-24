@@ -100,6 +100,11 @@ workflowExecutor:
     #STAGEOUT_AWS_REGION: RegionOne
     #STAGEOUT_OUTPUT: s3://processing_results
 
+    #STAGEIN_AWS_SERVICEURL: https://mys3repositoryendpoint.com
+    #STAGEIN_AWS_ACCESS_KEY_ID: myAccesKeyId
+    #STAGEIN_AWS_SECRET_ACCESS_KEY: mySecretAccessKey
+
+
   main:
     cwl: ""
 
@@ -234,7 +239,6 @@ workflowExecutor:
   pod:
     env: {}
     # HTTP_PROXY: http://1.2.3.4:8534
-    nodeSelector: {}
 
   useResourceManager: false
   resourceManagerEndpoint: "https://resourcemanager-api.com"
