@@ -104,10 +104,8 @@ spec:
             - name: ADES_BACKOFF_LIMIT
               value: {{ .Values.workflowExecutor.backofflimit| quote }}
             {{- end }}
-            {{- if .Values.workflowExecutor.processingNodeSelector }}
-            - name: ADES_NODE_SELECTOR
-              value: {{ toJson .Values.workflowExecutor.processingNodeSelector| quote }}
-            {{- else if .Values.nodeSelector }}
+            # Use the default node selector for calrissian job
+            {{- if .Values.nodeSelector }}
             - name: ADES_NODE_SELECTOR
               value: {{ toJson .Values.nodeSelector| quote }}
             {{- else }}
