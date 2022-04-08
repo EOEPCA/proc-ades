@@ -112,7 +112,7 @@ spec:
               value: {{ toJson .Values.nodeSelector| quote }}
             {{- else }}
             - name: ADES_NODE_SELECTOR
-              value: {}
+              value: '{}'
             {{- end }}
             {{- if .Values.workflowExecutor.platformDomain }}
             - name: ADES_PLATFORM_DOMAIN
