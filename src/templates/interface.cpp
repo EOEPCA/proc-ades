@@ -410,15 +410,11 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
 
         if(serviceConf["sleepGetStatus"].empty()){
-            serviceConf["sleepGetStatus"]="60";
+            serviceConf["sleepGetStatus"]="4";
         }
 
         if(serviceConf["sleepGetPrepare"].empty()){
-            serviceConf["sleepGetPrepare"]="60";
-        }
-
-        if(serviceConf["sleepBeforeRes"].empty()){
-            serviceConf["sleepBeforeRes"]="60";
+            serviceConf["sleepGetPrepare"]="4";
         }
 
         std::map<std::string, std::string> lenv;
@@ -656,8 +652,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             }
 
             updateStatus(conf, 95, "waiting for logs");
-            w8for=std::stoi(serviceConf["sleepBeforeRes"]);
-            sleep(w8for);
             std::cerr << "status finished" << std::endl;
             //=============================STATUS
 
@@ -814,11 +808,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
 
             //waiting for results
-            w8for=std::stoi(serviceConf["sleepBeforeRes"]);
             updateStatus(conf, 99, "waiting for results");
-            sleep(w8for);
-
-
             std::list<std::pair<std::string, std::string>> outPutList{};
             std::cerr << "workflowExecutor->webGetResults init\n";
             workflowExecutor->webGetResults(*wfpm,outPutList);
@@ -855,8 +845,6 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
                 std::cerr << "Registering results to resource manager end\n";
             }
-
-
 
             std::cerr << "getresults finished" << std::endl;
             for (auto &[k, p] : outPutList) {

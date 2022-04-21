@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.1.1"
+  tag: "1.2.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -106,7 +106,25 @@ workflowExecutor:
 
 
   main:
-    cwl: ""
+    cwl: |
+      class: Workflow
+      doc: Main stage manager
+      id: main
+      label: macro-cwl
+      inputs: {}
+      outputs:
+        StacCatalogUri:
+          outputSource:
+            - node_stage_out/s3_catalog_output
+          type: string  
+      requirements:
+        SubworkflowFeatureRequirement: {}
+        ScatterFeatureRequirement: {}
+      steps:
+        node_stage_out:
+          in: {}
+          out: [s3_catalog_output]
+          run: ''      
 
   stagein:
     cwl: |
@@ -115,7 +133,7 @@ workflowExecutor:
       doc: "Run Stars for staging input data"
       class: CommandLineTool
       hints:
-        DockerRequirement:
+        DockerRequiremeent:
           dockerPull: terradue/stars:1.0.0-beta.11
       id: stars
       arguments:
@@ -195,7 +213,11 @@ workflowExecutor:
           type: string?
         process:
           type: string?
-      outputs: {}
+      outputs:
+        s3_catalog_output:
+          outputBinding:
+            outputEval: ${  return inputs.ADES_STAGEOUT_OUTPUT + "/" + inputs.process + "/catalog.json"; }
+          type: string
       requirements:
         InlineJavascriptRequirement: {}
         EnvVarRequirement:
