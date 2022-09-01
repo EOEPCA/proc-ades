@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN yum install -y epel-release                                                                 && \
     yum update -y                                                                               && \
-    yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3 && \
+    yum install -y json-c json-c-devel zlib-devel libxml2 libxml2-devel bison openssl  python-devel subversion libxslt-devel libcurl-devel gdal gdal-devel proj-devel libuuid-devel openssl-devel fcgi-devel wget unzip autoconf flex cmake3 valgrind && \
     yum install -y bzip2 kernel-devel which && ln -s /opt/rh/devtoolset-7/enable /etc/profile.d/rhgccenable.sh && chmod +x /etc/profile.d/rhgccenable.sh && \
     yum install -y git                                                                          && \
     yum install -y automake                                                                     && \
@@ -29,8 +29,19 @@ WORKDIR /project
 RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/zoo-project.tar.gz /opt/zoo-project.tar.gz
 RUN cd /opt/ && tar -zxvf zoo-project.tar.gz && rm -f zoo-project.tar.gz
 ### Apply patches
-RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c            && \
+RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/Makefile.in /opt/zoo-project/zoo-project/zoo-kernel/Makefile.in                      && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/configure.ac /opt/zoo-project/zoo-project/zoo-kernel/configure.ac                    && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/ZOOMakefile.opts.in /opt/zoo-project/zoo-project/zoo-kernel/ZOOMakefile.opts.in      && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.h /opt/zoo-project/zoo-project/zoo-kernel/response_print.h            && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/response_print.c /opt/zoo-project/zoo-project/zoo-kernel/response_print.c            && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/zoo_service_loader.c /opt/zoo-project/zoo-project/zoo-kernel/zoo_service_loader.c    && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service.h /opt/zoo-project/zoo-project/zoo-kernel/service.h                          && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service.c /opt/zoo-project/zoo-project/zoo-kernel/service.c                          && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/server_internal.h /opt/zoo-project/zoo-project/zoo-kernel/server_internal.h          && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/server_internal.c /opt/zoo-project/zoo-project/zoo-kernel/server_internal.c          && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_callback.h /opt/zoo-project/zoo-project/zoo-kernel/service_callback.h        && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_callback.c /opt/zoo-project/zoo-project/zoo-kernel/service_callback.c        && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.h /opt/zoo-project/zoo-project/zoo-kernel/service_json.h                && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c
 ### Make libcgi
 RUN cd /opt/zoo-project/thirds/cgic206 && make libcgic.a && make install
@@ -69,10 +80,11 @@ RUN yum install -y vim httpd \
 	&& chown -R 48:48 /var/www/zoo-bin/ /var/www/zoo-bin/ /var/www/data/ /var/www/_run/res  \
 	&& echo '/usr/local/lib' > /etc/ld.so.conf.d/zoo.conf && ldconfig \
 	&& mkdir -p /opt/t2build/includes  /opt/t2service/ /opt/opt/t2service/t2scripts/ \
-	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/
+	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/ /var/www/html/ogc-api
 
 ## Copy HTTP files
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_html /var/www/html/.htaccess
+COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_ogcapi /var/www/html/ogc-api/.htaccess
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_wps3 /var/www/_run/wps3/.htaccess
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_watchjob /var/www/_run/watchjob/.htaccess
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess /var/www/_run/zoo/.htaccess
