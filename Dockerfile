@@ -80,7 +80,8 @@ RUN yum install -y vim httpd \
 	&& chown -R 48:48 /var/www/zoo-bin/ /var/www/zoo-bin/ /var/www/data/ /var/www/_run/res  \
 	&& echo '/usr/local/lib' > /etc/ld.so.conf.d/zoo.conf && ldconfig \
 	&& mkdir -p /opt/t2build/includes  /opt/t2service/ /opt/opt/t2service/t2scripts/ \
-	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/ /var/www/html/ogc-api
+	&& mkdir -p /var/www/zoo-bin/ /var/www/_run/zoo/ /var/www/html/ogc-api /var/www/cache \
+	&& chown -R 48:48 /var/www/cache
 
 ## Copy HTTP files
 COPY 3ty/proc-comm-zoo-1.2-alpha/assets/zoo/httpd/htaccess_html /var/www/html/.htaccess
