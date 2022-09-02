@@ -772,15 +772,21 @@ addUserToMap(maps* conf){
               // rwx
               map *theGrants = createMap("grant","1--");
               addMapToMap(&_tmpMaps->content,theGrants);
+	      freeMap(&theGrants);
+	      free(theGrants);
             }else{
               // it is ok!
               map *theGrants = createMap("grant","111");
               addMapToMap(&_tmpMaps->content,theGrants);
+	      freeMap(&theGrants);
+	      free(theGrants);
             }
 
             if(conf){
               addMapsToMaps (&conf, _tmpMaps);
             }
+	    freeMaps(&_tmpMaps);
+	    free(_tmpMaps);
           }
         }
 
@@ -1202,12 +1208,12 @@ int fetchService(registry* zooRegistry,maps* m,service** spService, map* request
     setMapInMaps (m, "lenv", "oIdentifier", cIdentifier);
   } 
   else {
-    char conf_dir2[1024*2];
+    /*char conf_dir2[1024*2];
     memset(conf_dir2,0,1024*2);
 
     strcpy(conf_dir2,ntmp);
     getServicesNamespacePath(m,ntmp,conf_dir2,1024);
-    strcpy(ntmp,conf_dir2);
+    strcpy(ntmp,conf_dir2);*/
 
     /** EOEPCA SPEC **/
     char newPath[1024];
@@ -2070,6 +2076,7 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
   if( eoUserMap && strlen(eoUserMap->value)>0 && eoUserPathMap && strlen(eoUserPathMap->value)>0){
     sprintf(eoUserPath,"%s/%s",eoUserPathMap->value,eoUserMap->value);
     fprintf(stderr,"MAP ALL:--> %s***************0 \n",eoUserPath);
+    setMapInMaps(m, "lenv","cwd", eoUserPath);
   }
   /** EOEPCA SPEC END **/
 
@@ -2222,12 +2229,22 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
               fprintf (stderr, "Try to load function %s\n", r_inputs->value);
 #endif
               typedef int (*execute_t) (maps **, maps **, maps **);
+	      /** EOEPCA SPEC **/
+	      char* nS = zStrdup(r_inputs->value);
+	      maps* pmsTmp=getMaps(m,"fnRewrite");
+	      if(pmsTmp!=NULL){
+		free(nS);
+		nS=translateCharMap(r_inputs->value,pmsTmp->content);
+	      }
+	      fprintf(stderr,"service from %s to %s\n",r_inputs->value,nS);
 #ifdef WIN32
               execute_t execute =
-                (execute_t) GetProcAddress (so, r_inputs->value);
+                (execute_t) GetProcAddress (so, nS);
 #else
-              execute_t execute = (execute_t) dlsym (so, r_inputs->value);
+	      execute_t execute = (execute_t) dlsym (so, nS);
 #endif
+	      free(nS);
+	      /** EOEPCA SPEC END **/
 
               if (execute == NULL)
                 {
@@ -2254,7 +2271,7 @@ loadServiceAndRun (maps ** myMap, service * s1, map * request_inputs,
 
 #ifdef DEBUG
 #ifdef WIN32
-			  errstr = getLastErrorMessage();
+	      errstr = getLastErrorMessage();
 #else
               errstr = dlerror ();
 #endif
@@ -3392,8 +3409,8 @@ runRequest (map ** inputs)
 	  if(pcaClauseFinal==NULL){
 	    pcaClauseFinal=zStrdup("true");
 	  }
-	  if(pcaClauseFinal!=NULL){
-	    map *schema=getMapFromMaps(m,"database","schema");
+	  map *schema=getMapFromMaps(m,"database","schema");
+	  if(pcaClauseFinal!=NULL && schema!=NULL){
 	    char* pcaTmp=(char*) malloc((strlen(pcaClauseFinal)+
 					 strlen(schema->value)+
 					 98+1)
@@ -3420,6 +3437,8 @@ runRequest (map ** inputs)
 	      setMapInMaps(m,"lenv","selectedJob","-1");
 	    }
 #endif
+	  }else{
+	    free(pcaClauseFinal);
 	  }
 	  maps* pmsTmp=getMaps(m,"lenv");
 	  dumpMap(pmsTmp->content);
@@ -3627,6 +3646,7 @@ runRequest (map ** inputs)
 	  addToMap(pamError,"message",pacMessage);
 	  printExceptionReportResponseJ(m,pamError);
 	  fprintf(stderr, "Error: %s\n", json_tokener_error_desc(jerr));
+	  json_tokener_free(tok);
 	  return 1;
 	}
 	if (tok->char_offset < slen){
@@ -3638,9 +3658,10 @@ runRequest (map ** inputs)
 	  addToMap(pamError,"message",pacMessage);
 	  printExceptionReportResponseJ(m,pamError);
 	  fprintf(stderr, "Error: %s\n", json_tokener_error_desc(jerr));
+	  json_tokener_free(tok);
 	  return 1;
 	}
-
+	json_tokener_free(tok);
 	json_object* json_io=NULL;
 	char* cIdentifier=NULL;
 	if(json_object_object_get_ex(jobj,"id",&json_io)!=FALSE){
@@ -3667,6 +3688,7 @@ runRequest (map ** inputs)
 	  xmlCleanupParser ();
 	  zooXmlCleanupNs ();
 	}
+	free(cIdentifier);
 	parseJRequest(m,s1,jobj,request_inputs,&request_input_real_format,&request_output_real_format);
 	json_object_put(jobj);
 	map* preference=getMapFromMaps(m,"renv","HTTP_PREFER");

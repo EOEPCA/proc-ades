@@ -84,3 +84,12 @@ userworkspace=/opt/zooservices_user
 defaultUser=anonymous
 userSpaceScript=/opt/t2scripts/prepareUserSpace.sh
 removeServiceScript=/opt/t2scripts/removeservice.sh
+
+
+[fnRewrite]
+length=2
+val=.
+rep=_
+val_1=-
+rep_1=_
+
