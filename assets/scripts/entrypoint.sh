@@ -9,7 +9,7 @@ chown 48:48 /var/www/_run/res
 
 # Starting Workflow Executor
 echo "Starting workflow executor..."
-nohup /srv/conda/envs/workflow_executor_env/bin/python -m workflow_executor.fastapiserver &
+nohup /srv/conda/envs/workflow_executor_env/bin/python -m workflow_executor.fastapiserver > /var/www/_run/res/workflow_executor.log 2>&1 &
 sleep 5
 echo "Workflow executor started"
 
