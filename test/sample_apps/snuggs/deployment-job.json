@@ -5,18 +5,5 @@
             "href": "https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl",
             "type": "application/cwl"
         }
-    },
-    "outputs": 
-    {
-	"deployResult":{
-            "format": {
-		"mimeType": "string",
-		"schema": "string",
-		"encoding": "string"
-            },
-            "transmissionMode": "value"
-	}
-    },
-    "mode": "auto",
-    "response": "raw"
+    }
 }

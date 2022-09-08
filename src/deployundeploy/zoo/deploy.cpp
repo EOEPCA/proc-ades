@@ -450,7 +450,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     map *applicationPackageZooMapHref =
             getMapFromMaps(inputs, "applicationPackage", "xlink:href");
 
-    map *applicationPackageZooMimeTypeMap = getMapFromMaps(inputs, "applicationPackage", "mimeType");
+    map *applicationPackageZooMimeTypeMap = getMapFromMaps(inputs, "applicationPackage", "type");
     if (applicationPackageZooMimeTypeMap){
         theMimeType=applicationPackageZooMimeTypeMap->value;
     }
@@ -662,11 +662,17 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                     zooRef.append(".zo");
 
                                     xml->startElement("status");
+
+				    service_name_to_build=zoo->getIdentifier();
+				    replaceStr(service_name_to_build, ".", "_");
+				    setMapInMaps(conf,"lenv","deployedService",service_name_to_build.c_str());
+
                                     if (!fileExist(zooRef.c_str())) {
 
-                                        service_name_to_build=zoo->getIdentifier();
+				      /*service_name_to_build=zoo->getIdentifier();
                                         replaceStr(service_name_to_build, ".", "_");
-                                        replaceStr(service_name_to_build, "-", "_");
+                                        replaceStr(service_name_to_build, "-", "_");*/
+				      replaceStr(service_name_to_build, "-", "_");
 
                                         std::string COMPILE =
                                                 ("make -C " + buildPath +  " USERPATH=\"" +user->getPath() +"\" COMPILE=\"" +
@@ -691,6 +697,7 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                                             xml->writeAttribute("err", "0");
                                             xml->writeAttribute("mess", "");
                                             xml->writeContent("ready");
+
 
                                             if (usepep){
 
@@ -822,16 +829,24 @@ extern "C" {
 
 ZOO_DLL_EXPORT int DeployProcess(maps *&conf, maps *&inputs,
                                  maps *&outputs){
-    dumpMaps(inputs);
-    dumpMaps(conf);
+  fprintf(stderr,"------- %s %d \n",__FILE__,__LINE__);
+  fflush(stderr);
+  dumpMaps(inputs);
+  fprintf(stderr,"------- %s %d \n",__FILE__,__LINE__);
+  fflush(stderr);
+  //dumpMaps(conf);
 
     return job(conf, inputs, outputs, Operation::DEPLOY);
 }
 
 ZOO_DLL_EXPORT int UndeployProcess(maps *&conf, maps *&inputs,
                                    maps *&outputs) {
-    dumpMaps(inputs);
-    dumpMaps(conf);
+  fprintf(stderr,"------- %s %d \n",__FILE__,__LINE__);
+  fflush(stderr);
+  dumpMaps(inputs);
+  fprintf(stderr,"------- %s %d \n",__FILE__,__LINE__);
+  fflush(stderr);
+  //dumpMaps(conf);
     return job(conf, inputs, outputs, Operation::UNDEPLOY);
 }
 }

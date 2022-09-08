@@ -324,6 +324,8 @@ bool compareCnt(maps* conf, const char* field, const char* type){
       return true;
 }
 
+/** EOEPCA SPEC **/
+
 /**
  * Checks if the zooServicesNamespace map is present in the m map;
  * if it is, the path to the directory where the ZOO-kernel should search for service providers will be updated.
@@ -417,34 +419,39 @@ int addServicesNamespaceToMap(maps* conf){
  * @param m the conf maps containing the main.cfg and oas.cfg settings
  */
 void setRootUrlMap(maps* m){
-    char *rootUrl= " ";
-    map *zooServicesNamespaceMap = getMapFromMaps (m, "zooServicesNamespace", "namespace");
-    map* rootHost=getMapFromMaps(m,"openapi","rootHost");
-    map* rootPath=getMapFromMaps(m,"openapi","rootPath");
-
-#ifdef DEBUG
-    fprintf (stderr, "zooServicesNamespaceMap: %s\n", zooServicesNamespaceMap->value);
-    fprintf (stderr, "rootHost: %s\n", rootHost->value);
-    fprintf (stderr, "rootPath: %s\n", rootPath->value);
-#endif
-
-    if (zooServicesNamespaceMap && zooServicesNamespaceMap->value && strcmp(zooServicesNamespaceMap->value,"generalNamespace") != 0 ){
-        rootUrl=(char*) malloc((strlen(rootHost->value)+(strlen(rootPath->value)+ strlen(zooServicesNamespaceMap->value)+13)*sizeof(char)));
-        sprintf(rootUrl,"%s/%s/%s",rootHost->value, zooServicesNamespaceMap->value, rootPath->value);
-    } else {
-        rootUrl=(char*) malloc((strlen(rootHost->value)+(strlen(rootPath->value)+13)*sizeof(char)));
-        sprintf(rootUrl,"%s/%s",rootHost->value, rootPath->value);
+  map* rootHost=getMapFromMaps(m,"openapi","rootHost");
+  map* rootPath=getMapFromMaps(m,"openapi","rootPath");
+  int ei = 1;
+  int canContinue=false;
+  char **orig = environ;
+  char *s=*orig;
+  char workspace[1024*2];
+  char* pWorkspace = NULL;
+  memset(workspace,0,1024*2);
+  for (; s; ei++ ) {
+    if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
+      char* baseU=strchr(s,'=');
+      if (strlen(baseU)>1){
+	pWorkspace = ++baseU;
+      }
     }
+    s = *(orig+ei);
+  }
+  if (pWorkspace){
+    // TODO: verify if we should optionaly prepend with rootHost
+    if(rootHost!=NULL)
+      sprintf(workspace, "%s/%s/%s",rootHost->value,pWorkspace,rootPath->value);
+    else
+      sprintf(workspace, "/%s/%s",pWorkspace,rootPath->value);
+    fprintf(stderr,"---------WORKSPACE: %s--------------\n",workspace);
+    setMapInMaps(m,"openapi","rootUrl",workspace);
+  }
 
-#ifdef DEBUG
-    fprintf (stderr, "rootUrl: %s\n", rootUrl);
-#endif
-    setMapInMaps(m,"openapi","rootUrl",rootUrl);
-    free(rootUrl);
+  maps* pmsTmp=getMaps(m,"openapi");
+  dumpMap(pmsTmp->content);
 }
 
 
-/** EOEPCA SPEC **/
 
 //rdr
 int mkpath(char *file_path, mode_t mode) {
@@ -2993,12 +3000,58 @@ runRequest (map ** inputs)
     freeMaps(&m1);
     free(m1);
 
-    if((strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
-       strcasecmp(cgiRequestMethod,"post")==0){
+    /** EOEPCA SPEC **/
+    // Define specific route for Undeploy/DeployProcess
+    setMapInMaps(m,"lenv","request_method",cgiRequestMethod);
+    if(strncasecmp(cgiRequestMethod,"DELETE",6)==0 && strstr(cgiQueryString,"/processes/")!=NULL){
       free(pcaCgiQueryString);
-      pcaCgiQueryString=zStrdup("/processes/DeployProcess/execution");
-    }
+      pcaCgiQueryString=zStrdup("/processes/UndeployProcess/execution");
+      setMapInMaps(m,"lenv","request_method","POST");
+      if(strlen(strstr(cgiQueryString,"/processes/"))>11){
+	char* pcaProcessId=zStrdup(strstr(cgiQueryString,"/processes/")+11);
+	char newPath[1024];
+	getUserWorkspacePath(m,ntmp,newPath,1024);
+	fprintf(stderr,"----+++++++--- %s %d %s \n",__FILE__,__LINE__,newPath);
+	fprintf(stderr,"----+++++++--- %s %d %s \n",__FILE__,__LINE__,pcaProcessId);
+	fflush(stderr);
+	setMapInMaps(m,"lenv","deployedService",pcaProcessId);
+	char* pcaFileName=(char*)malloc((strlen(newPath)+strlen(pcaProcessId)+7)*sizeof(char));
+	sprintf(pcaFileName,"%s/%s.json",newPath,pcaProcessId);
+	FILE* pfRequest=fopen(pcaFileName,"rb");
+	if(pfRequest!=NULL){
+	  zStatStruct f_status;
+	  int s=zStat(pcaFileName, &f_status);
+	  if(f_status.st_size>0){
+	    char* pcaTmp=(char*)malloc((f_status.st_size+1)*sizeof(char));
+	    fread(pcaTmp,1,f_status.st_size,pfRequest);
+	    pcaTmp[f_status.st_size]=0;
+	    addToMap(request_inputs,"jrequest",pcaTmp);
+	    free(pcaTmp);
+	  }
+	  fclose(pfRequest);
+	}else{
+	  map* error=createMap("code","NoSuchProcess");
+	  addToMap(error,"message",_("The process is not yet deployed."));
+	  setMapInMaps(m,"headers","Content-Type","application/json;charset=UTF-8");
+	  printExceptionReportResponseJ(m,error);
+	  //json_object_put(res);
+	  // TODO: cleanup memory
+	  return 1;
+
+	}
+      }
+    } else
+      if((strcmp(cgiQueryString,"/processes")==0 || strcmp(cgiQueryString,"/processes/")==0) &&
+	 (strcasecmp(cgiRequestMethod,"post")==0 || strncasecmp(cgiRequestMethod,"put",6)==0) ){
+	free(pcaCgiQueryString);
+	pcaCgiQueryString=zStrdup("/processes/DeployProcess/execution");
+	if(strncasecmp(cgiRequestMethod,"PUT",6)==0)
+	  setMapInMaps(m,"lenv","request_method","POST");
+	//dumpMap(request_inputs);
+      }
+    map* pmCgiRequestMethod=getMapFromMaps(m,"lenv","request_method");
     setRootUrlMap(m);
+
     // Redirect using HTTP Status 301 (cf. rfc2616) in case full_html_support is
     // set to true
     map* pmTmp0=getMapFromMaps(m,"openapi","full_html_support");
@@ -3023,11 +3076,11 @@ runRequest (map ** inputs)
     json_object *res=json_object_new_object();
     setMapInMaps(m,"headers","Content-Type","application/json;charset=UTF-8");
     /* - Root url */
-    if((strncasecmp(cgiRequestMethod,"post",4)==0 &&
+    if((strncasecmp(pmCgiRequestMethod->value,"post",4)==0 &&
 	(strstr(pcaCgiQueryString,"/processes/")==NULL ||
 	 strlen(pcaCgiQueryString)<=11))
        ||
-       (strncasecmp(cgiRequestMethod,"DELETE",6)==0 &&
+       (strncasecmp(pmCgiRequestMethod->value,"DELETE",6)==0 &&
 	(strstr(pcaCgiQueryString,"/jobs/")==NULL || strlen(pcaCgiQueryString)<=6)) ){
       setMapInMaps(m,"lenv","status_code","405");
       map* error=createMap("code","InvalidMethod");
@@ -3038,7 +3091,7 @@ runRequest (map ** inputs)
       return 1;
     }
     else if(cgiContentLength==1){
-      if(strncasecmp(cgiRequestMethod,"GET",3)!=0){
+      if(strncasecmp(pmCgiRequestMethod->value,"GET",3)!=0){
 	setMapInMaps(m,"lenv","status_code","405");
 	map* pamError=createMap("code","InvalidMethod");
 	const char* pccErr=_("This API does not support the method.");
@@ -3110,16 +3163,35 @@ runRequest (map ** inputs)
       json_object_object_add(res,"links",res1);
     }else if(strcmp(pcaCgiQueryString,"/conformance")==0){
       /* - /conformance url */
+      maps* pmsConformsTo=getMaps(m,"conformsTo");
+      map* pmExtentionsLength=getMapFromMaps(m,"conformsTo","extentionsLength");
+      int len=0;
+      map* pmExtentionUrl=NULL;
+      if(pmExtentionsLength!=NULL){
+	len=atoi(pmExtentionsLength->value);
+      }
       map* rootUrl=getMapFromMaps(m,"conformsTo","rootUrl");
       json_object *res1=json_object_new_array();
       map* length=getMapFromMaps(m,"conformsTo","length");
-      maps* tmpMaps=getMaps(m,"conformsTo");
       for(int kk=0;kk<atoi(length->value);kk++){
-	map* tmpMap1=getMapArray(tmpMaps->content,"link",kk);
+	map* tmpMap1=getMapArray(pmsConformsTo->content,"link",kk);
 	json_object *res2;
 	if(tmpMap1!=NULL){
-	  char* tmpStr=(char*) malloc((strlen(rootUrl->value)+strlen(tmpMap1->value)+1)*sizeof(char));
-	  sprintf(tmpStr,"%s%s",rootUrl->value,tmpMap1->value);
+	  char* tmpStr=NULL;
+	  if(getMapArray(pmsConformsTo->content,"extention",kk)!=NULL){
+	    map* pmCid=getMapArray(pmsConformsTo->content,"extid",kk);
+	    if(pmCid!=NULL){
+	      pmExtentionUrl=getMapArray(pmsConformsTo->content,"extentionUrl",atoi(pmCid->value));
+	      if(pmExtentionUrl!=NULL){
+		tmpStr=(char*) malloc((strlen(pmExtentionUrl->value)+strlen(tmpMap1->value)+1)*sizeof(char));
+		sprintf(tmpStr,"%s%s",pmExtentionUrl->value,tmpMap1->value);
+	      }
+	    }
+	  }
+	  else{
+	    tmpStr=(char*) malloc((strlen(rootUrl->value)+strlen(tmpMap1->value)+1)*sizeof(char));
+	    sprintf(tmpStr,"%s%s",rootUrl->value,tmpMap1->value);
+	  }
 	  json_object_array_add(res1,json_object_new_string(tmpStr));
 	  free(tmpStr);
 	}
@@ -3170,7 +3242,7 @@ runRequest (map ** inputs)
     }
     else if(strstr(pcaCgiQueryString,"/processes")==NULL && (strstr(pcaCgiQueryString,"/jobs")!=NULL || strstr(pcaCgiQueryString,"/jobs/")!=NULL)){
       /* - /jobs url */
-      if(strncasecmp(cgiRequestMethod,"DELETE",6)==0) {
+      if(strncasecmp(pmCgiRequestMethod->value,"DELETE",6)==0) {
 	char* pcTmp=strstr(pcaCgiQueryString,"/jobs/");
 	if(strlen(pcTmp)>6){
 	  char* jobId=zStrdup(pcTmp+6);
@@ -3190,7 +3262,7 @@ runRequest (map ** inputs)
 	  }
 	}
       }
-      else if(strcasecmp(cgiRequestMethod,"get")==0){
+      else if(strcasecmp(pmCgiRequestMethod->value,"get")==0){
 	/* - /jobs List (GET) */
 	if(strlen(pcaCgiQueryString)<=6){
 	  map* pmTmp=getMap(request_inputs,"limit");
@@ -3449,7 +3521,7 @@ runRequest (map ** inputs)
 	else{
 	  char* tmpUrl=strstr(pcaCgiQueryString,"/jobs/");
 	  if(tmpUrl!=NULL && strlen(tmpUrl)>6){
-	    if(strncasecmp(cgiRequestMethod,"DELETE",6)==0){
+	    if(strncasecmp(pmCgiRequestMethod->value,"DELETE",6)==0){
 	      char* jobId=zStrdup(tmpUrl+6);
 	      setMapInMaps(m,"lenv","gs_usid",jobId);
 	      setMapInMaps(m,"lenv","file.statusFile",json_getStatusFilePath(m));
@@ -3622,7 +3694,7 @@ runRequest (map ** inputs)
 	xmlCleanupParser ();
 	zooXmlCleanupNs ();
 	return 1;
-      }else if(strcasecmp(cgiRequestMethod,"post")==0){
+      }else if(strcasecmp(pmCgiRequestMethod->value,"post")==0){
 	/* - /processes/{processId}/execution Execution (POST) */
 	eres = SERVICE_STARTED;
 	initAllEnvironment(m,request_inputs,ntmp,"jrequest");
@@ -3673,8 +3745,13 @@ runRequest (map ** inputs)
 	      cIdentifier[strlen(cIdentifier)-10]=0;
 	  }
 	}
-	if(cIdentifier!=NULL)
+	if(cIdentifier!=NULL){
 	  addToMap(request_inputs,"Identifier",cIdentifier);
+	  if(strcmp(cIdentifier,"DeployProcess")==0 || strcmp(cIdentifier,"UndeployProcess")==0){
+	    addToMap(request_inputs,"response","document");
+	    setMapInMaps(m,"lenv","no-headers","true");
+	  }
+	}
 
 	if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,cIdentifier,printExceptionReportResponseJ)!=0){
 	  // TODO: cleanup memory
@@ -3944,8 +4021,39 @@ runRequest (map ** inputs)
 	    json_object_put(res);
 	  res=printJResult(m,s1,request_output_real_format,eres);
 	}
-
-	    
+	maps* pmsTmp=getMaps(m,"lenv");
+	map* pmTmp=getMapFromMaps(m,"lenv","Identifier");
+	if(pmTmp!=NULL &&
+	   (strcmp(pmTmp->value,"DeployProcess")==0 || strcmp(pmTmp->value,"UndeployProcess")==0) ){
+	  map* pmDeployed=getMapFromMaps(m,"lenv","deployedService");
+	  map* pmRootUrl=getMapFromMaps(m,"openapi","rootUrl");
+	  if(pmDeployed!=NULL){
+	    char newPath[1024];
+	    getUserWorkspacePath(m,ntmp,newPath,1024);
+	    char* pcaFileName=(char*)malloc((strlen(newPath)+strlen(pmDeployed->value)+7)*sizeof(char));
+	    sprintf(pcaFileName,"%s/%s.json",newPath,pmDeployed->value);
+	    if(strcmp(pmTmp->value,"DeployProcess")==0){
+	      printHeaders(m);
+	      printf("Location: %s/processes/%s\r\n",pmRootUrl->value,pmDeployed->value);
+	      printf("Status: 201 Created\r\n\r\n");
+	      setMapInMaps(m,"lenv","hasPrinted","true");
+	      FILE*  pfRequest=fopen(pcaFileName,"wb+");
+	      if(pfRequest!=NULL){
+		map* pmJRequest=getMap(request_inputs,"jrequest");
+		if(pmJRequest!=NULL)
+		  fwrite(pmJRequest->value,1,strlen(pmJRequest->value),pfRequest);
+		fclose(pfRequest);
+	      }
+	    }else
+	      if(pmTmp!=NULL && strcmp(pmTmp->value,"UndeployProcess")==0){
+		unlink(pcaFileName);
+		printHeaders(m);
+		printf("Status: 204 OK\r\n\r\n");
+		setMapInMaps(m,"lenv","hasPrinted","true");
+	      }
+	    free(pcaFileName);
+	  }
+	}
       }//else error
       else
 	if(strstr(pcaCgiQueryString,"/jobs")==NULL && strstr(pcaCgiQueryString,"/jobs/")==NULL){

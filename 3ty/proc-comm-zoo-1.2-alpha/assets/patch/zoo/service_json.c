@@ -862,6 +862,15 @@ extern "C" {
       if(tmpMap!=NULL){
 	json_object_object_add(res,"description",json_object_new_string(_ss(tmpMap->value)));
       }
+      tmpMap=getMap(serv->content,"mutable");
+      if(tmpMap==NULL)
+	json_object_object_add(res,"mutable",json_object_new_boolean(TRUE));
+      else{
+	if(strcmp(tmpMap->value,"false")==0)
+	  json_object_object_add(res,"mutable",json_object_new_boolean(FALSE));
+	else
+	  json_object_object_add(res,"mutable",json_object_new_boolean(TRUE));
+      }
       tmpMap=getMap(serv->content,"processVersion");
       if(tmpMap!=NULL){
 	if(strlen(tmpMap->value)<5){
@@ -1620,14 +1629,25 @@ extern "C" {
 	tmps = strtok_r (NULL, ",", &saveptr);
       }
     }else{
-      DIR *dirp = opendir (tmpPath->value);
+      char* cpath=(char*)malloc( (strlen(tmpPath->value)+14+/*rdr  add user path*/ + 1024)*sizeof(char)) ;
+
+      map *userMap = getMapFromMaps (conf, "eoepcaUser", "user");
+      if (userMap && userMap->value && strlen(userMap->value)>0 ){
+	sprintf(cpath,"%s/%s",tmpPath->value,userMap->value);
+      }else{
+	sprintf(cpath,"%s",tmpPath->value);
+      }
+      fprintf(stderr,"-----------PATH1: %s ---------------\n",cpath);
+
+      //DIR *dirp = opendir (tmpPath->value);
+      DIR *dirp = opendir (cpath);
       if(dirp!=NULL){
 	while ((dp = readdir (dirp)) != NULL){
-	  char* extn = strstr(dp->d_name, "_status.json");
+	  char* extn = strstr(dp->d_name, ".json");
 	  if(extn!=NULL){
 	    if(cnt>=skip && cnt<limit+skip){
 	      char* tmpStr=zStrdup(dp->d_name);
-	      tmpStr[strlen(dp->d_name)-12]=0;
+	      tmpStr[strlen(dp->d_name)-5]=0;
 	      json_object* cjob=printJobStatus(conf,tmpStr);
 	      json_object_array_add(res,cjob);
 	    }
@@ -2068,13 +2088,19 @@ extern "C" {
     if(sessId==NULL){
       sessId = getMapFromMaps (conf, "lenv", "gs_usid");
     }
+
+    int wpLen=0;
+    char* wp=NULL;
+
     char *Url0=(char*) malloc((strlen(tmpPath->value)+
 			       strlen(sessId->value)+18)*sizeof(char));
+
     int needResult=-1;
     char *message, *status;
     sprintf(Url0,"%s/jobs/%s",
 	    tmpPath->value,
 	    sessId->value);
+
     if(getMapFromMaps(conf,"lenv","gs_location")==NULL)
       setMapInMaps(conf,"headers","Location",Url0);
     json_object* val=json_object_new_object();
@@ -2130,11 +2156,43 @@ extern "C" {
     }else
       sessId = getMapFromMaps (conf, "lenv", "gs_usid");
     
-    char *tmp1=(char*) malloc((strlen(tmpPath->value)+
-			       strlen(sessId->value)+14)*sizeof(char));
-    sprintf(tmp1,"%s/%s_status.json",
-	    tmpPath->value,
-	    sessId->value);
+    char *tmp1=(char*) malloc((strlen(tmpPath->value)+14)*sizeof(char)
+			      + /*rdr*/ (1024*sizeof(char)) );
+
+
+    map *userMap = getMapFromMaps (conf, "eoepcaUser", "user");
+    if (userMap && userMap->value && strlen(userMap->value)>0 ){
+      sprintf(tmp1,"%s/%s",
+              tmpPath->value,userMap->value);
+      fprintf(stderr,"--------------1--%s \n",tmp1);
+    }else{
+      sprintf(tmp1,"%s/",
+              tmpPath->value);
+      fprintf(stderr,"--------------2--%s \n",tmp1);
+
+    }
+
+    if(mkdir(tmp1,0777) != 0 && errno != EEXIST){
+      fprintf(stderr,"Issue creating directory %s\n",tmp1);
+      return NULL;
+    }
+    free(tmp1);
+    tmp1=(char*) malloc((strlen(tmpPath->value)+
+			 strlen(sessId->value)+20)*sizeof(char) + /*rdr*/ (1024*sizeof(char)));
+    int needResult=0;
+    char *message, *rstatus;
+
+
+    if (userMap && userMap->value && strlen(userMap->value)>0 ){
+      sprintf(tmp1,"%s/%s/%s.json",
+              tmpPath->value,userMap->value,
+              sessId->value);
+    }else{
+      sprintf(tmp1,"%s/%s.json",
+              tmpPath->value,
+              sessId->value);
+    }
+
     return tmp1;
   }
 
@@ -2243,7 +2301,7 @@ extern "C" {
 	  hasMessage=1;
 	}
 	map* mMap=NULL;
-	if((mMap=getMapFromMaps(conf,"lenv","status"))!=NULL)
+	if((mMap=getMapFromMaps(conf,"lenv","PercentCompleted"))!=NULL)
 	  json_object_object_add(res,"progress",json_object_new_int(atoi(mMap->value)));
 	rstatus="running";
 	break;
@@ -2422,12 +2480,15 @@ extern "C" {
     if(tmpMap!=NULL){
       json_object_object_add(res1,"description",json_object_new_string(_(tmpMap->value)));
       json_object_object_add(res5,"description",json_object_new_string(_(tmpMap->value)));
-      tmpMap=getMapFromMaps(conf,"openapi","rootUrl");
-      json_object_object_add(res5,"url",json_object_new_string(tmpMap->value));
     }
-    tmpMap=getMapFromMaps(conf,"identification","title");
+    tmpMap=getMapFromMaps(conf,"openapi","rootUrl");
     if(tmpMap!=NULL)
+      json_object_object_add(res5,"url",json_object_new_string(tmpMap->value));
+    tmpMap=getMapFromMaps(conf,"identification","title");
+    if(tmpMap!=NULL){
       json_object_object_add(res1,"title",json_object_new_string(_(tmpMap->value)));
+      json_object_object_add(res5,"description",json_object_new_string(_(tmpMap->value)));
+    }
     json_object_object_add(res1,"version",json_object_new_string(ZOO_VERSION));
     tmpMap=getMapFromMaps(conf,"identification","keywords");
     if(tmpMap!=NULL){
@@ -2716,18 +2777,25 @@ extern "C" {
 	    json_object *responses=json_object_new_object();
 	    json_object *cc3=json_object_new_object();
 	    map* pmUseContent=getMapFromMaps(conf,"openapi","use_content");
+	    map* pmCode=getMapArray(tmpMaps->content,"code",i);
 	    vMap=getMapArray(tmpMaps->content,"schema",i);
 	    if(vMap!=NULL){
 	      map* tMap=getMapArray(tmpMaps->content,"type",i);
-	      addResponse(pmUseContent,cc3,vMap,tMap,"200","successful operation");
+	      if(pmCode!=NULL)
+		addResponse(pmUseContent,cc3,vMap,tMap,pmCode->value,"successful operation");
+	      else
+		addResponse(pmUseContent,cc3,vMap,tMap,"200","successful operation");
 	      vMap=getMapArray(tmpMaps->content,"eschema",i);
-	      if(vMap!=NULL && cMap!=NULL && strncasecmp(cMap->value,"post",4)==0)
+	      if(pmCode==NULL && vMap!=NULL && cMap!=NULL && strncasecmp(cMap->value,"post",4)==0)
 		addResponse(pmUseContent,cc3,vMap,tMap,"201","successful operation");
 	    }else{
 	      map* tMap=getMapFromMaps(conf,tmps,"type");
 	      map* pMap=createMap("ok","true");
-	      addResponse(pMap,cc3,vMap,tMap,"200","successful operation");
-	      if(cMap!=NULL && strncasecmp(cMap->value,"post",4)==0)
+	      if(pmCode!=NULL)
+		addResponse(pMap,cc3,vMap,tMap,pmCode->value,"successful operation");
+	      else
+		addResponse(pMap,cc3,vMap,tMap,"200","successful operation");
+	      if(pmCode==NULL && cMap!=NULL && strncasecmp(cMap->value,"post",4)==0)
 		addResponse(pmUseContent,cc3,vMap,tMap,"201","successful operation");
 	      freeMap(&pMap);
 	      free(pMap);
@@ -2783,7 +2851,7 @@ extern "C" {
 		  json_object *cc0=json_object_new_object();
 		  json_object_object_add(cc0,"schema",cc);
 		  // Add examples from here
-		  map* pmExample=getMap(tmpMaps->content,"examples");
+		  map* pmExample=getMapArray(tmpMaps->content,"examples",i);
 		  if(pmExample!=NULL){
 		    int iCnt=0;
 		    char* saveptr;
@@ -2829,6 +2897,7 @@ extern "C" {
 		    json_object_object_add(cc1,tmpMap3->value,cc0);
 		  else
 		    json_object_object_add(cc1,"application/json",cc0);
+
 		  json_object *cc2=json_object_new_object();
 		  json_object_object_add(cc2,"content",cc1);
 		  vMap=getMap(tmpMaps1->content,"abstract");
@@ -2839,7 +2908,7 @@ extern "C" {
 		  
 		  json_object_object_add(methodc,"requestBody",cc2);
 
-		}		
+		}
 	      }
 	      tmpMaps1=getMaps(conf,"callbacks");
 	      if(tmpMaps1!=NULL){
