@@ -1343,10 +1343,9 @@ int fetchService(registry* zooRegistry,maps* m,service** spService, map* request
 	  }
 	  //setMapInMaps(conf,"lenv","status_code","404 Bad Request");
 	  funcError(m,error);
-	  
+	  //free (*spService);
 	  //errorException (m, tmpMsg, "InvalidParameterValue", "identifier");
 	  free (tmpMsg);
-	  free (*spService);
 	  freeMap(&error);
 	  free(error);
 	  //freeMaps (&m);
@@ -1392,6 +1391,8 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
   /** EOEPCA SPEC END **/
 
 
+  fflush(stderr);
+  fflush (stdout);
   zDup2 (fileno (stderr), fileno (stdout));  
   if (strcasecmp ("all", orig) == 0)
     {
@@ -1421,8 +1422,10 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
       }
       if (int res =
 	  recursReaddirF (m, zooRegistry, doc, n, conf_dir, NULL, saved_stdout, 0,
-			  func) < 0)
+			  func) < 0){
+	zDup2 (saved_stdout, fileno (stdout));
 	return res;
+      }
 #ifdef META_DB
       fetchServicesFromDb(zooRegistry,m,doc,n,func,0);
       close_sql(m,0);
@@ -1557,6 +1560,8 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
 			s1 = createService();
 			if (s1 == NULL)
 			  {
+			    fflush(stderr);
+			    fflush(stdout);
 			    zDup2 (saved_stdout, fileno (stdout));
 			    map* errormap = createMap("text", _("Unable to allocate memory"));
 			    addToMap(errormap,"code", "InternalError");
@@ -1577,6 +1582,8 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
 			free (tmp0);
 			if (t < 0)
 			  {
+			    fflush(stderr);
+			    fflush(stdout);
 			    zDup2 (saved_stdout, fileno (stdout));
 			    exitAndCleanUp(zooRegistry, m,
 					   buff,"InternalError","NULL",
@@ -1951,6 +1958,7 @@ donothing (int sig)
   exit (0);
 }
 
+
 /**
  * Signal handling function which create an ExceptionReport node containing the
  * information message corresponding to the signal number.
@@ -1996,6 +2004,26 @@ sig_handler (int sig)
   fprintf (stderr, "Not this time!\n");
 #endif
   exit (0);
+}
+
+/**
+ * Register signals
+ *
+ * @param a function for handling signals
+ * @see donothing
+ */
+void register_signals(void (func)(int)){
+#ifndef USE_GDB
+#ifndef WIN32
+  signal (SIGCHLD, SIG_IGN);
+#endif
+  signal (SIGSEGV, func);
+  signal (SIGTERM, func);
+  signal (SIGINT, func);
+  signal (SIGILL, func);
+  signal (SIGFPE, func);
+  signal (SIGABRT, func);
+#endif
 }
 
 #ifdef USE_JSON
@@ -2624,18 +2652,7 @@ int
 runRequest (map ** inputs)
 {
  
-#ifndef USE_GDB
-#ifndef WIN32
-  signal (SIGCHLD, SIG_IGN);
-#endif  
-  signal (SIGSEGV, sig_handler);
-  signal (SIGTERM, sig_handler);
-  signal (SIGINT, sig_handler);
-  signal (SIGILL, sig_handler);
-  signal (SIGFPE, sig_handler);
-  signal (SIGABRT, sig_handler);
-#endif
-
+  register_signals(sig_handler);
   
   map *r_inputs = NULL;
   map *request_inputs = *inputs;
@@ -2935,17 +2952,7 @@ runRequest (map ** inputs)
     errorException (m, _("OGC API - Processes is not supported by this ZOO-Kernel, please contact the service provider."), "InternalError", NULL);
     return 1;
 #else
-#ifndef USE_GDB
-#ifndef WIN32
-    signal (SIGCHLD, SIG_IGN);
-#endif  
-    signal (SIGSEGV, json_sig_handler);
-    signal (SIGTERM, json_sig_handler);
-    signal (SIGINT, json_sig_handler);
-    signal (SIGILL, json_sig_handler);
-    signal (SIGFPE, json_sig_handler);
-    signal (SIGABRT, json_sig_handler);
-#endif
+    register_signals(json_sig_handler);
     setMapInMaps(m,"main","executionType","json");
     char *pcaCgiQueryString=NULL;
     if(strstr(cgiQueryString,"&")!=NULL){
@@ -3755,15 +3762,18 @@ runRequest (map ** inputs)
 
 	if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,cIdentifier,printExceptionReportResponseJ)!=0){
 	  // TODO: cleanup memory
+	  register_signals(donothing);
 	  freeMaps (&m);
 	  free (m);
 	  free (REQUEST);
 	  json_object_put(res);
-	  freeMap (&request_inputs);
-	  free (request_inputs);
+	  freeMap (inputs);
+	  free (*inputs);
+	  *inputs=NULL;
 	  free(pcaCgiQueryString);
 	  xmlCleanupParser ();
 	  zooXmlCleanupNs ();
+	  return 1;
 	}
 	free(cIdentifier);
 	parseJRequest(m,s1,jobj,request_inputs,&request_input_real_format,&request_output_real_format);
@@ -4033,10 +4043,7 @@ runRequest (map ** inputs)
 	    char* pcaFileName=(char*)malloc((strlen(newPath)+strlen(pmDeployed->value)+7)*sizeof(char));
 	    sprintf(pcaFileName,"%s/%s.json",newPath,pmDeployed->value);
 	    if(strcmp(pmTmp->value,"DeployProcess")==0){
-	      printHeaders(m);
-	      printf("Location: %s/processes/%s\r\n",pmRootUrl->value,pmDeployed->value);
-	      printf("Status: 201 Created\r\n\r\n");
-	      setMapInMaps(m,"lenv","hasPrinted","true");
+	      setMapInMaps(m,"lenv","no-headers","true");
 	      FILE*  pfRequest=fopen(pcaFileName,"wb+");
 	      if(pfRequest!=NULL){
 		map* pmJRequest=getMap(request_inputs,"jrequest");
@@ -4044,6 +4051,30 @@ runRequest (map ** inputs)
 		  fwrite(pmJRequest->value,1,strlen(pmJRequest->value),pfRequest);
 		fclose(pfRequest);
 	      }
+	      setMapInMaps(m,"lenv","requestType","GetCapabilities");
+	      setMapInMaps(m,"lenv","Identifier",pmDeployed->value);
+	      setMapInMaps(m,"lenv","oIdentifier",pmDeployed->value);
+	      json_object *res3=json_object_new_object();
+	      int saved_stdout = zDup (fileno (stdout));
+	      int t=fetchServicesForDescription(NULL, m, pmDeployed->value,
+						printGetCapabilitiesForProcessJ,
+						NULL, (void*) res3, ntmp,
+						request_inputs,
+						printExceptionReportResponseJ);
+	      zDup2 (saved_stdout, fileno (stdout));
+	      zClose(saved_stdout);
+	      const char* jsonStr=json_object_to_json_string_ext(res3,JSON_C_TO_STRING_NOSLASHESCAPE);
+	      setMapInMaps(m,"lenv","no-headers","false");
+	      printHeaders(m);
+	      printf("Location: %s/processes/%s\r\n",pmRootUrl->value,pmDeployed->value);
+	      printf("Status: 201 Created\r\n\r\n");
+	      printf(jsonStr);
+	      printf("\n");
+	      setMapInMaps(m,"lenv","no-headers","true");
+	      fflush(stdout);
+	      json_object_put(res3);
+	      setMapInMaps(m,"lenv","no-header","true");
+	      setMapInMaps(m,"lenv","hasPrinted","true");
 	    }else
 	      if(pmTmp!=NULL && strcmp(pmTmp->value,"UndeployProcess")==0){
 		unlink(pcaFileName);
@@ -4057,7 +4088,7 @@ runRequest (map ** inputs)
       }//else error
       else
 	if(strstr(pcaCgiQueryString,"/jobs")==NULL && strstr(pcaCgiQueryString,"/jobs/")==NULL){
-	  /* - /processes/{id}/ */
+	  /* - /processes/{processId}/ */
 	  //DIR *dirp = opendir (ntmp);
 	  json_object *res3=json_object_new_object();
 	  char *orig = NULL;
@@ -4973,14 +5004,7 @@ runRequest (map ** inputs)
    * an ExceptionReport document as the result was already returned to the 
    * client.
    */
-#ifndef USE_GDB
-  signal (SIGSEGV, donothing);
-  signal (SIGTERM, donothing);
-  signal (SIGINT, donothing);
-  signal (SIGILL, donothing);
-  signal (SIGFPE, donothing);
-  signal (SIGABRT, donothing);
-#endif
+  register_signals(donothing);
 
   if (((int) zGetpid ()) != cpid || cgiSid != NULL)
     {
@@ -5100,17 +5124,7 @@ runRequest (map ** inputs)
 int
 runAsyncRequest (maps** iconf, map ** lenv, map ** irequest_inputs,json_object *msg_obj)
 {
-#ifndef USE_GDB
-#ifndef WIN32
-  signal (SIGCHLD, SIG_IGN);
-#endif
-  signal (SIGSEGV, sig_handler);
-  signal (SIGTERM, sig_handler);
-  signal (SIGINT, sig_handler);
-  signal (SIGILL, sig_handler);
-  signal (SIGFPE, sig_handler);
-  signal (SIGABRT, sig_handler);
-#endif
+  register_signals(sig_handler);
   maps* conf=*iconf;
   map* request_inputs=*irequest_inputs;
   map* dsNb=getMapFromMaps(conf,"lenv","ds_nb");
@@ -5169,6 +5183,7 @@ runAsyncRequest (maps** iconf, map ** lenv, map ** irequest_inputs,json_object *
 	    if(getMap(request_inputs,"jrequest")!=NULL){
 	      setMapInMaps(lconf,"main","executionType","json");
 	      initAllEnvironment(lconf,request_inputs,ntmp,"jrequest");
+	      register_signals(json_sig_handler);
 	    }
 	    else{
 	      setMapInMaps(lconf,"main","executionType","xml");
