@@ -4055,15 +4055,17 @@ runRequest (map ** inputs)
 	      setMapInMaps(m,"lenv","Identifier",pmDeployed->value);
 	      setMapInMaps(m,"lenv","oIdentifier",pmDeployed->value);
 	      json_object *res3=json_object_new_object();
+	      json_object *res4=json_object_new_array();
 	      int saved_stdout = zDup (fileno (stdout));
 	      int t=fetchServicesForDescription(NULL, m, pmDeployed->value,
 						printGetCapabilitiesForProcessJ,
-						NULL, (void*) res3, ntmp,
+						(void*) res4, (void*) res3, ntmp,
 						request_inputs,
 						printExceptionReportResponseJ);
 	      zDup2 (saved_stdout, fileno (stdout));
 	      zClose(saved_stdout);
-	      const char* jsonStr=json_object_to_json_string_ext(res3,JSON_C_TO_STRING_NOSLASHESCAPE);
+	      json_object *res5=json_object_array_get_idx(res4,0);
+	      const char* jsonStr=json_object_to_json_string_ext(res5,JSON_C_TO_STRING_NOSLASHESCAPE);
 	      setMapInMaps(m,"lenv","no-headers","false");
 	      printHeaders(m);
 	      printf("Location: %s/processes/%s\r\n",pmRootUrl->value,pmDeployed->value);
@@ -4073,6 +4075,8 @@ runRequest (map ** inputs)
 	      setMapInMaps(m,"lenv","no-headers","true");
 	      fflush(stdout);
 	      json_object_put(res3);
+	      json_object_put(res4);
+	      json_object_put(res5);
 	      setMapInMaps(m,"lenv","no-header","true");
 	      setMapInMaps(m,"lenv","hasPrinted","true");
 	    }else

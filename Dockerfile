@@ -57,7 +57,8 @@ RUN mkdir -p /opt/t2service /opt/watchjob /var/www/zoo-bin/ /var/www/data/ /etc/
 RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make 
 ### Copy it as a service
 RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env && cp longProcess.zcfg wps_status.zo GetStatus.zcfg /opt/t2service/ && \
-    cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl /var/www/data/updateStatus.xsl
+    cp /opt/zoo-project/zoo-project/zoo-services/utils/status/cgi-env/updateStatus.xsl /var/www/data/updateStatus.xsl && \
+    sed "s:serviceType = C:serviceType = C\n mutable = false:g" -i /opt/t2service/GetStatus.zcfg
 ### Copy watchjob source
 RUN cp -r 3ty/proc-comm-zoo-1.2-alpha/src/* /opt/watchjob/
 ### Make watchjob
