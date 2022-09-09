@@ -126,6 +126,8 @@ COPY test/sample_apps/snuggs/deployment-job.json /var/www/html/examples/deployme
 COPY test/sample_apps/snuggs/job_order1.json /var/www/html/examples/snuggs-0_3_0/job_order1.json
 COPY test/sample_apps/snuggs/job_order2.json /var/www/html/examples/snuggs-0_3_0/job_order2.json
 COPY test/sample_apps/snuggs/job_order3.json /var/www/html/examples/snuggs-0_3_0/job_order3.json
+COPY test/sample_apps/vegetation-index/deployment-job.json /var/www/html/examples/deployment-job1.json
+COPY test/sample_apps/dNBR/app-deploy-body.json /var/www/html/examples/deployment-job2.json
 
     
 COPY assets/main.cfg /opt/t2service/main.cfg
