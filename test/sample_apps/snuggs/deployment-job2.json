@@ -1,0 +1,22 @@
+{
+    "inputs": 
+    {
+	"applicationPackage": {
+            "href": "https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl",
+            "type": "application/cwl"
+        }
+    },
+    "outputs": 
+    {
+	"unDeployResult":{
+            "format": {
+		"mimeType": "string",
+		"schema": "string",
+		"encoding": "string"
+            },
+            "transmissionMode": "value"
+	}
+    },
+    "mode": "auto",
+    "response": "raw"
+}

@@ -1,28 +1,8 @@
 {
-  "inputs": [
-    {
-      "id": "applicationPackage",
-      "input": {
-        "format": {
-          "mimeType": "application/cwl"
-        },
-        "value": {
-          "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/dNBR/dNBR.cwl#dnbr"
-        }
-      }
+    "inputs": {
+	"applicationPackage": {
+	    "type":"application/cwl",
+	    "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/dNBR/dNBR.cwl#dnbr"
+	}
     }
-  ],
-  "outputs": [
-    {
-      "format": {
-        "mimeType": "string",
-        "schema": "string",
-        "encoding": "string"
-      },
-      "id": "deployResult",
-      "transmissionMode": "value"
-    }
-  ],
-  "mode": "auto",
-  "response": "raw"
 }

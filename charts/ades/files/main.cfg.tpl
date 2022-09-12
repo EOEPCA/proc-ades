@@ -12,7 +12,7 @@ cacheDir=/var/www/cache
 lang=en-US,en-GB
 language=en-US
 msOgcVersion=1.0.0
-tmpUrl=/res
+tmpUrl=http://localhost:8080/_run/res
 cors=false
 storeExecuteResponse=true
 servicePath=/zooservices/
@@ -84,3 +84,12 @@ userworkspace=/opt/zooservices_user
 defaultUser=anonymous
 userSpaceScript=/opt/t2scripts/prepareUserSpace.sh
 removeServiceScript=/opt/t2scripts/removeservice.sh
+
+
+[fnRewrite]
+length=2
+val=.
+rep=_
+val_1=-
+rep_1=_
+
