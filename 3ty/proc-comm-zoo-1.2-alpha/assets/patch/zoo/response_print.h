@@ -197,7 +197,7 @@ extern "C" {
    */
   static const char* const aapccStatusCodes[][10] = {
     {
-      "500 Not Implemented",
+      "500 Internal Server Error",
       "OperationNotSupported",
       "NoApplicableCode",
       "InvalidQueryParameterValue",
@@ -225,7 +225,7 @@ extern "C" {
       NULL
     },
     {
-      "500 Not Implemented",
+      "501 Not Implemented",
       NULL
     }
   };

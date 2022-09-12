@@ -2587,6 +2587,8 @@ void _printExceptionReportResponse(maps* m,map* s){
   tmp=getMapFromMaps(m,"lenv","status_code");
   if(tmp!=NULL)
     exceptionCode=tmp->value;
+  if(exceptionCode==NULL)
+    exceptionCode=aapccStatusCodes[3][0];
   if(m!=NULL){
     map *tmpSid=getMapFromMaps(m,"lenv","sid");
     if(tmpSid!=NULL){

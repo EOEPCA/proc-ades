@@ -3757,6 +3757,7 @@ runRequest (map ** inputs)
 	  if(strcmp(cIdentifier,"DeployProcess")==0 || strcmp(cIdentifier,"UndeployProcess")==0){
 	    addToMap(request_inputs,"response","document");
 	    setMapInMaps(m,"lenv","no-headers","true");
+	    setMapInMaps(m,"lenv","hasPrinted","true");
 	  }
 	}
 
@@ -4031,9 +4032,10 @@ runRequest (map ** inputs)
 	    json_object_put(res);
 	  res=printJResult(m,s1,request_output_real_format,eres);
 	}
-	maps* pmsTmp=getMaps(m,"lenv");
+	//maps* pmsTmp=getMaps(m,"lenv");
+	//dumpMap(pmsTmp->content);
 	map* pmTmp=getMapFromMaps(m,"lenv","Identifier");
-	if(pmTmp!=NULL &&
+	if(eres==SERVICE_SUCCEEDED && pmTmp!=NULL &&
 	   (strcmp(pmTmp->value,"DeployProcess")==0 || strcmp(pmTmp->value,"UndeployProcess")==0) ){
 	  map* pmDeployed=getMapFromMaps(m,"lenv","deployedService");
 	  map* pmRootUrl=getMapFromMaps(m,"openapi","rootUrl");
@@ -4087,6 +4089,12 @@ runRequest (map ** inputs)
 		setMapInMaps(m,"lenv","hasPrinted","true");
 	      }
 	    free(pcaFileName);
+	  }else{
+	    handleDRUError(m);
+	  }
+	}else{
+	  if((strcmp(pmTmp->value,"DeployProcess")==0 || strcmp(pmTmp->value,"UndeployProcess")==0) ){
+	    handleDRUError(m);
 	  }
 	}
       }//else error

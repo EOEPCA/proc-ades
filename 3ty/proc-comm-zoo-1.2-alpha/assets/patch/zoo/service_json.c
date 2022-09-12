@@ -978,6 +978,7 @@ extern "C" {
     if(pmTmp!=NULL){
       json_object_object_add(res,"title",json_object_new_string(_(pmTmp->value)));
       int i=0;
+      int hasType=-1;
       for(i=0;i<4;i++){
 	if(strcasecmp(pmTmp->value,WPSExceptionCode[OAPIPCorrespondances[i][0]])==0){
 	  map* pmExceptionUrl=getMapFromMaps(m,"openapi","exceptionsUrl");
@@ -985,11 +986,16 @@ extern "C" {
 	  sprintf(pcaTmp,"%s/%s",pmExceptionUrl->value,OAPIPExceptionCode[OAPIPCorrespondances[i][1]]);
 	  json_object_object_add(res,"type",json_object_new_string(pcaTmp));
 	  free(pcaTmp);
+	  hasType=0;
 	}
+      }
+      if(hasType<0){
+	json_object_object_add(res,"type",json_object_new_string(pmTmp->value));
       }
     }
     else{
       json_object_object_add(res,"title",json_object_new_string("NoApplicableCode"));
+      json_object_object_add(res,"type",json_object_new_string("NoApplicableCode"));
     }
     pmTmp=getMap(s,"text");
     if(pmTmp==NULL)
@@ -998,6 +1004,7 @@ extern "C" {
       pmTmp=getMapFromMaps(m,"lenv","message");
     if(pmTmp!=NULL)
       json_object_object_add(res,"detail",json_object_new_string(pmTmp->value));
+    //setMapInMaps(m,"headers","Content-Type","application/problem+json;charset=UTF-8");
     return res;
   }
   
@@ -1011,23 +1018,26 @@ extern "C" {
    * @param s the map containing the text,code,locator keys (or a map array of the same keys)
    */
   void printExceptionReportResponseJ(maps* m,map* s){
-    if(getMapFromMaps(m,"lenv","hasPrinted")!=NULL)
+    map* pmHasprinted=getMapFromMaps(m,"lenv","hasExceptionPrinted");
+    if(pmHasprinted!=NULL && strncasecmp(pmHasprinted->value,"true",4)==0)
       return;
+    pmHasprinted=getMapFromMaps(m,"lenv","hasPrinted");
     int buffersize;
     //json_object *res=json_object_new_object();
     json_object *res=createExceptionJ(m,s);
     maps* tmpMap=getMaps(m,"main");
     const char *exceptionCode;
     map* pmTmp=getMap(s,"code");
-    exceptionCode=produceStatusString(m,pmTmp);    
-
-    if(getMapFromMaps(m,"lenv","no-headers")==NULL)
+    exceptionCode=produceStatusString(m,pmTmp);
+    map* pmNoHeaders=getMapFromMaps(m,"lenv","no-headers");
+    if(pmNoHeaders==NULL || strncasecmp(pmNoHeaders->value,"false",5)==0)
       printHeaders(m);
-
     pmTmp=getMapFromMaps(m,"lenv","status_code");
     if(pmTmp!=NULL)
       exceptionCode=pmTmp->value;
-    if(getMapFromMaps(m,"lenv","no-headers")==NULL){
+    if(exceptionCode==NULL)
+      exceptionCode=aapccStatusCodes[3][0];
+    if(pmNoHeaders==NULL || strncasecmp(pmNoHeaders->value,"false",5)==0){
       if(m!=NULL){
 	map *tmpSid=getMapFromMaps(m,"lenv","sid");
 	if(tmpSid!=NULL){
@@ -1046,10 +1056,14 @@ extern "C" {
     const char* jsonStr=json_object_to_json_string_ext(res,JSON_C_TO_STRING_NOSLASHESCAPE);
     if(getMapFromMaps(m,"lenv","jsonStr")==NULL)
       setMapInMaps(m,"lenv","jsonStr",jsonStr);
-    maps* pmsTmp=getMaps(m,"lenv");
-    printf(jsonStr);
-    if(m!=NULL)
-      setMapInMaps(m,"lenv","hasPrinted","true");
+
+    if(pmHasprinted==NULL || strncasecmp(pmHasprinted->value,"false",5)==0){
+      printf(jsonStr);
+      if(m!=NULL){
+	setMapInMaps(m,"lenv","hasPrinted","true");
+	setMapInMaps(m,"lenv","hasExceptionPrinted","true");
+      }
+    }
     json_object_put(res);
   }
 
@@ -1950,7 +1964,7 @@ extern "C" {
 	if(mode!=NULL && strncasecmp(mode->value,"async",5)==0)
 	  setMapInMaps(conf,"headers","Status","201 Created");
 	else
-	  setMapInMaps(conf,"headers","Status","200 Ok");
+	  setMapInMaps(conf,"headers","Status","200 OK");
       }
       else{
 	setMapInMaps(conf,"headers","Status","500 Issue running your service");
@@ -3002,7 +3016,33 @@ extern "C" {
     json_object_array_add(res3,res4);
     json_object_object_add(res,"servers",res3);
   }
-  
+
+  /**
+   * Print exception report in case Deploy or Undeploy failed to execute
+   *
+   * @param conf the main configuration maps pointer
+   */
+  void handleDRUError(maps* conf){
+    map* pmError=getMapFromMaps(conf,"lenv","jsonStr");
+    setMapInMaps(conf,"lenv","hasPrinted","false");
+    setMapInMaps(conf,"lenv","no-headers","false");
+    setMapInMaps(conf,"headers","Status","500 Internal Server Error");
+    setMapInMaps(conf,"lenv","status_code","500 Internal Server Error");
+    if(pmError!=NULL){
+      printHeaders(conf);
+      printf("\r\n");
+      printf(pmError->value);
+      printf("\n");
+    }else{
+      pmError=createMap("code","InternalError");
+      addToMap(pmError,"message",_("Failed to deploy process!"));
+      printExceptionReportResponseJ(conf,pmError);
+      freeMap(&pmError);
+      free(pmError);
+    }
+    setMapInMaps(conf,"lenv","no-headers","true");
+    setMapInMaps(conf,"lenv","hasPrinted","true");
+  }
 #ifdef __cplusplus
 }
 #endif
