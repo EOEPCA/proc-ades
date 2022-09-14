@@ -4,6 +4,7 @@
 	processVersion = 1.0.0
 	storeSupported = true
 	statusSupported = true
+	mutable = false
 	serviceType = C
 	serviceProvider = libepcatransactional.zo
 <DataInputs>
