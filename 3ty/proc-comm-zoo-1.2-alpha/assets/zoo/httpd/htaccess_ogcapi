@@ -1,0 +1,9 @@
+RewriteEngine On
+SetEnvIf Request_URI "^\/?(\w+)\/ogc-api(.*)" SERVICES_NAMESPACE=$1
+RewriteRule ^\/?(\w+)\/ogc-api/(.*) /ogc-api/$2 [PT]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api.html$ /zoo-bin/zoo_loader.cgi?/api.html [L,QSA]
+RewriteRule ^index.html$ /zoo-bin/zoo_loader.cgi?service=WPS&service=WPS&request=Execute&version=1.0.0&Identifier=display&RawDataOutput=Result&DataInputs=tmpl=@xlink:href=http://localhost/ogc-api/ [L,QSA]
+RewriteRule ^(.*).html$ /zoo-bin/zoo_loader.cgi?service=WPS&service=WPS&request=Execute&version=1.0.0&Identifier=display&RawDataOutput=Result&DataInputs=tmpl=@xlink:href=http://localhost/ogc-api/$1 [L,QSA]
+RewriteRule ^(.*)$ /zoo-bin/zoo_loader.cgi?/$1 [L,QSA]
