@@ -942,6 +942,8 @@ addUserToMap(maps* conf){
     _tmpMaps->content = createMap ("user", (anonymousUser?anonymousUser:"anonymous"));
     map *theGrants = createMap("grant","1--");
     addMapToMap(&_tmpMaps->content,theGrants);
+    freeMap(&theGrants);
+    free(theGrants);
     addMapsToMaps (&conf, _tmpMaps);
     freeMaps(&_tmpMaps);
     free(_tmpMaps);
@@ -4110,9 +4112,20 @@ runRequest (map ** inputs)
 	  map* pmMutable=getMap(s1->content,"mutable");
 	  if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
 	    map* pmError=createMap("code","None");
-	    addToMap(pmError,"message",_("The synchronous mode is not allowed for mutable service yet."));
+	    addToMap(pmError,"message",_("The synchronous mode is not allowed for mutable services."));
 	    printExceptionReportResponseJ(m,pmError);
-	    // TODO: cleanup memory
+	    freeMap(&pmError);
+	    free(pmError);
+	    freeMaps(&m);
+	    free(m);
+	    freeMaps (&request_input_real_format);
+	    free (request_input_real_format);
+	    freeMaps (&request_output_real_format);
+	    free (request_output_real_format);
+	    json_object_put(res);
+	    free(pcaCgiQueryString);
+	    freeService (&s1);
+	    free(s1);
 	    return 1;
 	  }
 	  loadHttpRequests(m,request_input_real_format);

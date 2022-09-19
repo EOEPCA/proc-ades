@@ -3078,8 +3078,8 @@ extern "C" {
 	*pjRequest=json_object_get(pjRes);
 	const char* jsonStr=json_object_to_json_string_ext(*pjRequest,JSON_C_TO_STRING_NOSLASHESCAPE);
 	setMapInMaps(conf,"lenv","jrequest",jsonStr);
-	json_object_put(pjRes);
       }
+      json_object_put(pjRes);
     }
     return 0;
   }
