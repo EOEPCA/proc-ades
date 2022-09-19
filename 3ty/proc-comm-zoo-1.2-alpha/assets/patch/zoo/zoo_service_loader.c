@@ -3987,6 +3987,7 @@ runRequest (map ** inputs)
 	      pid=cpid;
 	      r_inputs = getMapFromMaps (m, "main", "tmpPath");
 	      setMapInMaps (m, "lenv", "async","true");
+	      setMapInMaps(m,"lenv","no-headers","true");
 	      map* r_inputs1 = createMap("ServiceName", s1->name);
 	      // Create the filename for the result file (.res)
 	      fbkpres =

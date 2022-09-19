@@ -1705,7 +1705,8 @@ extern "C" {
       free(pamTmp);
       return NULL;
     }
-    if(getMapFromMaps(conf,"lenv","no-headers")==NULL)
+    map* pmHeaders=getMapFromMaps(conf,"lenv","no-headers");
+    if(pmHeaders==NULL || strncasecmp(pmHeaders->value,"false",5)==0)
       printHeaders(conf);
     map* pmMode=getMapFromMaps(conf,"request","response");
     if(pmMode!=NULL && strncasecmp(pmMode->value,"raw",3)==0){
@@ -3052,6 +3053,13 @@ extern "C" {
     setMapInMaps(conf,"lenv","hasPrinted","true");
   }
 
+  /**
+   * Convert an OGC Application Package into a standard execute payload
+   *
+   * @param conf the main configuration maps pointer
+   * @param request_inputs map containing the request inputs
+   * @param pjRequest the json_object corresponding to the initial payload
+   */
   int convertOGCAppPkgToExecute(maps* conf,map* request_inputs,json_object** pjRequest){
     json_object* pjRes=json_object_new_object();
     json_object* pjProcessDescription=NULL;
