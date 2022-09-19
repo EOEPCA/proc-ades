@@ -3186,11 +3186,8 @@ void* printRawdataOutput(maps* conf,maps* outputs){
   }
   if(rs!=NULL)
     fwrite(toto->value,sizeof(char),atoi(rs->value),stdout);
-  else{
+  else
     fwrite(toto->value,sizeof(char),strlen(toto->value),stdout);
-    // TODO: review why we have to write 4 more chars for getting the proper output here
-    fwrite("    ",sizeof(char),4,stdout);
-  }
   fflush(stdout);
 }
 
