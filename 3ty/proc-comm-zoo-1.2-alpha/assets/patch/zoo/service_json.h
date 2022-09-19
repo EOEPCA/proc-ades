@@ -84,9 +84,10 @@ extern "C" {
   /**
    * Name and corresponding attributes depending on the WPS version
    */
-  static const char* jcapabilities[4]={
+  static const char* jcapabilities[6]={
     "jobControlOptions","sync-execute async-execute dismiss",
-    "outputTransmission","value reference"
+    "outputTransmission","value reference",
+    "jobControlOptions","async-execute"
   };
 
   /**

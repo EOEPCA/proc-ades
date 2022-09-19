@@ -886,6 +886,11 @@ extern "C" {
       int limit=4;
       int i=0;
       map* sType=getMap(serv->content,"serviceType");
+      map* pmMutable=getMap(serv->content,"mutable");
+      if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
+	i=2;
+	limit=6;
+      }
       for(;i<limit;i+=2){
 	json_object *res2=json_object_new_array();
 	char *saveptr;

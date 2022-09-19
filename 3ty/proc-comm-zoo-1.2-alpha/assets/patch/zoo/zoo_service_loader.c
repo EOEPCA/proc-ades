@@ -4107,6 +4107,14 @@ runRequest (map ** inputs)
 	    }
 #endif
 	}else{
+	  map* pmMutable=getMap(s1->content,"mutable");
+	  if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
+	    map* pmError=createMap("code","None");
+	    addToMap(pmError,"message",_("The synchronous mode is not allowed for mutable service yet."));
+	    printExceptionReportResponseJ(m,pmError);
+	    // TODO: cleanup memory
+	    return 1;
+	  }
 	  loadHttpRequests(m,request_input_real_format);
 	  if(validateRequest(&m,s1,request_inputs, &request_input_real_format,&request_output_real_format,NULL)<0)
 	    return -1;
