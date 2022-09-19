@@ -593,7 +593,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         std::string workflowIdHashtag;
         while(std::getline(zcfgBuffer, line)) {
             if (line.compare(0, prefix.size(), prefix) == 0) {
-                std::cout << "owsOri line found: " << line << '\n';
+                std::cerr << "owsOri line found: " << line << '\n';
 
                 if (line.find("#") != std::string::npos) {
                     std::cerr << "workflow id hashtag found!" << '\n';
@@ -729,13 +729,13 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
                 if(count) {
                     username = claims[key].as_string();
-                    std::cout << "user: " << username << std::endl;
+                    std::cerr << "user: " << username << std::endl;
                 } else {
                     if (claims.count("pct_claims")) {
                         auto pct_claims_json = claims["pct_claims"].to_json();
                         if (pct_claims_json.contains(key)) {
                             username = pct_claims_json.get(key).to_str();
-                            std::cout << "user: " << pct_claims_json.get(key) << std::endl;
+                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
                         }
                     }
                 }
