@@ -3327,41 +3327,37 @@ runRequest (map ** inputs)
 	  m1->next = NULL;
 	  if (conf_read (pcaPath, m1) == 2)
 	    {
-	      errorException (NULL, _("Unable to load the lenv.cfg file."),
-			      "InternalError", NULL);
 	      free (m1);
-	      return 1;
 	    }
-	  map* pmIdentifier=getMapFromMaps(m1,"lenv","oIdentifier");
-	  if(pmIdentifier!=NULL){
-	    json_object *res3=json_object_new_object();
-	    json_object *res4=json_object_new_array();
-	    //int saved_stdout = zDup (fileno (stdout));
-	    //fetchService(zooRegistry,m,&s1,request_inputs,ntmp,pmIdentifier->value,printExceptionReportResponseJ);
-	    if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,pmIdentifier->value,printExceptionReportResponseJ)!=0){
-	      // TODO: cleanup memory
-	      register_signals(donothing);
-	      freeService (&s1);
-	      free(s1);
-	      freeMaps (&m);
-	      free (m);
-	      free (REQUEST);
-	      json_object_put(res);
-	      freeMap (inputs);
-	      free (*inputs);
-	      *inputs=NULL;
-	      free(pcaCgiQueryString);
-	      xmlCleanupParser ();
-	      zooXmlCleanupNs ();
-	      return 1;
-	    }
-	    //zDup2 (saved_stdout, fileno (stdout));
-	    //zClose(saved_stdout);
-	    if(s1!=NULL){
-	      map* pmMutable=getMap(s1->content,"mutable");
-	      if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
-		setMapInMaps(m,"lenv","isMutable","true");
+	  else{
+	    map* pmIdentifier=getMapFromMaps(m1,"lenv","oIdentifier");
+	    if(pmIdentifier!=NULL){
+	      json_object *res3=json_object_new_object();
+	      json_object *res4=json_object_new_array();
+	      if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,pmIdentifier->value,printExceptionReportResponseJ)!=0){
+		register_signals(donothing);
+		freeService (&s1);
+		free(s1);
+		freeMaps (&m);
+		free (m);
+		free (REQUEST);
+		json_object_put(res);
+		freeMap (inputs);
+		free (*inputs);
+		*inputs=NULL;
+		free(pcaCgiQueryString);
+		xmlCleanupParser ();
+		zooXmlCleanupNs ();
+		return 1;
 	      }
+	      if(s1!=NULL){
+		map* pmMutable=getMap(s1->content,"mutable");
+		if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
+		  setMapInMaps(m,"lenv","isMutable","true");
+		}
+	      }
+	      freeMaps(&m1);
+	      free(m1);
 	    }
 	  }
 	  /** EOEPCA SPEC END **/
