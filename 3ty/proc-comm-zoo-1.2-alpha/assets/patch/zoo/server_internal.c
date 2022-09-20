@@ -35,6 +35,11 @@
 #define ERROR_MSG_MAX_LENGTH 1024
 #endif
 #include <signal.h>
+/** EOEPCA SPEC **/
+#ifdef USE_JSON
+#include "service_json.h"
+#endif
+/** EOEPCA SPEC END**/
 
 // #include <stdlib.h>
 /*
@@ -1120,6 +1125,19 @@ void runDismiss(maps* conf,char* pid){
     sprintf (fbkpid, "%s/%s.pid", r_inputs->value, pid);
     FILE* f0 = fopen (fbkpid, "r");
     if(f0!=NULL){
+      /** EOEPCA SPEC **/
+      map* pmMutable=getMapFromMaps(conf,"lenv","isMutable");
+      if(pmMutable!=NULL && strncasecmp(pmMutable->value,"true",4)==0){
+	fprintf(stderr,"---___-*-*-___--- Dismiss is not allowed yet for mutable services %s %d \n",__FILE__,__LINE__);
+	fflush(stderr);
+	setMapInMaps(conf,"lenv","error","true");
+	setMapInMaps(conf,"lenv","code","NotAllowed");
+	setMapInMaps(conf,"lenv","message",_("Dismiss is not allowed yet for mutable services while they are running"));
+	fclose(f0);
+	free(fbkpid);
+	return;
+      }
+      /** EOEPCA SPEC END **/
       long flen;
       char *fcontent;
       fseek (f0, 0, SEEK_END);
@@ -1163,6 +1181,15 @@ void runDismiss(maps* conf,char* pid){
 	}
       }
     }
+    /** EOEPCA SPEC **/
+#ifdef USE_JSON
+    setMapInMaps(conf,"lenv","gs_usid",pid);
+    char* pcaPath=json_getStatusFilePath(conf);
+    unlink(pcaPath);
+    free(pcaPath);
+#endif
+    /** EOEPCA SPEC END **/
+
 #ifdef RELY_ON_DB
     removeService(conf,pid);
 #endif
