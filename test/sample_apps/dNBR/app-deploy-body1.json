@@ -1,6 +1,6 @@
 {
-    "executionUnit": [{
+    "executionUnit": {
 	"type":"application/cwl",
 	"href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/develop/test/sample_apps/dNBR/dNBR.cwl#dnbr"
-    }]
+    }
 }

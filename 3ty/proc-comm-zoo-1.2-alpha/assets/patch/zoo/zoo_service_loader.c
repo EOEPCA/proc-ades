@@ -1184,7 +1184,7 @@ void exitAndCleanUp(registry* zooRegistry, maps* m,
   map* tmpMap=getMapFromMaps(m,"main","executionType");
   char* errorCode=(char*)code;
   if(tmpMap!=NULL && strncasecmp(tmpMap->value,"json",4)==0)
-    errorCode="NoSuchProcess";
+    errorCode=(char*)"NoSuchProcess";
 
   addToMap(errormap,"code", errorCode);
   addToMap(errormap,"locator", locator);
@@ -3314,12 +3314,14 @@ runRequest (map ** inputs)
 	if(strlen(pcTmp)>6){
 	  char* jobId=zStrdup(pcTmp+6);
 	  setMapInMaps(m,"lenv","gs_usid",jobId);
-	  setMapInMaps(m,"lenv","file.statusFile",json_getStatusFilePath(m));
+	  char* pcaStatusFilePath=json_getStatusFilePath(m);
+	  setMapInMaps(m,"lenv","file.statusFile",pcaStatusFilePath);
+	  free(pcaStatusFilePath);
 	  /** EOEPCA SPEC **/
 	  fprintf(stderr,"DETECT if service is mutable or not by loading the zcfg of the corresponding service !! %s %d \n",__FILE__,__LINE__);
 	  fflush(stderr);
 	  map* pmTmpPath=getMapFromMaps(m,"main","tmpPath");
-	  char* pcaPath=(char*)malloc((strlen(jobId)+strlen(pmTmpPath->value)+1)*sizeof(char));
+	  char* pcaPath=(char*)malloc((strlen(jobId)+strlen(pmTmpPath->value)+11)*sizeof(char));
 	  sprintf(pcaPath,"%s/%s_lenv.cfg",pmTmpPath->value,jobId);
 	  maps* m1 = (maps *) malloc (MAPS_SIZE);
 	  m1->content = NULL;
@@ -3332,8 +3334,6 @@ runRequest (map ** inputs)
 	  else{
 	    map* pmIdentifier=getMapFromMaps(m1,"lenv","oIdentifier");
 	    if(pmIdentifier!=NULL){
-	      json_object *res3=json_object_new_object();
-	      json_object *res4=json_object_new_array();
 	      if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,pmIdentifier->value,printExceptionReportResponseJ)!=0){
 		register_signals(donothing);
 		freeService (&s1);
@@ -3360,6 +3360,9 @@ runRequest (map ** inputs)
 	      free(m1);
 	    }
 	  }
+	  free(pcaPath);
+	  initAllEnvironment(m,request_inputs,ntmp,"jrequest");
+	  setMapInMaps(m,"lenv","callback_request_method","DELETE");
 	  /** EOEPCA SPEC END **/
 	  runDismiss(m,jobId);
 	  map* pmError=getMapFromMaps(m,"lenv","error");
@@ -3375,6 +3378,9 @@ runRequest (map ** inputs)
 	    freeMap (inputs);
 	    free (*inputs);
 	    *inputs=NULL;
+	    freeMap (&r_inputs);
+	    free (r_inputs);
+	    free(jobId);
 	    free(pcaCgiQueryString);
 	    xmlCleanupParser ();
 	    zooXmlCleanupNs ();
@@ -3386,6 +3392,7 @@ runRequest (map ** inputs)
 	      json_object_put(res);
 	    res=createStatus(m,SERVICE_DISMISSED);
 	  }
+	  free(jobId);
 	}
       }
       else if(strcasecmp(pmCgiRequestMethod->value,"get")==0){
@@ -4364,6 +4371,16 @@ runRequest (map ** inputs)
     if(res!=NULL)
       json_object_put(res);
     free(pcaCgiQueryString);
+    dumpMap(r_inputs);
+    map* pmTest=getMap(*inputs,"shouldFree");
+    if(pmTest!=NULL){
+      freeMap (inputs);
+      free (*inputs);
+      *inputs=NULL;
+      freeMap(&r_inputs);
+      free (r_inputs);
+      r_inputs=NULL;
+    }
     //return 1;
 #endif
   }else{
