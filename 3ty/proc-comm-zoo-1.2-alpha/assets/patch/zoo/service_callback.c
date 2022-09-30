@@ -137,17 +137,23 @@ extern "C" {
       InternetCloseHandle (&hInternet);
       return NULL;
     }
-    setMapInMaps(pmConf,"lenv","callback_request_method","DELETE");
     maps* tmpConf=createMaps("main");
     tmpConf->content=createMap("memory","load");
     maps* pmsLenv=getMaps(pmConf,"lenv");
     addMapsToMaps(&tmpConf,pmsLenv);
     hInternet.waitingRequests[0] = zStrdup(pcUrl);
-    res1 = InternetOpenUrl (&hInternet,
-			    hInternet.waitingRequests[0], 
-			    (char*)pcJson, strlen(pcJson),
-			    INTERNET_FLAG_NO_CACHE_WRITE,
-			    0,tmpConf);
+    if(pcJson!=NULL)
+      res1 = InternetOpenUrl (&hInternet,
+			      hInternet.waitingRequests[0], 
+			      (char*)pcJson, strlen(pcJson),
+			      INTERNET_FLAG_NO_CACHE_WRITE,
+			      0,tmpConf);
+    else
+      res1 = InternetOpenUrl (&hInternet,
+			      hInternet.waitingRequests[0], 
+			      NULL, 0,
+			      INTERNET_FLAG_NO_CACHE_WRITE,
+			      0,tmpConf);
     AddHeaderEntries(&hInternet,pmConf);
     AddMissingHeaderEntry(&hInternet.ihandle[hInternet.nb-1],"Content-Type","application/json");
 #ifdef CALLBACK_DEBUG

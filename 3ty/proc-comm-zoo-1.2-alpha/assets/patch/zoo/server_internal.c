@@ -1127,11 +1127,14 @@ void runDismiss(maps* conf,char* pid){
       (char *)
       malloc ((strlen (r_inputs->value) + strlen (pid) + 7) * sizeof (char));
     sprintf (fbkpid, "%s/%s.pid", r_inputs->value, pid);
+    /** EOEPCA SPEC **/
+    map* pmMutable=getMapFromMaps(conf,"lenv","isMutable");
+    setMapInMaps(conf,"lenv","callback_request_method","DELETE");
+    /** EOEPCA SPEC END **/
     FILE* f0 = fopen (fbkpid, "r");
     if(f0!=NULL){
       /** EOEPCA SPEC **/
 #ifdef USE_JSON // USE_ADES
-      map* pmMutable=getMapFromMaps(conf,"lenv","isMutable");
       if(pmMutable!=NULL && strncasecmp(pmMutable->value,"true",4)==0){
 	// Append [eoepca]/WorkflowExecutorHost with /jobs/{jobId}
 	map* pmWorkflowExecutorHost=getMapFromMaps(conf,"eoepca","WorkflowExecutorHost");
@@ -1159,11 +1162,9 @@ void runDismiss(maps* conf,char* pid){
 	  }
 	  json_object_put(pjaRes);
 	  free(pcaUrl);
+	  setMapInMaps(conf,"lenv","invokedWorkflow","true");
 	  /**/
 	}
-	//fclose(f0);
-	//free(fbkpid);
-	//return;
       }
 #endif
       /** EOEPCA SPEC END **/
@@ -1186,6 +1187,27 @@ void runDismiss(maps* conf,char* pid){
       free(fcontent);
     }
     free(fbkpid);
+    /** EOEPCA SPEC **/
+    // Should we invoke WorkflowExecutor again?
+    map* pmHasRun=getMapFromMaps(conf,"lenv","invokedWorkflow");
+    if(pmMutable!=NULL && strncasecmp(pmMutable->value,"true",4)==0 &&
+       pmHasRun==NULL){
+      	// Append [eoepca]/WorkflowExecutorHost with /jobs/{jobId}
+	map* pmWorkflowExecutorHost=getMapFromMaps(conf,"eoepca","WorkflowExecutorHost");
+	if(pmWorkflowExecutorHost!=NULL){
+	  char* pcaUrl=(char*)malloc((strlen(pmWorkflowExecutorHost->value)+strlen(pid)+7)*sizeof(char));
+	  sprintf(pcaUrl,"%s/jobs/%s",pmWorkflowExecutorHost->value,pid);
+	  json_object* pjaRes=json_object_new_object();
+	  map* pmUserId=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+	  map* pmUser=getMapFromMaps(conf,"eoepcaUser","user");
+	  json_object_object_add(pjaRes,"useridToken",json_object_new_string((pmUserId!=NULL?pmUserId->value:"")));
+	  json_object_object_add(pjaRes,"username",json_object_new_string(pmUser->value));
+	  const char* jsonStr=json_object_to_json_string_ext(pjaRes,JSON_C_TO_STRING_PLAIN);
+	  json_object_put(pjaRes);
+	  free(pcaUrl);
+	}
+    }
+    /** EOEPCA SPEC END **/
     struct dirent *dp;
     DIR *dirp = opendir(r_inputs->value);
     char fileName[1024];
