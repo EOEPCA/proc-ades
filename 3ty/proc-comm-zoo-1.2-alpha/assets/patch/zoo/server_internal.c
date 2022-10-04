@@ -1011,7 +1011,6 @@ void runGetStatus(maps* conf,char* pid,char* req){
       setMapInMaps(conf,"lenv","message",_("The JobID from the request does not match any of the Jobs running on this server"));
     }
   }else{
-    free(sid);
     map* statusInfo=createMap("JobID",pid);
     if(isRunning(conf,pid)>0){
       if(strncasecmp(req,"GetResult",strlen(req))==0){
@@ -1023,6 +1022,7 @@ void runGetStatus(maps* conf,char* pid,char* req){
 	  setMapInMaps(conf,"lenv","code","ResultNotReady");
 	  setMapInMaps(conf,"lenv","message",_("The result for the requested JobID has not yet been generated. The service is currently running."));
 	}
+	free(sid);
 	return;
       }
       else{
