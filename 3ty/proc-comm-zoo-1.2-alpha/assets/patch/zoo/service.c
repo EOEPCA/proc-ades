@@ -751,8 +751,10 @@ map* getMapOrFill(map** ppmMap,const char *pccKey,const char* pccValue){
     if(pmTmp!=NULL){
       addToMap((*ppmMap),pccKey,pccValue);
     }
-    else
+    else{
       (*ppmMap)=createMap(pccKey,pccValue);
+      addToMap(*ppmMap,"shouldFree","true");
+    }
     pmTmp1=getMap(*ppmMap,pccKey);
   }
   return pmTmp1;

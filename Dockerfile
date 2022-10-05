@@ -42,6 +42,8 @@ RUN cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/Makefile.in /opt/zoo-project
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/server_internal.c /opt/zoo-project/zoo-project/zoo-kernel/server_internal.c          && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_callback.h /opt/zoo-project/zoo-project/zoo-kernel/service_callback.h        && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_callback.c /opt/zoo-project/zoo-project/zoo-kernel/service_callback.c        && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/ulinet.c /opt/zoo-project/zoo-project/zoo-kernel/ulinet.c                            && \
+    cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/ulinet.h /opt/zoo-project/zoo-project/zoo-kernel/ulinet.h                            && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.h /opt/zoo-project/zoo-project/zoo-kernel/service_json.h                && \
     cp 3ty/proc-comm-zoo-1.2-alpha/assets/patch/zoo/service_json.c /opt/zoo-project/zoo-project/zoo-kernel/service_json.c
 ### Make libcgi
@@ -109,13 +111,13 @@ ENV BASH_ENV=~/.bashrc                                          \
     MAMBA_ROOT_PREFIX=/srv/conda                                \
     PATH=/srv/conda/envs/workflow_executor_env/bin:$PATH
 
-RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1 && \
-    ./micromamba shell init -s bash -p ~/micromamba                                                                         && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                    && \
-    cp ./micromamba /usr/bin                                                                                                && \
-    micromamba create -n workflow_executor_env                                                                              && \
-    micromamba install workflow-executor=1.0.28 -c eoepca -c conda-forge -n workflow_executor_env                           && \
-    rm -fr /srv/conda/pkgs                                                                                                  && \
+RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1    && \
+    ./micromamba shell init -s bash -p ~/micromamba                                                                            && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                       && \
+    cp ./micromamba /usr/bin                                                                                                   && \
+    micromamba create -n workflow_executor_env                                                                                 && \
+    micromamba install workflow-executor=1.0.32 -c eoepca -c conda-forge -n workflow_executor_env          && \
+    rm -fr /srv/conda/pkgs                                                                                                     && \
     rm -fr /tmp/*
 
 RUN git clone https://github.com/swagger-api/swagger-ui.git                                                                    && \

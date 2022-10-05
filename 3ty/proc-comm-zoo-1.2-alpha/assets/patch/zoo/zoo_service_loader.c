@@ -1184,7 +1184,7 @@ void exitAndCleanUp(registry* zooRegistry, maps* m,
   map* tmpMap=getMapFromMaps(m,"main","executionType");
   char* errorCode=(char*)code;
   if(tmpMap!=NULL && strncasecmp(tmpMap->value,"json",4)==0)
-    errorCode="NoSuchProcess";
+    errorCode=(char*)"NoSuchProcess";
 
   addToMap(errormap,"code", errorCode);
   addToMap(errormap,"locator", locator);
@@ -3314,11 +3314,76 @@ runRequest (map ** inputs)
 	if(strlen(pcTmp)>6){
 	  char* jobId=zStrdup(pcTmp+6);
 	  setMapInMaps(m,"lenv","gs_usid",jobId);
-	  setMapInMaps(m,"lenv","file.statusFile",json_getStatusFilePath(m));
+	  char* pcaStatusFilePath=json_getStatusFilePath(m);
+	  setMapInMaps(m,"lenv","file.statusFile",pcaStatusFilePath);
+	  free(pcaStatusFilePath);
+	  /** EOEPCA SPEC **/
+	  fprintf(stderr,"DETECT if service is mutable or not by loading the zcfg of the corresponding service !! %s %d \n",__FILE__,__LINE__);
+	  fflush(stderr);
+	  map* pmTmpPath=getMapFromMaps(m,"main","tmpPath");
+	  char* pcaPath=(char*)malloc((strlen(jobId)+strlen(pmTmpPath->value)+11)*sizeof(char));
+	  sprintf(pcaPath,"%s/%s_lenv.cfg",pmTmpPath->value,jobId);
+	  maps* m1 = (maps *) malloc (MAPS_SIZE);
+	  m1->content = NULL;
+	  m1->child = NULL;
+	  m1->next = NULL;
+	  if (conf_read (pcaPath, m1) == 2)
+	    {
+	      free (m1);
+	    }
+	  else{
+	    map* pmIdentifier=getMapFromMaps(m1,"lenv","oIdentifier");
+	    if(pmIdentifier!=NULL){
+	      if(fetchService(zooRegistry,m,&s1,request_inputs,ntmp,pmIdentifier->value,printExceptionReportResponseJ)!=0){
+		register_signals(donothing);
+		freeService (&s1);
+		free(s1);
+		freeMaps (&m);
+		free (m);
+		free (REQUEST);
+		json_object_put(res);
+		freeMap (inputs);
+		free (*inputs);
+		*inputs=NULL;
+		free(pcaCgiQueryString);
+		xmlCleanupParser ();
+		zooXmlCleanupNs ();
+		return 1;
+	      }
+	      if(s1!=NULL){
+		map* pmMutable=getMap(s1->content,"mutable");
+		if(pmMutable==NULL || strncasecmp(pmMutable->value,"true",4)==0){
+		  setMapInMaps(m,"lenv","isMutable","true");
+		}
+	      }
+	      freeMaps(&m1);
+	      free(m1);
+	    }
+	  }
+	  free(pcaPath);
+	  initAllEnvironment(m,request_inputs,ntmp,"jrequest");
+	  setMapInMaps(m,"lenv","callback_request_method","DELETE");
+	  /** EOEPCA SPEC END **/
 	  runDismiss(m,jobId);
 	  map* pmError=getMapFromMaps(m,"lenv","error");
 	  if(pmError!=NULL && strncasecmp(pmError->value,"true",4)==0){
 	    printExceptionReportResponseJ(m,getMapFromMaps(m,"lenv","code"));
+	    register_signals(donothing);
+	    freeService (&s1);
+	    free(s1);
+	    freeMaps (&m);
+	    free (m);
+	    free (REQUEST);
+	    json_object_put(res);
+	    freeMap (inputs);
+	    free (*inputs);
+	    *inputs=NULL;
+	    freeMap (&r_inputs);
+	    free (r_inputs);
+	    free(jobId);
+	    free(pcaCgiQueryString);
+	    xmlCleanupParser ();
+	    zooXmlCleanupNs ();
 	    return 1;
 	  }
 	  else{
@@ -3327,6 +3392,7 @@ runRequest (map ** inputs)
 	      json_object_put(res);
 	    res=createStatus(m,SERVICE_DISMISSED);
 	  }
+	  free(jobId);
 	}
       }
       else if(strcasecmp(pmCgiRequestMethod->value,"get")==0){
@@ -4186,10 +4252,10 @@ runRequest (map ** inputs)
 	      json_object *res4=json_object_new_array();
 	      int saved_stdout = zDup (fileno (stdout));
 	      int t=fetchServicesForDescription(NULL, m, pmDeployed->value,
-						printGetCapabilitiesForProcessJ,
-						(void*) res4, (void*) res3, ntmp,
-						request_inputs,
-						printExceptionReportResponseJ);
+				 printGetCapabilitiesForProcessJ,
+				 (void*) res4, (void*) res3, ntmp,
+				 request_inputs,
+				 printExceptionReportResponseJ);
 	      zDup2 (saved_stdout, fileno (stdout));
 	      zClose(saved_stdout);
 	      json_object *res5=json_object_array_get_idx(res4,0);
@@ -4305,6 +4371,16 @@ runRequest (map ** inputs)
     if(res!=NULL)
       json_object_put(res);
     free(pcaCgiQueryString);
+    dumpMap(r_inputs);
+    map* pmTest=getMap(*inputs,"shouldFree");
+    if(pmTest!=NULL){
+      freeMap (inputs);
+      free (*inputs);
+      *inputs=NULL;
+      freeMap(&r_inputs);
+      free (r_inputs);
+      r_inputs=NULL;
+    }
     //return 1;
 #endif
   }else{

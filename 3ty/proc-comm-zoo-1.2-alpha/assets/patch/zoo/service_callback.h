@@ -37,6 +37,7 @@
 extern "C" {
 #endif
 
+  int invokeInternalCallback(maps*,char*,const char*);
   bool invokeBasicCallback(maps*,int);
 #ifdef USE_CALLBACK
   bool invokeCallback(maps*,maps*,maps*,int,int);
