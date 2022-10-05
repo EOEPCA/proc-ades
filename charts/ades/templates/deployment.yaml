@@ -127,6 +127,12 @@ spec:
             - name: CALRISSIAN_IMAGE
               value: {{ .Values.workflowExecutor.calrissianImage | quote }}
             {{- end }}
+            {{- if .Values.workflowExecutor.calrissianJobTemplatePath }}
+            - name: CALRISSIAN_JOB_TEMPLATE_PATH
+              value: {{ .Values.workflowExecutor.calrissianJobTemplatePath | quote }}
+            {{- end }}
+
+
 
           volumeMounts:
             - name: ades-config

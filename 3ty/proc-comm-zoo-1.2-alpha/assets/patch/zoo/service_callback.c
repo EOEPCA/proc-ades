@@ -119,6 +119,82 @@ extern "C" {
     }
     return false;
   }
+
+  /**
+   * Invoke a callback, meaning sending a HTTP POST request.
+   *
+   * @param conf the main configuration file maps
+   * @param pcUrl the Url to use
+   * @param pcJson the json message to send
+   */
+  int invokeInternalCallback(maps* pmConf,char* pcUrl,const char* pcJson){
+    int iRes=0;
+    HINTERNET hInternet,res1;
+    hInternet=InternetOpen("ZOO-Kernel-HTTP-Client\0",
+			   INTERNET_OPEN_TYPE_PRECONFIG,
+			   NULL,NULL, 0);
+    if(!CHECK_INET_HANDLE(hInternet)){
+      InternetCloseHandle (&hInternet);
+      return NULL;
+    }
+    maps* tmpConf=createMaps("main");
+    tmpConf->content=createMap("memory","load");
+    maps* pmsLenv=getMaps(pmConf,"lenv");
+    addMapsToMaps(&tmpConf,pmsLenv);
+    hInternet.waitingRequests[0] = zStrdup(pcUrl);
+    if(pcJson!=NULL)
+      res1 = InternetOpenUrl (&hInternet,
+			      hInternet.waitingRequests[0], 
+			      (char*)pcJson, strlen(pcJson),
+			      INTERNET_FLAG_NO_CACHE_WRITE,
+			      0,tmpConf);
+    else
+      res1 = InternetOpenUrl (&hInternet,
+			      hInternet.waitingRequests[0], 
+			      NULL, 0,
+			      INTERNET_FLAG_NO_CACHE_WRITE,
+			      0,tmpConf);
+    AddHeaderEntries(&hInternet,pmConf);
+    AddMissingHeaderEntry(&hInternet.ihandle[hInternet.nb-1],"Content-Type","application/json");
+#ifdef CALLBACK_DEBUG
+    curl_easy_setopt(hInternet.ihandle[hInternet.nb-1].handle, CURLOPT_VERBOSE, 1);
+#endif
+    if(hInternet.ihandle[hInternet.nb-1].header!=NULL)
+      curl_easy_setopt(hInternet.ihandle[hInternet.nb-1].handle,CURLOPT_HTTPHEADER,hInternet.ihandle[hInternet.nb-1].header);
+    processDownloads(&hInternet);
+    freeMaps(&tmpConf);
+    free(tmpConf);
+
+    // Fetch result
+    char *tmp = (char *) malloc ((hInternet.ihandle[0].nDataLen + 1)
+				 * sizeof (char));
+    if (tmp == NULL)
+      {
+	setMapInMaps(pmConf,"lenv","message",_("Unable to allocate memory"));
+	setMapInMaps(pmConf,"lenv","code","InternalError");
+	return NULL;
+      }
+    size_t bRead;
+    InternetReadFile (hInternet.ihandle[0],
+		      (LPVOID) tmp,
+		      hInternet.
+		      ihandle[0].nDataLen,
+		      &bRead);
+    tmp[hInternet.ihandle[0].nDataLen] = 0;
+    setMapInMaps(pmConf,"lenv","callback_response",tmp);
+#ifdef CALLBACK_DEBUG
+    fprintf(stderr,"************************* %s %d: REQUEST END \n%s",__FILE__,__LINE__,tmp);
+    fflush(stderr);
+#endif
+    free(tmp);
+    fprintf(stderr,"------- %s %d Status code: %d\n",__FILE__,__LINE__,hInternet.ihandle[0].code);
+    fflush(stderr);
+    if(hInternet.ihandle[0].code!=200)
+      iRes=hInternet.ihandle[0].code;
+    InternetCloseHandle(&hInternet);
+    return iRes;
+  }
+
   /**
    * Practically invoke the callback, meaning sending the HTTP POST request.
    * 

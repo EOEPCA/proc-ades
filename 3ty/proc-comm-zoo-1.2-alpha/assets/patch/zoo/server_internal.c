@@ -35,6 +35,12 @@
 #define ERROR_MSG_MAX_LENGTH 1024
 #endif
 #include <signal.h>
+/** EOEPCA SPEC **/
+#ifdef USE_JSON
+#include "service_json.h"
+#include "service_callback.h"
+#endif
+/** EOEPCA SPEC END**/
 
 // #include <stdlib.h>
 /*
@@ -878,7 +884,7 @@ char* addDefaultValues(maps** out,elements* in,maps* m,int type,map** err){
     *err=res;
     return result;
   }
-  return "";
+  return (char*)"";
 }
 
 /**
@@ -1016,6 +1022,7 @@ void runGetStatus(maps* conf,char* pid,char* req){
 	  setMapInMaps(conf,"lenv","code","ResultNotReady");
 	  setMapInMaps(conf,"lenv","message",_("The result for the requested JobID has not yet been generated. The service is currently running."));
 	}
+	free(sid);
 	return;
       }
       else{
@@ -1103,6 +1110,7 @@ void runDismiss(maps* conf,char* pid){
   map* e_type = getMapFromMaps (conf, "main", "executionType");
   char *sid=getStatusId(conf,pid);
   if(sid==NULL){
+    free(sid);
     if(e_type==NULL || strncasecmp(e_type->value,"json",4)!=0)
       errorException (conf, _("The JobID from the request does not match any of the Jobs running on this server"),
 		      "NoSuchJob", pid);
@@ -1113,13 +1121,53 @@ void runDismiss(maps* conf,char* pid){
     }
     return;
   }else{
+    free(sid);
     // We should send the Dismiss request to the target host if it differs
     char* fbkpid =
       (char *)
       malloc ((strlen (r_inputs->value) + strlen (pid) + 7) * sizeof (char));
     sprintf (fbkpid, "%s/%s.pid", r_inputs->value, pid);
+    /** EOEPCA SPEC **/
+    map* pmMutable=getMapFromMaps(conf,"lenv","isMutable");
+    setMapInMaps(conf,"lenv","callback_request_method","DELETE");
+    /** EOEPCA SPEC END **/
     FILE* f0 = fopen (fbkpid, "r");
     if(f0!=NULL){
+      /** EOEPCA SPEC **/
+#ifdef USE_JSON // USE_ADES
+      if(pmMutable!=NULL && strncasecmp(pmMutable->value,"true",4)==0){
+	// Append [eoepca]/WorkflowExecutorHost with /jobs/{jobId}
+	map* pmWorkflowExecutorHost=getMapFromMaps(conf,"eoepca","WorkflowExecutorHost");
+	if(pmWorkflowExecutorHost!=NULL){
+	  char* pcaUrl=(char*)malloc((strlen(pmWorkflowExecutorHost->value)+strlen(pid)+7)*sizeof(char));
+	  sprintf(pcaUrl,"%s/jobs/%s",pmWorkflowExecutorHost->value,pid);
+	  json_object* pjaRes=json_object_new_object();
+	  map* pmUserId=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+	  map* pmUser=getMapFromMaps(conf,"eoepcaUser","user");
+	  json_object_object_add(pjaRes,"useridToken",json_object_new_string((pmUserId!=NULL?pmUserId->value:"")));
+	  json_object_object_add(pjaRes,"username",json_object_new_string(pmUser->value));
+	  const char* jsonStr=json_object_to_json_string_ext(pjaRes,JSON_C_TO_STRING_PLAIN);
+	  if(int iRet=invokeInternalCallback(conf,pcaUrl,jsonStr)!=0){
+	    setMapInMaps(conf,"lenv","error","true");
+	    setMapInMaps(conf,"lenv","code","NotAllowed");
+	    setMapInMaps(conf,"lenv","message",_("Something went wrong with the callback invocation"));
+	    map* pmResponse=getMapFromMaps(conf,"lenv","callback_response");
+	    if(pmResponse!=NULL){
+	      fprintf(stderr,"%s %d %d %s \n",__FILE__,__LINE__,iRet,pmResponse->value);
+	      fflush(stderr);
+	    }
+	    json_object_put(pjaRes);
+	    free(pcaUrl);
+	    return ;
+	  }
+	  json_object_put(pjaRes);
+	  free(pcaUrl);
+	  setMapInMaps(conf,"lenv","invokedWorkflow","true");
+	  /**/
+	}
+      }
+#endif
+      /** EOEPCA SPEC END **/
       long flen;
       char *fcontent;
       fseek (f0, 0, SEEK_END);
@@ -1139,6 +1187,27 @@ void runDismiss(maps* conf,char* pid){
       free(fcontent);
     }
     free(fbkpid);
+    /** EOEPCA SPEC **/
+    // Should we invoke WorkflowExecutor again?
+    map* pmHasRun=getMapFromMaps(conf,"lenv","invokedWorkflow");
+    if(pmMutable!=NULL && strncasecmp(pmMutable->value,"true",4)==0 &&
+       pmHasRun==NULL){
+      	// Append [eoepca]/WorkflowExecutorHost with /jobs/{jobId}
+	map* pmWorkflowExecutorHost=getMapFromMaps(conf,"eoepca","WorkflowExecutorHost");
+	if(pmWorkflowExecutorHost!=NULL){
+	  char* pcaUrl=(char*)malloc((strlen(pmWorkflowExecutorHost->value)+strlen(pid)+7)*sizeof(char));
+	  sprintf(pcaUrl,"%s/jobs/%s",pmWorkflowExecutorHost->value,pid);
+	  json_object* pjaRes=json_object_new_object();
+	  map* pmUserId=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+	  map* pmUser=getMapFromMaps(conf,"eoepcaUser","user");
+	  json_object_object_add(pjaRes,"useridToken",json_object_new_string((pmUserId!=NULL?pmUserId->value:"")));
+	  json_object_object_add(pjaRes,"username",json_object_new_string(pmUser->value));
+	  const char* jsonStr=json_object_to_json_string_ext(pjaRes,JSON_C_TO_STRING_PLAIN);
+	  json_object_put(pjaRes);
+	  free(pcaUrl);
+	}
+    }
+    /** EOEPCA SPEC END **/
     struct dirent *dp;
     DIR *dirp = opendir(r_inputs->value);
     char fileName[1024];
@@ -1162,14 +1231,24 @@ void runDismiss(maps* conf,char* pid){
 	  
 	}
       }
+      closedir (dirp);
     }
+    /** EOEPCA SPEC **/
+#ifdef USE_JSON
+    setMapInMaps(conf,"lenv","gs_usid",pid);
+    char* pcaPath=json_getStatusFilePath(conf);
+    unlink(pcaPath);
+    free(pcaPath);
+#endif
+    /** EOEPCA SPEC END **/
+
 #ifdef RELY_ON_DB
     removeService(conf,pid);
 #endif
     if(e_type==NULL || strncasecmp(e_type->value,"json",4)!=0){
       map* statusInfo=createMap("JobID",pid);
       addToMap(statusInfo,"Status","Dismissed");
-      printStatusInfo(conf,statusInfo,"Dismiss");
+      printStatusInfo(conf,statusInfo,(char*)"Dismiss");
       free(statusInfo);
     }else{
       setMapInMaps(conf,"lenv","error","false");

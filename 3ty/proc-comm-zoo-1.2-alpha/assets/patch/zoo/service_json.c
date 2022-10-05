@@ -1164,8 +1164,8 @@ extern "C" {
 	output->content=createMap("xlink:href",json_object_get_string(json_value));
 	int len=0;
 	int createdStr=0;
-	char *tmpStr="url";
-	char *tmpStr1="input";
+	char *tmpStr=(char*)"url";
+	char *tmpStr1=(char*)"input";
 	if(getMaps(conf,"http_requests")==NULL){
 	  maps* tmpMaps=createMaps("http_requests");
 	  tmpMaps->content=createMap("length","1");
@@ -1223,8 +1223,8 @@ extern "C" {
 	addToMap(output->content,"crs","http://www.opengis.net/def/crs/OGC/1.3/CRS84");
     }
     char* tmpStrs[2]={
-      "lowerCorner",
-      "upperCorner"
+      (char*)"lowerCorner",
+      (char*)"upperCorner"
     };
     for(int i=0;i<2;i++)
       if(json_object_object_get_ex(req,tmpStrs[i],&json_cinput)!=FALSE){
@@ -1499,7 +1499,7 @@ extern "C" {
     elements* io=s->inputs;
     json_object* json_io=NULL;
     int parsed=0;
-    char* tmpS="input";
+    char* tmpS=(char*)"input";
     maps* in=*inputs;
     parseJIO(conf,req,s->inputs,inputs,"inputs");
     parseJIO(conf,req,s->outputs,outputs,"outputs");
@@ -1572,7 +1572,7 @@ extern "C" {
    */
   json_object* printJobStatus(maps* pmsConf,char* pcJobId){
     json_object* pjoRes=NULL;
-    runGetStatus(pmsConf,pcJobId,"GetStatus");
+    runGetStatus(pmsConf,pcJobId,(char*)"GetStatus");
     map* pmError=getMapFromMaps(pmsConf,"lenv","error");
     if(pmError!=NULL && strncasecmp(pmError->value,"true",4)==0){
       printExceptionReportResponseJ(pmsConf,getMapFromMaps(pmsConf,"lenv","code"));
@@ -2176,42 +2176,32 @@ extern "C" {
     }else
       sessId = getMapFromMaps (conf, "lenv", "gs_usid");
     
-    char *tmp1=(char*) malloc((strlen(tmpPath->value)+14)*sizeof(char)
+    char *tmp0=(char*) malloc((strlen(tmpPath->value)+14)*sizeof(char)
 			      + /*rdr*/ (1024*sizeof(char)) );
-
 
     map *userMap = getMapFromMaps (conf, "eoepcaUser", "user");
     if (userMap && userMap->value && strlen(userMap->value)>0 ){
-      sprintf(tmp1,"%s/%s",
+      sprintf(tmp0,"%s/%s",
               tmpPath->value,userMap->value);
-      fprintf(stderr,"--------------1--%s \n",tmp1);
     }else{
-      sprintf(tmp1,"%s/",
+      sprintf(tmp0,"%s/",
               tmpPath->value);
-      fprintf(stderr,"--------------2--%s \n",tmp1);
-
     }
 
-    if(mkdir(tmp1,0777) != 0 && errno != EEXIST){
-      fprintf(stderr,"Issue creating directory %s\n",tmp1);
+    if(mkdir(tmp0,0777) != 0 && errno != EEXIST){
+      fprintf(stderr,"Issue creating directory %s\n",tmp0);
+      fflush(stderr);
+      free(tmp0);
       return NULL;
     }
-    free(tmp1);
-    tmp1=(char*) malloc((strlen(tmpPath->value)+
-			 strlen(sessId->value)+20)*sizeof(char) + /*rdr*/ (1024*sizeof(char)));
-    int needResult=0;
-    char *message, *rstatus;
 
+    char* tmp1=(char*) malloc((strlen(tmp0)+
+			 strlen(sessId->value)+7)*sizeof(char) );
 
-    if (userMap && userMap->value && strlen(userMap->value)>0 ){
-      sprintf(tmp1,"%s/%s/%s.json",
-              tmpPath->value,userMap->value,
-              sessId->value);
-    }else{
-      sprintf(tmp1,"%s/%s.json",
-              tmpPath->value,
-              sessId->value);
-    }
+    sprintf(tmp1,"%s/%s.json",
+	    tmp0,
+	    sessId->value);
+    free(tmp0);
 
     return tmp1;
   }
@@ -2933,63 +2923,66 @@ extern "C" {
 
 		}
 	      }
-	      tmpMaps1=getMaps(conf,"callbacks");
-	      if(tmpMaps1!=NULL){
-		map* pmTmp2=getMap(tmpMaps1->content,"length");
-		int iLen=atoi(pmTmp2->value);
-		json_object *pajRes=json_object_new_object();
-		for(int i=0;i<iLen;i++){
-		  map* pmState=getMapArray(tmpMaps1->content,"state",i);
-		  map* pmUri=getMapArray(tmpMaps1->content,"uri",i);
-		  map* pmSchema=getMapArray(tmpMaps1->content,"schema",i);
-		  map* pmType=getMapArray(tmpMaps1->content,"type",i);
-		  map* pmTitle=getMapArray(tmpMaps1->content,"title",i);
-		  json_object *pajSchema=json_object_new_object();
-		  if(pmSchema!=NULL)
-		    json_object_object_add(pajSchema,"$ref",json_object_new_string(pmSchema->value));
-		  json_object *pajType=json_object_new_object();
-		  json_object_object_add(pajType,"schema",pajSchema);
-		  json_object *pajContent=json_object_new_object();
-		  if(pmType!=NULL)
-		    json_object_object_add(pajContent,pmType->value,pajType);
-		  else		  
-		    json_object_object_add(pajContent,"application/json",pajType);
-		  json_object *pajRBody=json_object_new_object();
-		  json_object_object_add(pajRBody,"content",pajContent);
+	      map* pmCallbacksReference=getMapArray(tmpMaps->content,"callbacksReference",i);
+	      if(pmCallbacksReference!=NULL){
+		tmpMaps1=getMaps(conf,pmCallbacksReference->value);
+		if(tmpMaps1!=NULL){
+		  map* pmTmp2=getMap(tmpMaps1->content,"length");
+		  int iLen=atoi(pmTmp2->value);
+		  json_object *pajRes=json_object_new_object();
+		  for(int i=0;i<iLen;i++){
+		    map* pmState=getMapArray(tmpMaps1->content,"state",i);
+		    map* pmUri=getMapArray(tmpMaps1->content,"uri",i);
+		    map* pmSchema=getMapArray(tmpMaps1->content,"schema",i);
+		    map* pmType=getMapArray(tmpMaps1->content,"type",i);
+		    map* pmTitle=getMapArray(tmpMaps1->content,"title",i);
+		    json_object *pajSchema=json_object_new_object();
+		    if(pmSchema!=NULL)
+		      json_object_object_add(pajSchema,"$ref",json_object_new_string(pmSchema->value));
+		    json_object *pajType=json_object_new_object();
+		    json_object_object_add(pajType,"schema",pajSchema);
+		    json_object *pajContent=json_object_new_object();
+		    if(pmType!=NULL)
+		      json_object_object_add(pajContent,pmType->value,pajType);
+		    else
+		      json_object_object_add(pajContent,"application/json",pajType);
+		    json_object *pajRBody=json_object_new_object();
+		    json_object_object_add(pajRBody,"content",pajContent);
 		  
-		  json_object *pajDescription=json_object_new_object();
-		  json_object *pajPost=json_object_new_object();
-		  if(pmTitle!=NULL){
-		    json_object_object_add(pajDescription,"description",json_object_new_string(_(pmTitle->value)));
-		    json_object_object_add(pajPost,"summary",json_object_new_string(_(pmTitle->value)));
+		    json_object *pajDescription=json_object_new_object();
+		    json_object *pajPost=json_object_new_object();
+		    if(pmTitle!=NULL){
+		      json_object_object_add(pajDescription,"description",json_object_new_string(_(pmTitle->value)));
+		      json_object_object_add(pajPost,"summary",json_object_new_string(_(pmTitle->value)));
+		    }
+		    json_object *pajResponse=json_object_new_object();
+		    json_object_object_add(pajResponse,"200",pajDescription);
+
+		    json_object_object_add(pajPost,"requestBody",pajRBody);
+		    json_object_object_add(pajPost,"responses",pajResponse);
+		    if(pmName!=NULL){
+		      char* pcaOperationId=(char*)malloc((strlen(pmState->value)+strlen(pmName->value)+1)*sizeof(char));
+		      sprintf(pcaOperationId,"%s%s",pmState->value,pmName->value);
+		      json_object_object_add(pajPost,"operationId",json_object_new_string(pcaOperationId));
+		      free(pcaOperationId);
+		    }
+		    else
+		      json_object_object_add(pajPost,"operationId",json_object_new_string(pmState->value));
+		  
+		    json_object *pajMethod=json_object_new_object();
+		    json_object_object_add(pajMethod,"post",pajPost);
+
+		  
+		    char* pacUri=(char*) malloc((strlen(pmUri->value)+29)*sizeof(char));
+		    sprintf(pacUri,"{$request.body#/subscriber/%s}",pmUri->value);
+
+		    json_object *pajFinal=json_object_new_object();
+		    json_object_object_add(pajFinal,pacUri,pajMethod);
+		    json_object_object_add(pajRes,pmState->value,pajFinal);
+
 		  }
-		  json_object *pajResponse=json_object_new_object();
-		  json_object_object_add(pajResponse,"200",pajDescription);
-
-		  json_object_object_add(pajPost,"requestBody",pajRBody);
-		  json_object_object_add(pajPost,"responses",pajResponse);
-		  if(pmName!=NULL){
-		    char* pcaOperationId=(char*)malloc((strlen(pmState->value)+strlen(pmName->value)+1)*sizeof(char));
-		    sprintf(pcaOperationId,"%s%s",pmState->value,pmName->value);
-		    json_object_object_add(pajPost,"operationId",json_object_new_string(pcaOperationId));
-		    free(pcaOperationId);
-		  }
-		  else
-		    json_object_object_add(pajPost,"operationId",json_object_new_string(pmState->value));
-		  
-		  json_object *pajMethod=json_object_new_object();
-		  json_object_object_add(pajMethod,"post",pajPost);
-
-		  
-		  char* pacUri=(char*) malloc((strlen(pmUri->value)+29)*sizeof(char));
-		  sprintf(pacUri,"{$request.body#/subscriber/%s}",pmUri->value);
-
-		  json_object *pajFinal=json_object_new_object();
-		  json_object_object_add(pajFinal,pacUri,pajMethod);
-		  json_object_object_add(pajRes,pmState->value,pajFinal);
-
+		  json_object_object_add(methodc,"callbacks",pajRes);
 		}
-		json_object_object_add(methodc,"callbacks",pajRes);
 	      }
 	    }
 	    map* mMap=getMapArray(tmpMaps->content,"method",i);
