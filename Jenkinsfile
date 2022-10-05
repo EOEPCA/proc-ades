@@ -23,7 +23,7 @@ pipeline {
 }
 
 def getTypeOfVersion(branchName) {
-  def matcher = (branchName =~ /master/)
+  def matcher = (branchName =~ /1.x-stable/)
   if (matcher.matches())
     return ""
   
@@ -31,7 +31,7 @@ def getTypeOfVersion(branchName) {
 }
 
 def getConfiguration(branchName) {
-  def matcher = (branchName =~ /master/)
+  def matcher = (branchName =~ /1.x-stable/)
   if (matcher.matches())
     return "Release"
   
