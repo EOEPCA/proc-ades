@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-1
+  namespace: snuggs-0-3-0853a6472-4b16-11ed-b405-8634e91e25f7
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 21Gi
+  hostPath:
+    path: /home/bla/dev/eoepca/proc-ades/test/integration_tests/pv1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-2
+  namespace: snuggs-0-3-0853a6472-4b16-11ed-b405-8634e91e25f7
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 21Gi
+  hostPath:
+    path: /home/bla/dev/eoepca/proc-ades/test/integration_tests/pv2

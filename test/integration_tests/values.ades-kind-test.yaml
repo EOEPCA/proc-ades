@@ -1,0 +1,50 @@
+image:
+  pullPolicy: Always
+  repository: eoepca/proc-ades
+  tag: "2.0.2"
+
+persistence:
+  enabled: false
+
+fullnameOverride: "ades-dev"
+
+workflowExecutor:
+  processingKeepWorkspace: "False"
+  processingMaxCores: "2"
+  processingMaxRam: 5Gi
+  processingVolumeSize: "4Gi"
+
+  processingStorageClass: standard
+
+  # Size of the Kubernetes Tmp Volumes
+  processingVolumeTmpSize: "5Gi"
+  # Size of the Kubernetes Output Volumes
+  processingVolumeOutputSize: "20Gi"
+
+  calrissianImage: "terradue/calrissian:0.11.0-sprint1"
+  #calrissianJobTemplatePath: "/tmp/CalrissianJobTemplate.yaml"
+
+  imagePullSecrets:
+    - name: ades-secret
+  inputs:
+    APP: ades
+
+  STAGEOUT_AWS_SERVICEURL: http://my-minio-fs.minio.svc.cluster.local:9000
+  STAGEOUT_AWS_ACCESS_KEY_ID: minio
+  STAGEOUT_AWS_SECRET_ACCESS_KEY: minio123
+  STAGEOUT_AWS_REGION: RegionOne
+  STAGEOUT_OUTPUT: s3://processingresults
+
+  # Number of retries before considering a Job as failed
+  backofflimit: 1
+
+  processingKeepWorkspaceIfFailed: True
+
+
+  pod:
+    env:
+      TEST: BLABLABLA
+
+
+ades-longhorn:
+  enabled: false
