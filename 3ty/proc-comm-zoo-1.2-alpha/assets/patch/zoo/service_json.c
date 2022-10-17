@@ -2306,7 +2306,7 @@ extern "C" {
 	message=_("ZOO-Kernel is currently running your service!");
 	map* pmStatus=getMapFromMaps(conf,"lenv","message");
 	if(pmStatus!=NULL){
-	  setMapInMaps(conf,"lenv","gs_message",pmStatus->value);
+	  //setMapInMaps(conf,"lenv","gs_message",pmStatus->value);
 	  message=zStrdup(pmStatus->value);
 	  hasMessage=1;
 	}
