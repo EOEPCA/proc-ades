@@ -784,7 +784,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 if (wfpm->perc!=-1)
                     updateStatus(conf,wfpm->perc,wfpm->message.c_str());
 
-                std::cerr << "going to sleep counter[webGetPrepare]: " << counter << std::endl;
+                std::cerr << "going to sleep counter[webGetStatus]: " << counter << std::endl;
                 counter=counter+1;
                 sleep(w8for);
             }
