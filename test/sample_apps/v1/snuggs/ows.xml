@@ -15,7 +15,7 @@
         <owc:offering code="http://www.opengis.net/eoc/applicationContext/cwl" xmlns:owc="http://www.opengis.net/owc/1.0">
             <owc:content type="application/cwl" href="https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl" />
         </owc:offering>
-        <identifier xmlns="http://purl.org/dc/elements/1.1/">vegetation-index</identifier>
+        <identifier xmlns="http://purl.org/dc/elements/1.1/">snuggs</identifier>
     </entry>
     <debugRequest xmlns="http://purl.org/dc/elements/1.1/" />
     <debugResponse xmlns="http://purl.org/dc/elements/1.1/" />

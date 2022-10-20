@@ -1,9 +1,0 @@
-{
-    "inputs": 
-    {
-	"applicationPackage": {
-            "href": "https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl",
-            "type": "application/cwl"
-        }
-    }
-}

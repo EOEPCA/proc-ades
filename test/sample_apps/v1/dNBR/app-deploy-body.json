@@ -1,0 +1,28 @@
+{
+	"inputs": [
+		{
+			"id": "applicationPackage",
+			"input": {
+				"format": {
+					"mimeType": "application/cwl"
+				},
+				"value": {
+					"href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/main/test/sample_apps/v1/dNBR/dNBR.cwl"
+				}
+			}
+		}
+	],
+	"outputs": [
+		{
+			"format": {
+				"mimeType": "string",
+				"schema": "string",
+				"encoding": "string"
+			},
+			"id": "deployResult",
+			"transmissionMode": "value"
+		}
+	],
+	"mode": "auto",
+	"response": "raw"
+}

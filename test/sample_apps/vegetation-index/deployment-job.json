@@ -1,8 +1,0 @@
-{
-    "inputs": {
-	"applicationPackage": {
-            "type": "application/xml",
-            "href": "https://catalog.terradue.com/eoepca-services/search?uid=application_vegetation_index"
-        }
-    }
-}
