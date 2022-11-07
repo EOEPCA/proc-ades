@@ -116,7 +116,7 @@ RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | t
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                       && \
     cp ./micromamba /usr/bin                                                                                                   && \
     micromamba create -n workflow_executor_env                                                                                 && \
-    micromamba install workflow-executor=1.0.35 -c eoepca -c conda-forge -n workflow_executor_env          && \
+    micromamba install workflow-executor=1.0.36 -c eoepca -c conda-forge -n workflow_executor_env          && \
     rm -fr /srv/conda/pkgs                                                                                                     && \
     rm -fr /tmp/*
 
@@ -125,12 +125,12 @@ RUN git clone https://github.com/swagger-api/swagger-ui.git                     
     sed "s=https://petstore.swagger.io/v2/swagger.json=http://localhost:8080/ogc-api/api=g" -i /var/www/html/swagger-ui/dist/* && \
     mv /var/www/html/swagger-ui/dist /var/www/html/swagger-ui/oapip                                                            && \
     mkdir -p /var/www/html/examples/snuggs-0_3_0
-COPY test/sample_apps/snuggs/deployment-job1.json /var/www/html/examples/deployment-job.json
-COPY test/sample_apps/snuggs/job_order1.json /var/www/html/examples/snuggs-0_3_0/job_order1.json
-COPY test/sample_apps/snuggs/job_order2.json /var/www/html/examples/snuggs-0_3_0/job_order2.json
-COPY test/sample_apps/snuggs/job_order3.json /var/www/html/examples/snuggs-0_3_0/job_order3.json
-COPY test/sample_apps/vegetation-index/deployment-job1.json /var/www/html/examples/deployment-job1.json
-COPY test/sample_apps/dNBR/app-deploy-body1.json /var/www/html/examples/deployment-job2.json
+COPY test/sample_apps/v2/snuggs/app-deploy-body.json /var/www/html/examples/deployment-job.json
+COPY test/sample_apps/v2/snuggs/app-execute-body.json /var/www/html/examples/snuggs-0_3_0/job_order1.json
+COPY test/sample_apps/v2/snuggs/app-execute-body2.json /var/www/html/examples/snuggs-0_3_0/job_order2.json
+COPY test/sample_apps/v2/snuggs/app-execute-body3.json /var/www/html/examples/snuggs-0_3_0/job_order3.json
+COPY test/sample_apps/v2/dNBR/app-deploy-body.json /var/www/html/examples/deployment-job1.json
+COPY test/sample_apps/v2/dNBR/app-deploy-body.json /var/www/html/examples/deployment-job2.json
 
     
 COPY assets/main.cfg /opt/t2service/main.cfg

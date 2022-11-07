@@ -84,12 +84,21 @@ class TypeCWL {
   void parseOther(const TOOLS::Object* obj) {
     if (obj){
       auto qf=obj->getQlf();
+      bool make_optional{false};
       if (qf.first=="type" && qf.second.empty()){
 
         TOOLS::Object a;
         a.setQlf("noBase","");
         for (auto& o : obj->getChildren()) {
-            a.addChildren(o.get());
+            if ( o->getQ() == "type"){
+              a.addChildren(o.get());
+            } else if (o->getF() == "null" ){
+              make_optional=true;
+            } else if (o->hasChildren()) {
+              for (auto& oo : o->getChildren()) {
+                a.addChildren(oo.get());
+              }
+            }
         }
         //=============================================
         //TODO: create operator=
@@ -99,8 +108,17 @@ class TypeCWL {
           typeBase_ = typeCWL->getTypeBase();
           typeParsed_ = typeCWL->getTypeParsed();
           array_ = typeCWL->isArray();
-          optional_ = typeCWL->isOptional();
-          for (auto& s : typeCWL->getSymbols()) symbols_.emplace_back(s);
+          if(make_optional){
+            optional_ = true;
+          } else {
+            optional_ = typeCWL->isOptional();
+          }
+
+
+          for (auto& s : typeCWL->getSymbols()){
+            std::cout << "symbol: " << s <<"\n";
+           symbols_.emplace_back(s);
+          }
         }
         //=============================================
       }
