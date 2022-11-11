@@ -7,7 +7,7 @@
 					"mimeType": "application/cwl"
 				},
 				"value": {
-					"href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/main/test/sample_apps/v1/dNBR/dNBR.cwl"
+					"href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/master/test/sample_apps/v1/dNBR/workflow.cwl#dnbr"
 				}
 			}
 		}
