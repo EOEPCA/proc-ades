@@ -1,6 +1,6 @@
 {
     "executionUnit": {
-        "href": "https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl",
+        "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/master/test/sample_apps/v2/snuggs/workflow.cwl#snuggs",
         "type": "application/cwl"
     }
 }
