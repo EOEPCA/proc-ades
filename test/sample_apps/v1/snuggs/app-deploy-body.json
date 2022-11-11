@@ -7,7 +7,7 @@
           "mimeType": "application/cwl"
         },
         "value": {
-          "href": "https://raw.githubusercontent.com/EOEPCA/app-snuggs/main/app-package.cwl"
+          "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/master/test/sample_apps/v1/snuggs/workflow.cwl#snuggs"
         }
       }
     }
