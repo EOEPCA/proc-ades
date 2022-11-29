@@ -27,8 +27,8 @@ fi
 
 
 cd $HERE
-#docker build --rm --no-cache -t ${LOCAL_IMAGE_NAME} .
-docker build --rm -t ${LOCAL_IMAGE_NAME} .
+docker build --rm --no-cache -t ${LOCAL_IMAGE_NAME} .
+#docker build --rm -t ${LOCAL_IMAGE_NAME} .
 if [ $? -ne 0 ]; then
   echo "docker build --rm -t ${LOCAL_IMAGE_NAME} failed"
   exit 2
