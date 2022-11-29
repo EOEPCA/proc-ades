@@ -47,6 +47,10 @@ RUN cd /opt/zoo-project/zoo-project/zoo-services/utils/status && make && cd /opt
 
 FROM centos
 
+RUN cd /etc/yum.repos.d/ && \
+    sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+RUN yum update -y
 RUN yum install -y epel-release
 RUN yum update -y
 RUN yum install -y json-c libxml2 bison openssl wget unzip bzip2 make gcc-c++
