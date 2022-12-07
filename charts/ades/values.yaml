@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "1.2.5"
+  tag: "1.2.6"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -106,25 +106,7 @@ workflowExecutor:
 
 
   main:
-    cwl: |
-      class: Workflow
-      doc: Main stage manager
-      id: main
-      label: macro-cwl
-      inputs: {}
-      outputs:
-        StacCatalogUri:
-          outputSource:
-            - node_stage_out/s3_catalog_output
-          type: string  
-      requirements:
-        SubworkflowFeatureRequirement: {}
-        ScatterFeatureRequirement: {}
-      steps:
-        node_stage_out:
-          in: {}
-          out: [s3_catalog_output]
-          run: ''      
+    cwl: ""
 
   stagein:
     cwl: |
