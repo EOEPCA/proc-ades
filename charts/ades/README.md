@@ -87,8 +87,8 @@ The configuration parameters in this section control the resources requested and
 | workflowExecutor.processingVolumeOutputSize | Size of the volumes for processing result for the whole workflow ouput                                                       | `10Gi`                   |
 | workflowExecutor.processingMaxRam       | Total maximum RAM pool available for all pods running concurrently                             | `16Gi`                  |
 | workflowExecutor.processingMaxCores       | Total maximum CPU cores pool available for all pods running concurrently                             | `8`                  |
-| workflowExecutor.processingKeepWorkspace | If false the Ades will clean the volume after the workflow has successfully finished running  | `false`                          |
-| workflowExecutor.processingKeepWorkspaceIfFailed | if false the Ades will clean the volume after the workflow has finished but will keep it in case of error  | `false`                          |
+| workflowExecutor.processingKeepWorkspace | If false the Ades will clean the namespace after the workflow has successfully finished running  | `false`                          |
+| workflowExecutor.processingKeepWorkspaceIfFailed | if false the Ades will clean the namespace after the workflow has finished but will keep it in case of error  | `false`                          |
 | workflowExecutor.processingNodeSelector  | Constrain on which nodes the processing pods are eligible to run based on the node label  | `nodeSelector`                          |
 | workflowExecutor.main.cwl             | Main CWL workflow file path used by [`cwl-wrapper`](https://github.com/EOEPCA/cwl-wrapper)                                                          | `empty` |
 | workflowExecutor.stagein.cwl             | Stage-in CWL workflow file path                                                                 | `charts/ades/files/cwl/stagein/terradue_stars_t2_latest.cwl`                            |
