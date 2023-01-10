@@ -696,12 +696,12 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
             //==========PEP
             //register get Status and Get Results
-            if (usepep && resource.get() && pepRegisterResources.get()){
+            if (usepep && resource.get() && pepRegisterResources.get()) {
                 resource->dump();
-                resource->setWorkspaceService( userEoepca["user"],wfpm->serviceID);
+                resource->setWorkspaceService(userEoepca["user"], wfpm->serviceID);
 
                 std::cerr << "send pep prepareStatus \n";
-                resource->prepareStatus(confPep,wfpm->runID);
+                resource->prepareStatus(confPep, wfpm->runID);
                 long retCodePep = pepRegisterResources->pepSave(*(resource.get()));
                 if (200 != retCodePep) {
 
@@ -713,11 +713,13 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                         setStatus(conf, "failed", err.c_str());
                         updateStatus(conf, 100, err.c_str());
                         return SERVICE_FAILED;
-                    }else{
+                    } else {
                         usepep = false;
                     }
                 }
+            }
 
+            if(useResourceManager){
                 wfpm->userIdToken = userIdToken(conf);
                 std::cerr << "Retrieving username from JWT \n";
 
@@ -742,8 +744,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
                 if (username.empty() ) {
                     std::string err{
-                            "eoepca: pepresource.so service error. Username could not be parsed from JWT."};
-                    err.append(" on ").append(resource->getIconUri()).append(" ");
+                            "eoepca: service error. Username could not be parsed from JWT."};
                     setStatus(conf, "failed", err.c_str());
                     updateStatus(conf, 100, err.c_str());
                     return SERVICE_FAILED;
