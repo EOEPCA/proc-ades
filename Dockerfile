@@ -151,9 +151,10 @@ RUN mkdir -p /opt/t2libs && cp /project/src/templates/libinterface.so /opt/t2lib
 RUN cp /project/build/libworkflow_executor.so /opt/t2service/libworkflow_executor.so                && \
     cp /project/build/libpep_resource.so /opt/t2service/libpep_resource.so                          && \
     mkdir -p /opt/zooservices_user && chown 48:48 /opt/zooservices_user
-COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
+    COPY assets/scripts/prepareUserSpace.sh /opt/t2scripts/prepareUserSpace.sh
 COPY assets/scripts/removeservice.sh /opt/t2scripts/removeservice.sh
-RUN chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh                     && \
+RUN chown 48:48 -R /var/www/ /opt/t2* /opt/zooservices_user/ /project/ /zooservices/               && \
+    chmod +x /opt/t2scripts/prepareUserSpace.sh /opt/t2scripts/removeservice.sh                     && \
     echo "alias ll='ls -ltr'" >> $HOME/.bashrc                                                      && \
     yum install mlocate -y
 
