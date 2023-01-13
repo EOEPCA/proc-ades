@@ -815,7 +815,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             workflowExecutor->webGetResults(*wfpm,outPutList);
             std::cerr << "workflowExecutor->webGetResults end\n";
 
-            if (usepep && useResourceManager){
+            if (useResourceManager){
                 std::cerr << "Registering results to resource manager init\n";
 
                 // retrieving resource manager endpoint
