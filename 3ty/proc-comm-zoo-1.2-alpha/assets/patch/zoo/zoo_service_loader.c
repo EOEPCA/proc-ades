@@ -257,73 +257,6 @@ int dumpBackFinalFile(maps* m,char* fbkp,char* fbkp1)
   return 1;
 }
 
-/**
- * Update the counter value (in conf / lenv / serviceCnt
- *
- * @param conf the conf maps containing the main.cfg settings
- * @param field the value to update (serviceCnt or serviceCounter)
- * @param type char pointer can be "incr" for incrementing the value by 1, other
- * will descrement the value by 1
- */
-void updateCnt(maps* conf, const char* field, const char* type){
-  map* pmTmp=getMapFromMaps(conf,"lenv",field);
-  if(pmTmp!=NULL){
-    int iCnt=atoi(pmTmp->value);
-    if(strncmp(type,"incr",4)==0)
-      iCnt++;
-    else
-      iCnt--;
-    char* pcaTmp=(char*) malloc((10+1)*sizeof(char));
-    sprintf(pcaTmp,"%d",iCnt);
-    setMapInMaps(conf,"lenv",field,pcaTmp);
-    free(pcaTmp);
-  }
-}
-
-/**
- * Compare a value with conf / lenv / serviceCnt
- *
- * @param conf the conf maps containing the main.cfg settings
- * @param field the value to compare with (serviceCntLimit or serviceCntSkip)
- * @param type comparison operator can be : elower, lower, eupper, upper, or
- * equal
- * @return boolean resulting of the comparison between the values
- */
-bool compareCnt(maps* conf, const char* field, const char* type){
-  map* pmTmp=getMapFromMaps(conf,"lenv","serviceCnt");
-  map* pmTmp1=getMapFromMaps(conf,"lenv",field);
-
-  if(pmTmp!=NULL && pmTmp1!=NULL){
-    int iCnt=atoi(pmTmp->value);
-    int iCntOther=atoi(pmTmp1->value);
-    if(strncmp(field,"serviceCntLimit",15)==0){
-      pmTmp1=getMapFromMaps(conf,"lenv","serviceCntSkip");
-      if(pmTmp1!=NULL)
-	iCntOther+=atoi(pmTmp1->value);
-    }
-    if(strncmp(type,"lower",5)==0)
-      return iCnt<iCntOther;
-    else{
-      if(strncmp(type,"elower",6)==0)
-	return iCnt<=iCntOther;
-      else{
-	if(strncmp(type,"eupper",6)==0)
-	  return iCnt>=iCntOther;
-	else{
-	  if(strncmp(type,"upper",5)==0)
-	    return iCnt>iCntOther;
-	  else
-	    return iCnt==iCntOther;
-	}
-      }
-    }
-  }else
-    if(strncmp(type,"equal",5)==0)
-      return false;
-    else
-      return true;
-}
-
 /** EOEPCA SPEC **/
 
 /**
@@ -1571,9 +1504,10 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
 			s1 = createService();
 			if (s1 == NULL)
 			  {
-			    fflush(stderr);
 			    fflush(stdout);
+			    fflush(stderr);
 			    zDup2 (saved_stdout, fileno (stdout));
+			    zClose(saved_stdout);
 			    map* errormap = createMap("text", _("Unable to allocate memory"));
 			    addToMap(errormap,"code", "InternalError");
 			    addToMap(errormap,"locator", "NULL");
@@ -1625,11 +1559,15 @@ int fetchServicesForDescription(registry* zooRegistry, maps* m, char* r_inputs,
 	    }		      
 	  if (hasVal < 0)
 	    {
+	      fflush (stdout);
+	      fflush (stderr);
 	      zDup2 (saved_stdout, fileno (stdout));
+	      zClose(saved_stdout);
 	      exitAndCleanUp(zooRegistry, m,
 			     buff,"InvalidParameterValue","Identifier",
 			     orig,corig,
 			     funcError);
+	      fflush(stdout);
 	      if(dirp!=NULL)
 		closedir (dirp);
 	      return 1;
@@ -3125,8 +3063,8 @@ runRequest (map ** inputs)
 	sprintf(pacTmpUrl,"%s/index.html",pmTmpUrl->value);
       }
       setMapInMaps(m,"headers","Location",pacTmpUrl);
+      setMapInMaps(m,"headers","Status","301 Moved permanently");
       printHeaders(m);
-      printf("Status: 301 Moved permanently \r\n\r\n");
       fflush(stdout);
       free(pacTmpUrl);
       return 1;
@@ -3417,6 +3355,7 @@ runRequest (map ** inputs)
 	    if(pmTmp!=NULL){
 	      char *saveptr;
 	      char *tmps = strtok_r(pmTmp->value, ",", &saveptr);
+	      int iCnt=0;
 	      while (tmps != NULL){
 		for(int l=0;l<3;l++){
 		  if(strcmp(tmps,oapipStatus[l])==0){
@@ -3424,16 +3363,20 @@ runRequest (map ** inputs)
 		    break;
 		  }
 		}
+		maps* pmsLenv=getMaps(m,"lenv");
 		if(pcaClause==NULL){
 		  pcaClause=(char*)malloc((strlen(statusSearchFieldsReal[k])+strlen(tmps)+10)*sizeof(char));
 		  sprintf(pcaClause," (%s=$q$%s$q$",statusSearchFieldsReal[k],tmps);
+		  setMapArray(pmsLenv->content,"servicePidFilter",iCnt,tmps);
 		}else{
 		  char* pcaTmp=zStrdup(pcaClause);
 		  pcaClause=(char*)realloc(pcaClause,strlen(statusSearchFieldsReal[k])+strlen(tmps)+strlen(pcaTmp)+12);
 		  sprintf(pcaClause,"%s OR %s=$q$%s$q$",pcaTmp,statusSearchFieldsReal[k],tmps);
+		  setMapArray(pmsLenv->content,"servicePidFilter",iCnt,tmps);
 		  free(pcaTmp);
 		}
 		tmps = strtok_r (NULL, ",", &saveptr);
+		iCnt++;
 	      }
 	      char* pcaTmp=zStrdup(pcaClause);
 	      pcaClause=(char*)realloc(pcaClause,strlen(pcaTmp)+3);
@@ -3998,9 +3941,16 @@ runRequest (map ** inputs)
       if(preference!=NULL)
 	setMapInMaps(m,"headers","Preference-Applied",preference->value);
       //invokeBasicCallback(m,SERVICE_ACCEPTED);
-      printHeaders(m);
-      printf("Status: 201 Created \r\n\r\n");
-      return 1;
+      setMapInMaps(m,"headers","Status","201 Created");
+      map* pmTmp=getMapFromMaps(m,"lenv","usid");
+      if(pmTmp!=NULL){
+	if(res!=NULL)
+	  json_object_put(res);
+	res=printJobStatus(m,pmTmp->value);
+      }
+      //printHeaders(m);
+      //printf("Status: 201 Created \r\n\r\n");
+      //return 1;
       // ----- End USE_AMQP -----
 
 #else
@@ -4037,12 +3987,20 @@ runRequest (map ** inputs)
 	      if(preference!=NULL)
 		setMapInMaps(m,"headers","Preference-Applied",preference->value);
 	      //invokeBasicCallback(m,SERVICE_ACCEPTED);
+
+	      setMapInMaps(m,"headers","Status","201 Created");
 	      printHeaders(m);
-	      printf("Status: 201 Created \r\n\r\n");
+	      map* pmTmp=getMapFromMaps(m,"lenv","uusid");
+	      if(pmTmp!=NULL){
+		if(res!=NULL)
+		  json_object_put(res);
+	      }
+	      //printf("Status: 201 Created \r\n\r\n");
 	      return 1;
 	    }
 	  else if (pid == 0)
 	    {
+	      zSleep(10);
 	      eres = SERVICE_STARTED;
 	      //
 	      // son : have to close the stdout, stdin and stderr to let the parent
@@ -4264,12 +4222,15 @@ runRequest (map ** inputs)
 	      map* pmORequestMethod=getMapFromMaps(m,"lenv","orequest_method");
 	      if(pmORequestMethod!=NULL && strncasecmp(pmORequestMethod->value,"put",3)==0)
 		setMapInMaps(m,"headers","Status","204 No Content");
-	      printHeaders(m);
+	      else
+		setMapInMaps(m,"headers","Status","201 Created");
 	      printf("Location: %s/processes/%s\r\n",pmRootUrl->value,pmDeployed->value);
+	      printHeaders(m);
 	      if(pmORequestMethod!=NULL && strncasecmp(pmORequestMethod->value,"put",3)==0)
-		printf("Status: 204 No Content\r\n\r\n");
+		setMapInMaps(m,"headers","Status","204 No Content");
+		//printf("Status: 204 No Content\r\n\r\n");
 	      else{
-		printf("Status: 201 Created\r\n\r\n");
+		//printf("Status: 201 Created\r\n\r\n");
 		printf(jsonStr);
 		printf("\n");
 		fflush(stdout);
@@ -5140,7 +5101,7 @@ runRequest (map ** inputs)
 		       strlen (usid->value) + 12) * sizeof (char));
 	    sprintf (flenv, "%s/%s_lenv.cfg", r_inputs->value, usid->value);
 	    maps* lenvMaps=getMaps(m,"lenv");
-	    dumpMapsToFile(lenvMaps,flenv,0);
+	    dumpMapsToFile(lenvMaps,flenv,1);
 	    free(flenv);
 
 #ifdef USE_CALLBACK

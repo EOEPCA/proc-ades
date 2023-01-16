@@ -120,19 +120,19 @@ void dumpMaps(maps* pmMap){
  * @param iLimit the number of maps to print (0 for no limit)
  */
 void _dumpMapsToFile(maps* pmsMaps,FILE* psFile,int iLimit){
-  maps* tmp=pmsMaps;
+  maps* pmsTmp=pmsMaps;
   int cnt=0;
-  while(tmp!=NULL){
-    fprintf(psFile,"[%s]\n",tmp->name);
-    if(tmp->child!=NULL){
-      _dumpMapsToFile(tmp->child,psFile,iLimit);
+  while(pmsTmp!=NULL){
+    fprintf(psFile,"[%s]\n",pmsTmp->name);
+    if(pmsTmp->child!=NULL){
+      _dumpMapsToFile(pmsTmp->child,psFile,iLimit);
     }else
-      dumpMapToFile(tmp->content,psFile);
+      dumpMapToFile(pmsTmp->content,psFile);
     fflush(psFile);
-    tmp=tmp->next;
+    pmsTmp=pmsTmp->next;
     cnt++;
     if(iLimit>=0 && cnt==iLimit)
-      tmp=NULL;
+      pmsTmp=NULL;
   }
   fflush(psFile);
 }
@@ -974,6 +974,27 @@ map* getMapArray(map* pmMap,const char* pccKey,int iIndex){
     dumpMap(pmTmp);
 #endif
   return pmTmp;
+}
+
+/**
+ * Get the key name for a specific map array element
+ *
+ * @param pmMap the map to search for the key
+ * @param pccKey the key to search in the map
+ * @param iIndex of the MapArray
+ * @return an allocated char pointer containing the key name
+ * @warning make sure to free resources returned by this function
+ */
+char* getMapArrayKey(map* pmMap,const char* pccKey,int iIndex){
+  char* pcaTmp=(char*)malloc((strlen(pccKey)+5)*sizeof(char));
+  if(iIndex>0)
+    sprintf(pcaTmp,"%s_%d",pccKey,iIndex);
+  else
+    sprintf(pcaTmp,"%s",pccKey);
+#ifdef DEBUG
+  fprintf(stderr,"** KEY %s\n",pcaTmp);
+#endif
+  return pcaTmp;
 }
 
 /**
@@ -1993,7 +2014,6 @@ char* getValueFromMaps(maps* inputs,const char* name){
 	fcontent[flen]=0;
 	fclose(f0);
 	res=zStrdup(fcontent);
-	fprintf(stderr,"%s %d (%s)\n",__FILE__,__LINE__,fcontent);
 	free(fcontent);
       }
     }else{
@@ -2047,5 +2067,73 @@ translateCharMap (const char *str, map* rep)
       }
   }
   return res;
+}
+
+
+/**
+ * Update the counter value (in conf / lenv / serviceCnt
+ *
+ * @param conf the conf maps containing the main.cfg settings
+ * @param field the value to update (serviceCnt or serviceCounter)
+ * @param type char pointer can be "incr" for incrementing the value by 1, other
+ * will descrement the value by 1
+ */
+void updateCnt(maps* conf, const char* field, const char* type){
+  map* pmTmp=getMapFromMaps(conf,"lenv",field);
+  if(pmTmp!=NULL){
+    int iCnt=atoi(pmTmp->value);
+    if(strncmp(type,"incr",4)==0)
+      iCnt++;
+    else
+      iCnt--;
+    char* pcaTmp=(char*) malloc((10+1)*sizeof(char));
+    sprintf(pcaTmp,"%d",iCnt);
+    setMapInMaps(conf,"lenv",field,pcaTmp);
+    free(pcaTmp);
+  }
+}
+
+/**
+ * Compare a value with conf / lenv / serviceCnt
+ *
+ * @param conf the conf maps containing the main.cfg settings
+ * @param field the value to compare with (serviceCntLimit or serviceCntSkip)
+ * @param type comparison operator can be : elower, lower, eupper, upper, or
+ * equal
+ * @return boolean resulting of the comparison between the values
+ */
+bool compareCnt(maps* conf, const char* field, const char* type){
+  map* pmTmp=getMapFromMaps(conf,"lenv","serviceCnt");
+  map* pmTmp1=getMapFromMaps(conf,"lenv",field);
+
+  if(pmTmp!=NULL && pmTmp1!=NULL){
+    int iCnt=atoi(pmTmp->value);
+    int iCntOther=atoi(pmTmp1->value);
+    if(strncmp(field,"serviceCntLimit",15)==0){
+      pmTmp1=getMapFromMaps(conf,"lenv","serviceCntSkip");
+      if(pmTmp1!=NULL)
+	iCntOther+=atoi(pmTmp1->value);
+    }
+    if(strncmp(type,"lower",5)==0)
+      return iCnt<iCntOther;
+    else{
+      if(strncmp(type,"elower",6)==0)
+	return iCnt<=iCntOther;
+      else{
+	if(strncmp(type,"eupper",6)==0)
+	  return iCnt>=iCntOther;
+	else{
+	  if(strncmp(type,"upper",5)==0)
+	    return iCnt>iCntOther;
+	  else
+	    return iCnt==iCntOther;
+	}
+      }
+    }
+  }else
+    if(strncmp(type,"equal",5)==0)
+      return false;
+    else
+      return true;
 }
 
