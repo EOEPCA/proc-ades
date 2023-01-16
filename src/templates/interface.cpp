@@ -260,7 +260,7 @@ void setStatus(maps *&conf, const char *status, const char *message) {
     setMapInMaps(conf, "lenv", "status", status);
 
     maps *lenvMaps = getMaps(conf, "lenv");
-    dumpMapsToFile(lenvMaps, flenv, 0);
+    dumpMapsToFile(lenvMaps, flenv, 1);
     free(flenv);
 }
 

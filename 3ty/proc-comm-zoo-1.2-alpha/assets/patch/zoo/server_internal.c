@@ -438,7 +438,8 @@ void dumpMapsValuesToFiles(maps** main_conf,maps** in){
   int length=0;
   while(inputs!=NULL){
     if(getMap(inputs->content,"mimeType")!=NULL &&
-       getMap(inputs->content,"cache_file")==NULL){
+       getMap(inputs->content,"cache_file")==NULL &&
+       getMap(inputs->content,"value")!=NULL){
       map* cMap=inputs->content;
       if(getMap(cMap,"length")!=NULL){
 	map* tmpLength=getMap(cMap,"length");
@@ -1050,7 +1051,13 @@ void runGetStatus(maps* conf,char* pid,char* req){
 	char* result=_getStatusFile(conf,pid);
 	if(result!=NULL){
 	  char *encoding=getEncoding(conf);
-	  printf("Content-Type: text/xml; charset=%s\r\nStatus: 200 OK\r\n\r\n",encoding);
+	  map* pmTmp=getMapFromMaps(conf,"headers","Content-Type");
+	  if(pmTmp!=NULL){
+	    printHeaders(conf);
+	    printf("Status: 200 OK\r\n\r\n");
+	  }
+	  else
+	    printf("Content-Type: text/xml; charset=%s\r\nStatus: 200 OK\r\n\r\n",encoding);
 	  printf("%s",result);
 	  fflush(stdout);
 	  free(sid);
@@ -1059,10 +1066,17 @@ void runGetStatus(maps* conf,char* pid,char* req){
 	  free(result);
 	  return;
 	}else{
-	  errorException (conf, _("The result for the requested JobID has not yet been generated. The service ends but it still needs to produce the outputs."),
-			  "ResultNotReady", pid);
+	  if(e_type==NULL || strncasecmp(e_type->value,"json",4)!=0)
+	    errorException (conf, _("The result for the requested JobID has not yet been generated. The service ends but it still needs to produce the outputs."),
+			    "ResultNotReady", pid);
+	  else{
+	    setMapInMaps(conf,"lenv","error","true");
+	    setMapInMaps(conf,"lenv","code","ResultNotReady");
+	    setMapInMaps(conf,"lenv","message",_("The result for the requested JobID has not yet been generated. The service ends but it still needs to produce the outputs."));
+	  }
 	  freeMap(&statusInfo);
 	  free(statusInfo);
+	  free(result);
 	  return;
 	}
       }else
@@ -1121,7 +1135,6 @@ void runDismiss(maps* conf,char* pid){
     }
     return;
   }else{
-    free(sid);
     // We should send the Dismiss request to the target host if it differs
     char* fbkpid =
       (char *)
