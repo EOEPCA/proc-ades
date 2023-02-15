@@ -117,11 +117,11 @@ RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | t
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                       && \
     cp ./micromamba /usr/bin                                                                                                   && \
     micromamba create -n workflow_executor_env                                                                                 && \
-    micromamba install workflow-executor=1.0.41 -c eoepca -c conda-forge -n workflow_executor_env          && \
+    micromamba install workflow-executor=1.0.40 -c eoepca -c conda-forge -n workflow_executor_env          && \
     rm -fr /srv/conda/pkgs                                                                                                     && \
     rm -fr /tmp/*
 
-RUN git clone https://github.com/swagger-api/swagger-ui.git                                                                    && \
+RUN git clone --depth=1 https://github.com/swagger-api/swagger-ui.git                                                          && \
     mv swagger-ui /var/www/html/swagger-ui                                                                                     && \
     sed "s=https://petstore.swagger.io/v2/swagger.json=http://localhost:8080/ogc-api/api=g" -i /var/www/html/swagger-ui/dist/* && \
     mv /var/www/html/swagger-ui/dist /var/www/html/swagger-ui/oapip                                                            && \
