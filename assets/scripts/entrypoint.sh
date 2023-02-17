@@ -4,8 +4,8 @@ cp -f /opt/t2service/* /zooservices/
 
 ldconfig
 
-chown 48:48 /opt/zooservices_user
-chown 48:48 /var/www/_run/res
+#chown 48:48 /opt/zooservices_user
+#chown 48:48 /var/www/_run/res
 
 # Starting Workflow Executor
 echo "Starting workflow executor..."
