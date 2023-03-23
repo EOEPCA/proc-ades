@@ -283,7 +283,7 @@ workflowExecutor:
   # translate k8s error messages
   # available placeholders: $namespace $steps_exit_codes
   errorMessages:
-    "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes, namespace: $namespace )"
+    "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes )"
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
