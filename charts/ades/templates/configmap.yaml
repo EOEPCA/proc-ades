@@ -18,5 +18,7 @@ data:
   wfinputs.yaml: {{ toYaml .Values.workflowExecutor.inputs | quote }}
   pod_env_vars.yaml: {{ toYaml .Values.workflowExecutor.pod.env | quote }}
   pod_nodeselectors.yaml: {{ toYaml .Values.workflowExecutor.processingNodeSelector | quote }}
+  error_messages.json: {{  toJson .Values.workflowExecutor.errorMessages | quote }}
+
 
   

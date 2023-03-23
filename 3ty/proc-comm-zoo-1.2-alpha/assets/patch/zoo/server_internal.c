@@ -1390,8 +1390,11 @@ char* produceErrorMessage(maps* pmConf){
   char *pacTmp;
   map *pmLenv=getMapFromMaps(pmConf,"lenv","message");
   if(pmLenv!=NULL){
-    pacTmp=(char*)malloc((strlen(pmLenv->value)+strlen(_("Unable to run the Service. The message returned back by the Service was the following: "))+1)*sizeof(char));
-    sprintf(pacTmp,_("Unable to run the Service. The message returned back by the Service was the following: %s"),pmLenv->value);
+//    pacTmp=(char*)malloc((strlen(pmLenv->value)+strlen(_("Unable to run the Service. The message returned back by the Service was the following: "))+1)*sizeof(char));
+//    sprintf(pacTmp,_("Unable to run the Service. The message returned back by the Service was the following: %s"),pmLenv->value);
+
+      pacTmp=(char*)malloc((strlen(pmLenv->value)+strlen(_(""))+1)*sizeof(char));
+      sprintf(pacTmp,_(""),pmLenv->value);
   }
   else{
     pacTmp=(char*)malloc((strlen(_("Unable to run the Service. No more information was returned back by the Service."))+1)*sizeof(char));

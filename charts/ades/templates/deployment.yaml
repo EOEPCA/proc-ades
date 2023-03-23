@@ -144,6 +144,9 @@ spec:
             - name: ades-config
               mountPath: /zooservices/main.cfg
               subPath: maincfg
+            - name: ades-config
+              mountPath: /opt/error_message_templates/error_message_templates.json
+              subPath: error_messages.json
       volumes:
         - name: ades-config
           configMap:

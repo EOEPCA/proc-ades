@@ -8,7 +8,7 @@ image:
   repository: eoepca/proc-ades
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.10"
+  tag: "2.0.13"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -254,6 +254,11 @@ workflowExecutor:
 
   # Number of retries before considering a Job as failed
   backofflimit: 3
+
+  # translate k8s error messages
+  # available placeholders: $steps_exit_codes $namespace $workflow_name
+#  errorMessages:
+#    "Job has reached the specified backoff limit": "Unexpected application error occurred. (exit codes:  $steps_exit_codes, namespace: $namespace, workflow_name: $workflow_name )"
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
