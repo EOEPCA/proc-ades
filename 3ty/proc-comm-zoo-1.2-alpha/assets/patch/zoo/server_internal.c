@@ -1394,7 +1394,7 @@ char* produceErrorMessage(maps* pmConf){
 //    sprintf(pacTmp,_("Unable to run the Service. The message returned back by the Service was the following: %s"),pmLenv->value);
 
       pacTmp=(char*)malloc((strlen(pmLenv->value)+strlen(_(""))+1)*sizeof(char));
-      sprintf(pacTmp,_(""),pmLenv->value);
+      sprintf(pacTmp,_("%s"),pmLenv->value);
   }
   else{
     pacTmp=(char*)malloc((strlen(_("Unable to run the Service. No more information was returned back by the Service."))+1)*sizeof(char));
