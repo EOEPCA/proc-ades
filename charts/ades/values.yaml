@@ -119,11 +119,10 @@ workflowExecutor:
           dockerPull: terradue/stars:2.3.0
         "cwltool:Secrets":
           secrets:
-            - ADES_STAGEIN_AWS_SERVICEURL
-            - ADES_STAGEIN_AWS_REGION
-            - ADES_STAGEIN_AWS_REGION
-            - ADES_STAGEIN_AWS_ACCESS_KEY_ID
-            - ADES_STAGEIN_AWS_SECRET_ACCESS_KEY
+            - ADES_STAGEOUT_AWS_SERVICEURL
+            - ADES_STAGEOUT_AWS_REGION
+            - ADES_STAGEOUT_AWS_ACCESS_KEY_ID
+            - ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY
       id: stars
       arguments:
         - copy
@@ -183,6 +182,12 @@ workflowExecutor:
       hints:
         DockerRequirement:
           dockerPull: terradue/stars:2.9.2
+        "cwltool:Secrets":
+          secrets:
+            - ADES_STAGEIN_AWS_SERVICEURL
+            - ADES_STAGEIN_AWS_REGION
+            - ADES_STAGEIN_AWS_ACCESS_KEY_ID
+            - ADES_STAGEIN_AWS_SECRET_ACCESS_KEY
       id: stars
       requirements:
         EnvVarRequirement:
@@ -263,7 +268,7 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
   # Calrissian image tag
-  calrissianImage: "terradue/calrissian:0.11.0-sprint1"
+  calrissianImage: "terradue/calrissian:0.12.0"
   # some configuration values for submitted pod
   pod:
     env: {}
