@@ -2784,8 +2784,8 @@ void outputResponse(service* s,maps* request_inputs,maps* request_outputs,
     lenv=getMapFromMaps(m,"lenv","message");
     char *tmp0;
     if(lenv!=NULL){
-      tmp0=(char*)malloc((strlen(lenv->value)+strlen(_("Unable to run the Service. The message returned back by the Service was the following: "))+1)*sizeof(char));
-      sprintf(tmp0,_("Unable to run the Service. The message returned back by the Service was the following: %s"),lenv->value);
+      tmp0=(char*)malloc((strlen(lenv->value)+strlen(_(""))+1)*sizeof(char));
+      sprintf(tmp0,_("%s"),lenv->value);
     }
     else{
       tmp0=(char*)malloc((strlen(_("Unable to run the Service. No more information was returned back by the Service."))+1)*sizeof(char));

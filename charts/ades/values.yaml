@@ -238,7 +238,7 @@ workflowExecutor:
   # includes terradue.docker.com docker credentials
   imagePullSecrets: []
   # Calrissian image tag
-  calrissianImage: "terradue/calrissian:0.11.0-sprint1"
+  calrissianImage: "terradue/calrissian:0.12.0"
   # some configuration values for submitted pod
   pod:
     env: {}
@@ -254,6 +254,11 @@ workflowExecutor:
 
   # Number of retries before considering a Job as failed
   backofflimit: 3
+
+  # translate k8s error messages
+  # available placeholders: $namespace $steps_exit_codes
+  errorMessages:
+    "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes )"
 
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
