@@ -1,0 +1,67 @@
+name: Build and Publish Docker
+
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: 'Push to dockerhub'
+        type: boolean
+        default: false
+
+jobs:
+  build-and-publish-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Read docker name
+        id: yaml-docker-name
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: 'build.yml'
+          key-path: '["docker_image_name"]'
+
+      - name: Read docker version
+        id: yaml-docker-version
+        uses: jbutcher5/read-yaml@main
+        with:
+          file: 'build.yml'
+          key-path: '["docker_image_version"]'
+
+      - name: Generate docker tag
+        env:
+          GITHUB_BRANCH: ${{ github.ref }}
+          docker_image_name: ${{ steps.yaml-docker-name.outputs.data }}
+          docker_image_version: ${{ steps.yaml-docker-version.outputs.data }}
+        run: |
+
+          branch_name=${GITHUB_BRANCH#refs/heads/}
+          echo "branch_name=${GITHUB_BRANCH#refs/heads/}" >> $GITHUB_ENV
+
+          if [[ "$branch_name" = "main" ]]
+          then
+            mType=""
+          else
+            mType="dev"
+          fi
+          
+          echo "docker_tag=$docker_image_name:$mType$docker_image_version" >> $GITHUB_ENV
+          echo "docker_tag_latest=$docker_image_name:${mType}latest" >> $GITHUB_ENV
+
+      - name: Login to Docker Hub
+        if: ${{ github.event.inputs.push == true }}
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: "${{ github.event.inputs.push  == true }}"
+          no-cache: true
+          tags: |
+            ${{ env.docker_tag }}
+            ${{ env.docker_tag_latest }}
