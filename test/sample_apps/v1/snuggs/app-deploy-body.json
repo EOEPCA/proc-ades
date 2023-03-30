@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "id": "applicationPackage",
+      "input": {
+        "format": {
+          "mimeType": "application/cwl"
+        },
+        "value": {
+          "href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/master/test/sample_apps/v1/snuggs/workflow.cwl#snuggs"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "deployResult",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "auto",
+  "response": "raw"
+}

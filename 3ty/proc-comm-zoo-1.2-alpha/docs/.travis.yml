@@ -1,0 +1,25 @@
+jobs:
+  include:
+    - stage: generate docs
+      if: branch = master AND NOT type IN (pull_request)
+
+      # Assume that 'docker' service is stated at the Travis global level. It seems that re-stating it here confuses Travis.
+      # services:
+      #   - docker
+
+      before_install:
+        - docker pull asciidoctor/docker-asciidoctor
+
+      script:
+        - ./docs/bin/generate-docs.sh
+
+      after_error:
+        - docker logs asciidoc-to-html
+        - docker logs asciidoc-to-pdf
+
+      after_failure:
+        - docker logs asciidoc-to-html
+        - docker logs asciidoc-to-pdf
+
+      after_success:
+        - ./docs/bin/publish-docs.sh

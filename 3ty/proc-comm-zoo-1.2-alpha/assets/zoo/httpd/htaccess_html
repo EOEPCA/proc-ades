@@ -1,0 +1,8 @@
+RewriteEngine On
+SetEnvIf Request_URI "^\/?(\w+)\/(.*)" EOEPCA_WORKSPACE=$1
+
+RewriteCond %{Request_URI} wps3
+RewriteRule ^\/?(\w+)\/(.*) /_run/$2 [L]
+
+RewriteCond %{Request_URI} zoo-bin
+RewriteRule ^\/?(\w+)\/(.*) /$2 [L]

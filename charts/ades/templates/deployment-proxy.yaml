@@ -1,0 +1,48 @@
+{{- if .Values.useKubeProxy }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ades.fullname" . }}-kubeproxy
+  labels:
+    app.kubernetes.io/name: {{ include "ades.name" . }}-kubeproxy
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "ades.name" . }}-kubeproxy
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ include "ades.name" . }}-kubeproxy
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ades.fullname" . }}-processing-manager
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ include "ades.fullname" . }}-kubeproxy
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: eoepca/kubectl-proxy:latest
+          ports:
+            - containerPort: 8001
+      restartPolicy: Always
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,14 @@
+{
+  "inputs": {
+    "post_stac_item": [
+      "https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_53HPA_20210723_0_L2A",
+      "https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a-cogs/items/S2B_53HPA_20210703_0_L2A"
+    ],
+    "aoi": "136.659,-35.96,136.923,-35.791"
+  },
+  "outputs": {
+    "wf_outputs": {
+      "transmissionMode": "value"
+    }
+  }
+}

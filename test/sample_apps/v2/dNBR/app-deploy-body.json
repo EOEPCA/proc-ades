@@ -1,0 +1,6 @@
+{
+    "executionUnit": {
+	"type":"application/cwl",
+	"href": "https://raw.githubusercontent.com/EOEPCA/proc-ades/master/test/sample_apps/v2/dNBR/workflow.cwl#dnbr"
+    }
+}

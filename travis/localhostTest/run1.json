@@ -1,0 +1,44 @@
+{
+  "inputs": [
+    {
+      "id": "input_reference",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "https://catalog.terradue.com/sentinel3/search?format=atom&amp;uid=S3B_SL_2_LST____20200624T090133_20200624T090433_20200624T105644_0180_040_221_2700_LN2_O_NR_004"
+      }
+    },
+    {
+      "id": "input_reference",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "https://catalog.terradue.com/sentinel3/search?format=atom&amp;uid=S3B_SL_2_LST____20200623T092744_20200623T093044_20200624T153106_0180_040_207_2700_LN2_O_NT_004"
+      }
+    },
+    {
+      "id": "tiling_level",
+      "input": {
+        "dataType": {
+          "name": "string"
+        },
+        "value": "5"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "format": {
+        "mimeType": "string",
+        "schema": "string",
+        "encoding": "string"
+      },
+      "id": "results",
+      "transmissionMode": "value"
+    }
+  ],
+  "mode": "async",
+  "response": "raw"
+}

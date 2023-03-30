@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteRule call/(.*)/(.*) /zoo-bin/zoo_loader.cgi?request=Execute&service=WPS&version=1.0.0&Identifier=$1&DataInputs=sid=$2&RawDataOutput=Result [L,QSA]
+RewriteRule (.*)/(.*) /zoo-bin/zoo_loader.cgi?metapath=$1 [L,QSA]
+RewriteRule (.*) /zoo-bin/zoo_loader.cgi [L,QSA]

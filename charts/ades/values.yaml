@@ -1,0 +1,316 @@
+# Default values for ades.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: eoepca/proc-ades
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.13"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: ades.eoepca.com
+      paths: 
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+# We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
+# lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+# limits:
+#   cpu: 2
+#   memory: 4Gi
+# requests:
+#   cpu: 1
+#   memory: 2Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+clusterAdminRoleName: cluster-admin
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+useKubeProxy: true
+
+workflowExecutor:
+  # Necessary if useKubeProxy set to false
+  kubeconfig: ""
+
+  # Here specify fixed inputs to all workflows execution in all stages (main, stage-in/out)
+  # They will be prefixed with 'ADES_'. e.g. 'APP: ades' will be 'ADES_APP: ades'
+  inputs:
+    APP: ades
+
+    #STAGEOUT_AWS_SERVICEURL: https://mys3repositoryendpoint.com
+    #STAGEOUT_AWS_ACCESS_KEY_ID: myAccesKeyId
+    #STAGEOUT_AWS_SECRET_ACCESS_KEY: mySecretAccessKey
+    #STAGEOUT_AWS_REGION: RegionOne
+    #STAGEOUT_OUTPUT: s3://processing_results
+
+    #STAGEIN_AWS_SERVICEURL: https://mys3repositoryendpoint.com
+    #STAGEIN_AWS_ACCESS_KEY_ID: myAccesKeyId
+    #STAGEIN_AWS_SECRET_ACCESS_KEY: mySecretAccessKey
+
+
+  main:
+    cwl: ""
+
+  stageout:
+    cwl: |
+      cwlVersion: v1.0
+      baseCommand: Stars
+      doc: "Run Stars for staging results"
+      class: CommandLineTool
+      hints:
+        DockerRequirement:
+          dockerPull: terradue/stars:2.3.0
+        "cwltool:Secrets":
+          secrets:
+            - ADES_STAGEOUT_AWS_SERVICEURL
+            - ADES_STAGEOUT_AWS_REGION
+            - ADES_STAGEOUT_AWS_ACCESS_KEY_ID
+            - ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY
+      id: stars
+      arguments:
+        - copy
+        - -v
+        - -r
+        - '4'
+        - -o
+        - $( inputs.ADES_STAGEOUT_OUTPUT + "/" + inputs.process )
+        - valueFrom: |
+            ${
+                if( !Array.isArray(inputs.wf_outputs) )
+                {
+                    return inputs.wf_outputs.path + "/catalog.json";
+                }
+                var args=[];
+                for (var i = 0; i < inputs.wf_outputs.length; i++)
+                {
+                    args.push(inputs.wf_outputs[i].path + "/catalog.json");
+                }
+                return args;
+            }
+      inputs:
+        ADES_STAGEOUT_AWS_SERVICEURL:
+          type: string?
+        ADES_STAGEOUT_AWS_ACCESS_KEY_ID:
+          type: string?
+        ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY:
+          type: string?
+        ADES_STAGEOUT_OUTPUT:
+          type: string?
+        ADES_STAGEOUT_AWS_REGION:
+          type: string?
+        process:
+          type: string
+      outputs:
+        s3_catalog_output:
+          outputBinding:
+            outputEval: ${ return inputs.ADES_STAGEOUT_OUTPUT + "/" + inputs.process + "/catalog.json"; }
+          type: string
+      requirements:
+        InlineJavascriptRequirement: {}
+        EnvVarRequirement:
+          envDef:
+            PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            AWS__ServiceURL: $(inputs.ADES_STAGEOUT_AWS_SERVICEURL)
+            AWS__Region: $(inputs.ADES_STAGEOUT_AWS_REGION)
+            AWS__AuthenticationRegion: $(inputs.ADES_STAGEOUT_AWS_REGION)
+            AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEOUT_AWS_ACCESS_KEY_ID)
+            AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEOUT_AWS_SECRET_ACCESS_KEY)
+        ResourceRequirement: {}
+
+  stagein:
+    cwl: |
+      cwlVersion: v1.0
+      doc: "Run Stars for staging input data"
+      class: CommandLineTool
+      hints:
+        DockerRequirement:
+          dockerPull: terradue/stars:2.9.2
+        "cwltool:Secrets":
+          secrets:
+            - ADES_STAGEIN_AWS_SERVICEURL
+            - ADES_STAGEIN_AWS_REGION
+            - ADES_STAGEIN_AWS_ACCESS_KEY_ID
+            - ADES_STAGEIN_AWS_SECRET_ACCESS_KEY
+      id: stars
+      requirements:
+        EnvVarRequirement:
+          envDef:
+            PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            # AWS__Profile: $(inputs.aws_profile)
+            # AWS__ProfilesLocation: $(inputs.aws_profiles_location.path)
+            AWS__ServiceURL: $(inputs.ADES_STAGEIN_AWS_SERVICEURL)
+            AWS__Region: $(inputs.ADES_STAGEIN_AWS_REGION)
+            AWS__AuthenticationRegion: $(inputs.ADES_STAGEIN_AWS_REGION)
+            AWS_ACCESS_KEY_ID: $(inputs.ADES_STAGEIN_AWS_ACCESS_KEY_ID)
+            AWS_SECRET_ACCESS_KEY: $(inputs.ADES_STAGEIN_AWS_SECRET_ACCESS_KEY)
+        ResourceRequirement: {}
+        InlineJavascriptRequirement: {}
+        InitialWorkDirRequirement:
+          listing:
+            - entryname: stagein.sh
+              entry: |-
+                #!/bin/bash
+                  set -x
+                  res=0
+                  input='$( inputs.input )'
+      
+                  [ "\${input}" != "null" ] && {
+      
+                    IFS='#' read -r -a reference <<< '$( inputs.input )'
+                    input_len=\${#reference[@]}
+      
+                    [[ \${input_len} == 2 ]] && {
+      
+                        IFS=',' read -r -a assets <<< \${reference[1]}
+                        af=" "
+                        for asset in \${assets[@]}
+                        do
+                          af="\${af} -af \${asset}"
+                        done
+                    } || {
+                      af="--empty"
+                    }
+                    Stars copy -v -rel -r '4' \${af} -o ./ \${reference[0]}
+                    res=$?
+                  }
+                  rm -fr stagein.sh
+                  exit \${res}
+      
+      baseCommand: ['/bin/bash', 'stagein.sh']
+      
+      inputs:
+        ADES_STAGEIN_AWS_SERVICEURL:
+          type: string?
+        ADES_STAGEIN_AWS_REGION:
+          type: string?
+        ADES_STAGEIN_AWS_ACCESS_KEY_ID:
+          type: string?
+        ADES_STAGEIN_AWS_SECRET_ACCESS_KEY:
+          type: string?
+      outputs: {}
+
+  rulez:
+    cwl: ""
+
+  # kubernetes storage class to be used for provisioning volumes. Must be a persistent volume claim compliant (longhorn)
+  processingStorageClass: longhorn
+  # Size of the Kubernetes Tmp Volumes
+  processingVolumeTmpSize: "5Gi"
+  # Size of the Kubernetes Output Volumes
+  processingVolumeOutputSize: "10Gi"
+  # Max ram to use for a job
+  processingMaxRam: "16Gi"
+  # Max number of CPU cores to use concurrently for a job
+  processingMaxCores: "8"
+  # if false the Ades will clean the volume after the workflow has successfully finished running
+  processingKeepWorkspace: false
+  # if false the Ades will clean the volume after the workflow has finished with an error
+  processingKeepWorkspaceIfFailed: false
+  # processing pods node selector:
+  processingNodeSelector: {}
+  # includes terradue.docker.com docker credentials
+  imagePullSecrets: []
+  # Calrissian image tag
+  calrissianImage: "terradue/calrissian:0.12.0"
+  # some configuration values for submitted pod
+  pod:
+    env: {}
+    # HTTP_PROXY: http://1.2.3.4:8534
+
+  useResourceManager: false
+  resourceManagerEndpoint: "https://resourcemanager-api.com"
+  resourceManagerWorkspacePrefix: "rm-user"
+
+  # adds a label to the job namespace
+  jobNamespaceLabels:
+    app: "ades-app"
+
+  # Number of retries before considering a Job as failed
+  backofflimit: 3
+
+  # translate k8s error messages
+  # available placeholders: $namespace $steps_exit_codes
+  errorMessages:
+    "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes )"
+
+wps:
+  pepBaseUrl: "https://pep.eoepca.terradue.com"
+  pepClientStatePath: "/opt/zooservices_user/pepclient"
+  usePep: "false"
+  maincfgtpl: "files/main.cfg.tpl"
+
+
+persistence:
+  enabled: true
+  # existingUserDataClaim:
+  # existingProcServicesClaim:
+  storageClass: longhorn
+  userDataAccessMode: ReadWriteOnce
+  userDataSize: 10Gi
+  procServicesAccessMode: ReadWriteOnce
+  procServicesSize: 5Gi
+
+# installs longhorn storageClass using ades-longhorn chart
+ades-longhorn:
+  enabled: true
+  persistence:
+    defaultClassReplicaCount: 1
+  #defaultSettings:
+  #  systemManagedComponentsNodeSelector: "longhorn:yes"
