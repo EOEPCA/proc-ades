@@ -35,22 +35,19 @@ jobs:
           docker_image_name: ${{ steps.yaml-docker-name.outputs.data }}
           docker_image_version: ${{ steps.yaml-docker-version.outputs.data }}
         run: |
-
           branch_name=${GITHUB_BRANCH#refs/heads/}
           echo "branch_name=${GITHUB_BRANCH#refs/heads/}" >> $GITHUB_ENV
-
           if [[ "$branch_name" = "main" ]]
           then
             mType=""
           else
             mType="dev"
           fi
-          
           echo "docker_tag=$docker_image_name:$mType$docker_image_version" >> $GITHUB_ENV
           echo "docker_tag_latest=$docker_image_name:${mType}latest" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
-        if: ${{ github.event.inputs.push == true }}
+        if: ${{ github.event.inputs.push == 'true' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -60,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: "${{ github.event.inputs.push  == true }}"
+          push: ${{ github.event.inputs.push == 'true' }}
           no-cache: true
           tags: |
             ${{ env.docker_tag }}
