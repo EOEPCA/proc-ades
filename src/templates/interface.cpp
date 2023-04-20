@@ -741,35 +741,46 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             }
 
             if(useResourceManager){
-//                wfpm->userIdToken = userIdToken(conf);
-//                std::cerr << "Retrieving username from JWT \n";
-//
-//                auto decoded = jwt::decode(userIdToken(conf));
-//                std::string username;
-//                auto claims = decoded.get_payload_claims();
-//                std::string key = "user_name";
-//                auto count = decoded.get_payload_claims().count(key);
-//
-//                if(count) {
-//                    username = claims[key].as_string();
-//                    std::cerr << "user: " << username << std::endl;
-//                } else {
-//                    if (claims.count("pct_claims")) {
-//                        auto pct_claims_json = claims["pct_claims"].to_json();
-//                        if (pct_claims_json.contains(key)) {
-//                            username = pct_claims_json.get(key).to_str();
-//                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
-//                        }
-//                    }
-//                }
 
+                // username could not be parsed from bearer token
+                // we are going to check if the x-user-id header is present
                 if (username.empty() ) {
-                    std::string err{
-                            "eoepca: service error. Username could not be parsed from JWT."};
-                    setStatus(conf, "failed", err.c_str());
-                    updateStatus(conf, 100, err.c_str());
-                    return SERVICE_FAILED;
-                } else {
+                    wfpm->userIdToken = userIdToken(conf);
+                    std::cerr << "Retrieving username from JWT \n";
+
+                    auto decoded = jwt::decode(userIdToken(conf));
+                    std::string username;
+                    auto claims = decoded.get_payload_claims();
+                    std::string key = "user_name";
+                    auto count = decoded.get_payload_claims().count(key);
+
+                    if(count) {
+                        username = claims[key].as_string();
+                        std::cerr << "user: " << username << std::endl;
+                    } else {
+                        if (claims.count("pct_claims")) {
+                            auto pct_claims_json = claims["pct_claims"].to_json();
+                            if (pct_claims_json.contains(key)) {
+                                username = pct_claims_json.get(key).to_str();
+                                std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
+                            }
+                        }
+                    }
+                    // checking if username was correctly parsed
+                    if (username.empty() ) {
+                        std::string err{
+                                "eoepca: service error. Username could not be parsed."};
+                        setStatus(conf, "failed", err.c_str());
+                        updateStatus(conf, 100, err.c_str());
+                        return SERVICE_FAILED;
+                    } else {
+                        wfpm->username = username;
+                        std::cerr << "Retrieving username from X-User-id hearder token success. Username: " << username << std::endl;
+                    }
+                }
+
+                // username could be parsed from bearer token
+                else {
                     wfpm->username = username;
                     std::cerr << "Retrieving username from JWT success. Username: " << username << std::endl;
                 }
