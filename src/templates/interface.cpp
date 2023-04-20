@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 #include <jwt-cpp/jwt.h>
+#include <unordered_map>
 
 #include <json.h>
 #include "workflow_executor.hpp"
@@ -58,7 +59,12 @@ public:
 
 #define LOGTEST (std::cerr)
 
-std::string authorizationBearer(maps *&conf){
+/**
+ * Get the value of the HTTP_AUTHORIZATION header (bearer token) from the request
+ * @param conf
+ * @return
+ */
+std::string getAuthorizationBearer(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
     if (eoUserMap){
         map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
@@ -72,6 +78,25 @@ std::string authorizationBearer(maps *&conf){
     return  "";
 }
 
+
+/**
+ * Get the username path in the bearer token
+ * @param conf
+ * @return
+ */
+std::string getUserNamePath(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
+    if (eoUserMap){
+        return eoUserMap->value;
+    }
+    return  "";
+}
+
+/**
+ * Get the value of the HTTP_X_USER_ID header from the request
+ * @param conf
+ * @return
+ */
 std::string userIdToken(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_X_USER_ID");
     if (eoUserMap){
@@ -81,7 +106,12 @@ std::string userIdToken(maps *&conf){
 }
 
 
-
+/**
+ * loads a file in a string
+ * @param filePath
+ * @param sBuffer
+ * @return
+ */
 int loadFile(const char *filePath, std::stringstream &sBuffer) {
     std::ifstream infile(filePath);
     if (infile.good()) {
@@ -91,6 +121,11 @@ int loadFile(const char *filePath, std::stringstream &sBuffer) {
     return 1;
 }
 
+/**
+ * Check if a file exists
+ * @param fileName
+ * @return true if the file exists
+ */
 bool fileExist(const char *fileName) {
     std::ifstream infile(fileName);
     return infile.good();
@@ -267,18 +302,46 @@ void setStatus(maps *&conf, const char *status, const char *message) {
 
 
 
+/**
+ * given a json and path, return the value at the path
+ * returns an empty json if the path is not found
+ * @param j
+ * @param path
+ * @return json value
+ */
+nlohmann::json getJsonPathValue(nlohmann::json j, std::string path) {
+    std::string delimiter = ".";
+    size_t pos = 0;
+    std::string token;
+    while ((pos = path.find(delimiter)) != std::string::npos) {
+        token = path.substr(0, pos);
+        j = j[token];
+        path.erase(0, pos + delimiter.length());
+    }
+    return j[path];
+}
 
-/*        void registerClient(std::string clientName, std::string grantTypes, std::string redirectURIs, std::string logoutURI, std::string responseTypes, std::string scopes, std::string token_endpoint_auth_method, bool useJWT, std::string sectorIdentifier  ){
-            std::cerr << "Registering new client..." << std::endl;
 
-            headers = { 'content-type': "application/scim+json"}
-            payload = self.clientPayloadCreation(clientName, grantTypes, redirectURIs, logoutURI, responseTypes, scopes, sectorIdentifier, token_endpoint_auth_method, useJWT)
 
-        }*/
+/**
+ * given a token and a  path, returns the value at the path
+ * returns an empty json if the path is not found
+ * @param token
+ * @param path
+ * @return  json value
+ */
+nlohmann::json getPayloadPathValue(std::string token, std::string path) {
+    auto decoded = jwt::decode(token);
+    std::string payload = decoded.get_payload();
+    nlohmann::json j = nlohmann::json::parse(payload);
+    return getJsonPathValue(j, path);
+}
+
+
 
 
 /***
- *
+ * registers a client
  */
 nlohmann::json registerClient(char *baseUrl){
 
@@ -315,10 +378,6 @@ nlohmann::json registerClient(char *baseUrl){
             // registration_endpoint
             registration_endpoint = responseJson["registration_endpoint"].get<std::string>();
             std::cerr << registration_endpoint << std::endl;
-
-            // id_token
-            //https://test.185.52.193.87.nip.io/oxauth/restv1/token
-
             break;
         }
     }
@@ -336,13 +395,6 @@ nlohmann::json registerClient(char *baseUrl){
     } else {
 
         std::cerr << "State json does not exist" << std::endl;
-        // POST
-        // https://test.185.52.193.87.nip.io/oxauth/restv1/register
-        // REGISTER PAYLOAD: { "client_name": "Demo Client", "grant_types":["client_credentials", "password", "urn:ietf:params:oauth:grant-type:uma-ticket"], "redirect_uris" : [""], "post_logout_redirect_uris": [""], "scope": "openid email user_name uma_protection permission", "response_types": [  "code",  "token",  "id_token",], "token_endpoint_auth_method": "client_secret_post"}
-        // REGISTER HEADERS: {'content-type': 'application/scim+json'}
-
-
-
         std::cerr << "Registering client.\n";
         std::cerr << registration_endpoint << std::endl;
         std::string contentTypeHeader{"content-type: application/scim+json"};
@@ -401,23 +453,23 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         setStatus(conf, "running", "");
 
         //==================================GET CONFIGURATION
-        std::map<std::string, std::string> confEoepca;
+        std::map <std::string, std::string> confEoepca;
         getConfigurationFromZooMapConfig(conf, "eoepca", confEoepca);
 
 
-        std::map<std::string, std::string> serviceConf;
+        std::map <std::string, std::string> serviceConf;
         getConfigurationFromZooMapConfig(conf, "serviceConf", serviceConf);
 
 
-        if(serviceConf["sleepGetStatus"].empty()){
-            serviceConf["sleepGetStatus"]="4";
+        if (serviceConf["sleepGetStatus"].empty()) {
+            serviceConf["sleepGetStatus"] = "4";
         }
 
-        if(serviceConf["sleepGetPrepare"].empty()){
-            serviceConf["sleepGetPrepare"]="4";
+        if (serviceConf["sleepGetPrepare"].empty()) {
+            serviceConf["sleepGetPrepare"] = "4";
         }
 
-        std::map<std::string, std::string> lenv;
+        std::map <std::string, std::string> lenv;
         getConfigurationFromZooMapConfig(conf, "lenv", lenv);
 
 
@@ -431,28 +483,28 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
 
         if (confEoepca["WorkflowExecutorConfig"].empty()) {
-            std::string err{"eoepca configuration WorkflowExecutorConfig empty" };
+            std::string err{"eoepca configuration WorkflowExecutorConfig empty"};
 
             setStatus(conf, "failed", err.c_str());
             updateStatus(conf, 100, err.c_str());
             return SERVICE_FAILED;
         }
 
-        if (!fileExist(confEoepca["WorkflowExecutorConfig"].c_str())){
+        if (!fileExist(confEoepca["WorkflowExecutorConfig"].c_str())) {
             std::string err{"eoepca configuration WorkflowExecutorConfig not exist"};
 
-            setStatus(conf, "failed",  err.c_str());
+            setStatus(conf, "failed", err.c_str());
             updateStatus(conf, 100, err.c_str());
             return SERVICE_FAILED;
         }
 
-        std::map<std::string, std::string> userEoepca;
+        std::map <std::string, std::string> userEoepca;
         getConfigurationFromZooMapConfig(conf, "eoepcaUser", userEoepca);
-        std::cerr << "user: "<< userEoepca["user"] << " grants: "  << userEoepca["grant"] << "\n\n";
+        std::cerr << "user: " << userEoepca["user"] << " grants: " << userEoepca["grant"] << "\n\n";
 
 
         std::stringstream sConfigBuffer;
-        if(loadFile(confEoepca["WorkflowExecutorConfig"].c_str(),sConfigBuffer)){
+        if (loadFile(confEoepca["WorkflowExecutorConfig"].c_str(), sConfigBuffer)) {
             std::string err{"eoepca configuration cannot load file: "};
             err.append(confEoepca["WorkflowExecutorConfig"]);
 
@@ -462,17 +514,37 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         }
 
         std::cerr << "WorkflowExecutorConfig: \n" << sConfigBuffer.str() << "\n\n\n";
-
-        auto workflowExecutor=std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
-        if (!workflowExecutor->IsValid()){
+        auto workflowExecutor = std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
+        if (!workflowExecutor->IsValid()) {
             std::string err{"eoepca libworkflow_executor.so is not valid"};
             setStatus(conf, "failed", err.c_str());
             updateStatus(conf, 100, err.c_str());
             return SERVICE_FAILED;
-        }else{
+        } else {
             std::cerr << "\nlibworkflow_executor.so: VALID!\n\n";
         }
         //==================================GET CONFIGURATION
+
+
+
+        //==================================GET USERNAME FROM Bearer token
+
+
+        // get bearer token
+        std::string authorizationBearerToken{getAuthorizationBearer(conf)};
+        std::string username {""};
+        if (!authorizationBearerToken.empty()){
+            // get username path
+            std::string usernamePath {confEoepca["usernameJwtJsonPath"].c_str()};
+
+            // check if username path is empty, if so use default value
+            if (usernamePath.empty()) {
+                usernamePath = "user_name";
+            }
+
+            // get username from token using configured user path
+            username = getPayloadPathValue(authorizationBearerToken, usernamePath);
+        }
 
         //================ RESOURCE MANAGER
         std::map<std::string, std::string> confRm;
@@ -512,7 +584,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
 
         if (usepep){
-            resource->setJwt(authorizationBearer(conf));
+            resource->setJwt(authorizationBearerToken);
             if (resource->jwt_empty()) {
                 if (pepStopOnError){
                     std::string err{"eoepca pepresource.so jwt is empty"};
@@ -616,62 +688,11 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         int percent = 0;
         std::string message("");
         if (confEoepca["WorkflowExecutorHost"].empty()) {
-
-            //=============================START
-            std::cerr << "start!\n" <<  std::endl;
-            std::string serviceID{""};
-            auto resStart=workflowExecutor->start(sConfigBuffer.str(),path/*cwlBuffer.str()*/,jParams,
-                                                  lenv["Identifier"], lenv["uusid"],serviceID);
-            if (resStart){
-                std::string err{"Start empty"};
-
-                setStatus(conf, "failed", serviceID.c_str());
-                updateStatus(conf, 100, serviceID.c_str());
-                return SERVICE_FAILED;
-            }
-            std::cerr << "serviceID: " << serviceID << "\n\n" << std::endl;
-            if (serviceID.empty()) {
-                std::string err{"serviceID empty"};
-
-                setStatus(conf, "failed", err.c_str());
-                updateStatus(conf, 100, err.c_str());
-                return SERVICE_FAILED;
-            }
-            std::cerr << "start finished" << std::endl;
-            //=============================START
-
-
-            //=============================STATUS
-
-            std::cerr << "getStats start" << std::endl;
-            int w8for=std::stoi(serviceConf["sleepGetStatus"]);
-            while(workflowExecutor->getStatus(sConfigBuffer.str(),serviceID,percent,message)){
-                std::cerr << "going to sleep counter: " << counter << std::endl;
-                counter=counter+1;
-                sleep(w8for);
-            }
-
-            updateStatus(conf, 95, "waiting for logs");
-            std::cerr << "status finished" << std::endl;
-            //=============================STATUS
-
-            //=============================GETRESULT
-            updateStatus(conf, 98, "Get Results");
-            std::list<std::pair<std::string, std::string>> outPutList{};
-            std::cerr << "getresult " << argoWorkflowId << std::endl;
-            workflowExecutor->getResults(sConfigBuffer.str(),serviceID,outPutList);
-            std::cerr << "getresults finished" << std::endl;
-            for (auto &[k, p] : outPutList) {
-                std::cerr << "output" << k   << " " << p << std::endl;
-                setMapInMaps(outputs, k.c_str(), "value", p.c_str());
-            }
-            std::cerr << "mapping results" << std::endl;
-            //=============================GETRESULT
-            //  - accepted
-            //  - running
-            //  - successful
-            //  - failed
-
+            // throw error
+            std::string err("WorkflowExecutorHost is empty");
+            setStatus(conf, "failed", err.c_str());
+            updateStatus(conf, 100, err.c_str());
+            return SERVICE_FAILED;
         }else if (!confEoepca["WorkflowExecutorHost"].empty()){
 
             auto wfpm=std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
@@ -720,27 +741,27 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             }
 
             if(useResourceManager){
-                wfpm->userIdToken = userIdToken(conf);
-                std::cerr << "Retrieving username from JWT \n";
-
-                auto decoded = jwt::decode(userIdToken(conf));
-                std::string username;
-                auto claims = decoded.get_payload_claims();
-                std::string key = "user_name";
-                auto count = decoded.get_payload_claims().count(key);
-
-                if(count) {
-                    username = claims[key].as_string();
-                    std::cerr << "user: " << username << std::endl;
-                } else {
-                    if (claims.count("pct_claims")) {
-                        auto pct_claims_json = claims["pct_claims"].to_json();
-                        if (pct_claims_json.contains(key)) {
-                            username = pct_claims_json.get(key).to_str();
-                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
-                        }
-                    }
-                }
+//                wfpm->userIdToken = userIdToken(conf);
+//                std::cerr << "Retrieving username from JWT \n";
+//
+//                auto decoded = jwt::decode(userIdToken(conf));
+//                std::string username;
+//                auto claims = decoded.get_payload_claims();
+//                std::string key = "user_name";
+//                auto count = decoded.get_payload_claims().count(key);
+//
+//                if(count) {
+//                    username = claims[key].as_string();
+//                    std::cerr << "user: " << username << std::endl;
+//                } else {
+//                    if (claims.count("pct_claims")) {
+//                        auto pct_claims_json = claims["pct_claims"].to_json();
+//                        if (pct_claims_json.contains(key)) {
+//                            username = pct_claims_json.get(key).to_str();
+//                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
+//                        }
+//                    }
+//                }
 
                 if (username.empty() ) {
                     std::string err{
