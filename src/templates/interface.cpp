@@ -532,7 +532,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
 
         // get bearer token
         std::string authorizationBearerToken{getAuthorizationBearer(conf)};
-        std::string username {""};
+        std::string username{};
         if (!authorizationBearerToken.empty()){
             // get username path
             std::string usernamePath {confEoepca["usernameJwtJsonPath"].c_str()};
@@ -780,7 +780,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 }
 
                 // username could be parsed from bearer token
-                else {
+                else if (!username.empty())) {
                     wfpm->username = username;
                     std::cerr << "Retrieving username from JWT success. Username: " << username << std::endl;
                 }
