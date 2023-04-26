@@ -85,3 +85,4 @@ t2regcred.yaml
 workspace.code-workspace
 
 
+/charts/ades/values.minikube-dev.terradue.yaml
