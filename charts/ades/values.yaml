@@ -353,6 +353,8 @@ workflowExecutor:
   errorMessages:
     "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes )"
 
+  usernameJwtJsonPath: "pct_claims.user_name"
+
 wps:
   pepBaseUrl: "https://pep.eoepca.terradue.com"
   pepClientStatePath: "/opt/zooservices_user/pepclient"
