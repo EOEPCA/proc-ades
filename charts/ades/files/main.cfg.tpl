@@ -75,11 +75,10 @@ resourceManagerWorkspacePrefix= {{ .Values.workflowExecutor.resourceManagerWorks
 [eoepca]
 owsparser=/opt/t2libs/libeoepcaows.so
 buildPath=/opt/t2template/
-
+usernameJwtJsonPath="pct_claims.user_name"
 WorkflowExecutorHost=http://localhost:8000
 WorkflowExecutorConfig=/opt/t2config/workflowwxecutorconfig.json
 libWorkflowExecutor=/opt/t2service/libworkflow_executor.so
-
 userworkspace=/opt/zooservices_user
 defaultUser=anonymous
 userSpaceScript=/opt/t2scripts/prepareUserSpace.sh
