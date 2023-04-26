@@ -780,7 +780,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 }
 
                 // username could be parsed from bearer token
-                else if (!username.empty())) {
+                else if (!username.empty()) {
                     wfpm->username = username;
                     std::cerr << "Retrieving username from JWT success. Username: " << username << std::endl;
                 }
