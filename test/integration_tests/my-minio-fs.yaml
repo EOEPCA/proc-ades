@@ -4,6 +4,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: my-minio-fs-pvc
 spec:
+  storageClassName: "standard"
   accessModes:
     - ReadWriteOnce
   resources:

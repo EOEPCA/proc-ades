@@ -1,5 +1,12 @@
 #! /bin/sh
-# file: examples/equality_test.sh
+
+# prerequisites:
+# - helm
+# - kubectl
+# - kind
+# - nfs-common
+# - curl
+
 
 oneTimeSetUp() {
 
@@ -9,13 +16,24 @@ oneTimeSetUp() {
   echo "Set kubectl context to 'kind-ades-kind-cluster'"
   kubectl cluster-info --context kind-ades-kind-cluster
 
+  echo "installing open-iscsi on kind control plane pod"
+  docker exec ades-kind-cluster-control-plane apt-get update
+  docker exec ades-kind-cluster-control-plane apt-get install -y open-iscsi
+
+  echo "installing longhorn"
+  helm repo add longhorn https://charts.longhorn.io
+  helm repo update
+  helm install longhorn longhorn/longhorn --namespace longhorn-system --create-namespace --version 1.4.1
+  # takes 3 mins to install longhorn
+  sleep 220
+
   echo "creating namespace 'ades-test'"
   kubectl create ns ades-test
 }
 
 oneTimeTearDown() {
   echo "Delete kind cluster 'kind-ades-kind-cluster'"
-  kind delete cluster --name ades-kind-cluster
+  #kind delete cluster --name ades-kind-cluster
 }
 
 testDeployingAdesHelmChart() {
@@ -92,7 +110,7 @@ testExecuteSnuggsApp() {
 
   #kubectl create -f ./pv.yaml
 
-  result=$(curl --location --request POST 'http://127.0.0.1:8080/terradue/wps3/processes/snuggs-0_3_0/execution' \
+  result=$(curl -v --location --request POST 'http://127.0.0.1:8080/terradue/wps3/processes/snuggs-0_3_0/execution' \
     --header 'Accept: application/json' \
     --header 'Content-Type: application/json' \
     --header 'Prefer: respond-async' \
@@ -105,6 +123,12 @@ testExecuteSnuggsApp() {
     ]
   }
 }')
+
+  echo $result
+
+
+  #expected_result=$(cat ./data_assertions/testExecuteSnuggsApp_assertion.txt)
+  #assertEquals "$expected_result" "$result"
 
 }
 

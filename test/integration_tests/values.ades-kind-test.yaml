@@ -14,7 +14,7 @@ workflowExecutor:
   processingMaxRam: 5Gi
   processingVolumeSize: "4Gi"
 
-  processingStorageClass: standard
+  processingStorageClass: longhorn
 
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"
@@ -24,8 +24,8 @@ workflowExecutor:
   calrissianImage: "terradue/calrissian:0.11.0-sprint1"
   #calrissianJobTemplatePath: "/tmp/CalrissianJobTemplate.yaml"
 
-  imagePullSecrets:
-    - name: ades-secret
+  imagePullSecrets: []
+  
   inputs:
     APP: ades
 
