@@ -117,7 +117,7 @@ RUN wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | t
     rm -rf /var/lib/{apt,dpkg,cache,log}                                                                                       && \
     cp ./micromamba /usr/bin                                                                                                   && \
     micromamba create -n workflow_executor_env                                                                                 && \
-    micromamba install workflow-executor=1.0.44 -c eoepca -c conda-forge -n workflow_executor_env                              && \
+    micromamba install workflow-executor=1.0.45 -c eoepca -c conda-forge -n workflow_executor_env                              && \
     rm -fr /srv/conda/pkgs                                                                                                     && \
     rm -fr /tmp/*
 
@@ -140,7 +140,6 @@ COPY assets/oas.cfg /opt/t2service/oas.cfg
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
 RUN chmod +x /opt/t2scripts/entrypoint.sh
 
-COPY assets/workflowwxecutorconfig.json /opt/t2config/workflowwxecutorconfig.json
 COPY src/templates/template.cpp /opt/t2template/template.cpp
 COPY src/templates/Makefile /opt/t2template/Makefile
 RUN cp /project/src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/
