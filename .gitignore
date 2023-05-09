@@ -73,6 +73,7 @@ charts/ades/values.ades2.eoepcacreodiasdev.yaml
 charts/ades/values.eoepca-dev-ades1.terradue.yaml
 charts/ades/values.eoepca-dev-eoepca.terradue.yaml
 charts/ades/values.wasdi.yaml
+charts/ades/values.*.yaml
 
 # workflow executor test not yet ready
 3ty/workflow_executor/workflow_executor/workflow_executor/test
