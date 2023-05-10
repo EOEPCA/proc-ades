@@ -5,7 +5,7 @@ metadata:
   name: pv-1
   namespace: snuggs-0-3-0853a6472-4b16-11ed-b405-8634e91e25f7
 spec:
-  storageClassName: standard
+  storageClassName: openebs-hostpath
   accessModes:
     - ReadWriteMany
   capacity:
@@ -19,10 +19,10 @@ metadata:
   name: pv-2
   namespace: snuggs-0-3-0853a6472-4b16-11ed-b405-8634e91e25f7
 spec:
-  storageClassName: standard
+  storageClassName: openebs-hostpath
   accessModes:
     - ReadWriteMany
   capacity:
     storage: 21Gi
   hostPath:
-    path: /home/bla/dev/eoepca/proc-ades/test/integration_tests/pv2
+    path: /home/bla/dev/eoepca/proc-ades/test/integration_tests

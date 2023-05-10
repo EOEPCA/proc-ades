@@ -14,7 +14,8 @@ workflowExecutor:
   processingMaxRam: 5Gi
   processingVolumeSize: "4Gi"
 
-  processingStorageClass: longhorn
+  #processingStorageClass: longhorn
+  processingStorageClass: openebs-hostpath
 
   # Size of the Kubernetes Tmp Volumes
   processingVolumeTmpSize: "5Gi"

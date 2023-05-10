@@ -11,7 +11,8 @@
 oneTimeSetUp() {
 
   echo "creating a cluster called 'ades-kind-cluster'"
-  kind create cluster --name ades-kind-cluster
+  #kind create cluster --name ades-kind-cluster
+  kind create cluster --config=kind.cfg --name ades-kind-cluster
 
   echo "Set kubectl context to 'kind-ades-kind-cluster'"
   kubectl cluster-info --context kind-ades-kind-cluster
@@ -19,11 +20,20 @@ oneTimeSetUp() {
   echo "installing open-iscsi on kind control plane pod"
   docker exec ades-kind-cluster-control-plane apt-get update
   docker exec ades-kind-cluster-control-plane apt-get install -y open-iscsi
+  docker exec ades-kind-cluster-control-plane systemctl enable --now iscsid
 
-  echo "installing longhorn"
-  helm repo add longhorn https://charts.longhorn.io
+#  echo "installing longhorn"
+#  helm repo add longhorn https://charts.longhorn.io
+#  helm repo update
+#  helm install longhorn longhorn/longhorn --set persistence.defaultClassReplicaCount=1 --namespace longhorn-system --create-namespace --version 1.4.1
+
+
+  echo "installing openebs"
+  helm repo add openebs https://openebs.github.io/charts
   helm repo update
-  helm install longhorn longhorn/longhorn --namespace longhorn-system --create-namespace --version 1.4.1
+  helm install openebs --namespace openebs openebs/openebs --create-namespace
+
+
   # takes 3 mins to install longhorn
   sleep 220
 
