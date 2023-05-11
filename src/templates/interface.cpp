@@ -704,6 +704,7 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
             wfpm->message = "";
             wfpm->username = "";
             wfpm->userIdToken = "";
+            wfpm->bearerToken = "";
             wfpm->registerResultUrl = "";
             wfpm->cwl=cwlBuffer.str();
 
@@ -713,6 +714,10 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
                 wfpm->workflowIdHashtag = "";
             } else {
                 wfpm->workflowIdHashtag = workflowIdHashtag;
+            }
+
+            if (!authorizationBearerToken.empty()){
+                wfpm->bearerToken = authorizationBearerToken;
             }
 
             //==========PEP
