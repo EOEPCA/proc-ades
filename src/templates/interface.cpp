@@ -67,13 +67,15 @@ public:
 std::string getAuthorizationBearer(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
     if (eoUserMap){
-        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
-        if (userServicePathMap){
-            char* baseS=strchr(userServicePathMap->value,' ');
-            if (baseS){
-                return std::string(++baseS);
-            }
-        }
+//        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
+//        if (userServicePathMap){
+//            char* baseS=strchr(userServicePathMap->value,' ');
+//            if (baseS){
+//                return std::string(++baseS);
+//            }
+//        }
+        std::cerr << "getAuthorizationBearer: " << eoUserMap->value << "\n";
+        return eoUserMap->value;
     }
     return  "";
 }
