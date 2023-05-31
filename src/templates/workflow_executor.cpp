@@ -323,6 +323,10 @@ namespace nlohmann {
             x.jobID = j.at("userIdToken").get<std::string>();
         }
 
+        if (exists_key(j, "bearerToken")) {
+            x.jobID = j.at("bearerToken").get<std::string>();
+        }
+
         if (exists_key(j, "registerResultUrl")) {
             x.jobID = j.at("registerResultUrl").get<std::string>();
         }
@@ -348,6 +352,7 @@ namespace nlohmann {
         j["inputs"] = x.inputs;
         j["username"] = x.username;
         j["userIdToken"] = x.userIdToken;
+        j["bearerToken"] = x.bearerToken;
         j["registerResultUrl"] = x.registerResultUrl;
         j["workspaceResource"] = x.workspaceResource;
         j["workflowIdHashtag"] = x.workflowIdHashtag;

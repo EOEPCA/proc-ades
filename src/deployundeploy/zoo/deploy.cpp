@@ -44,16 +44,21 @@ static std::string replaceStr(std::string &str, const std::string &from,
 }
 
 std::string authorizationBearer(maps *&conf){
+//    std::cerr << "dumping map conf in deploy.cpp" << std::endl;
+//    dumpMaps(conf);
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
+
     if (eoUserMap){
         map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
         if (userServicePathMap){
             char* baseS=strchr(userServicePathMap->value,' ');
+            std::cerr << "HTTP_AUTHORIZATION " << baseS  << std::endl;
             if (baseS){
                 return std::string(++baseS);
             }
         }
     }
+    std::cerr << "HTTP_AUTHORIZATION not found" << std::endl;
     return  "";
 }
 
@@ -181,6 +186,63 @@ DeployResults deploy(std::string_view path, std::string_view content) {
     }
 
     return DeployResults::NONE;
+}
+
+
+/**
+ * given a json and path, return the value at the path
+ * returns an empty json if the path is not found
+ * @param j
+ * @param path
+ * @return json value
+ */
+nlohmann::json getJsonPathValue(nlohmann::json j, std::string path) {
+    std::string delimiter = ".";
+    size_t pos = 0;
+    std::string token;
+    while ((pos = path.find(delimiter)) != std::string::npos) {
+        token = path.substr(0, pos);
+        j = j[token];
+        path.erase(0, pos + delimiter.length());
+    }
+    return j[path];
+}
+
+
+
+/**
+ * given a token and a  path, returns the value at the path
+ * returns an empty json if the path is not found
+ * @param token
+ * @param path
+ * @return  json value
+ */
+nlohmann::json getPayloadPathValue(std::string token, std::string path) {
+    auto decoded = jwt::decode(token);
+    std::string payload = decoded.get_payload();
+    nlohmann::json j = nlohmann::json::parse(payload);
+    return getJsonPathValue(j, path);
+}
+
+
+/**
+ * Get the value of the HTTP_AUTHORIZATION header (bearer token) from the request
+ * @param conf
+ * @return
+ */
+std::string getAuthorizationBearer(maps *&conf){
+    map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
+    if (eoUserMap){
+        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
+        if (userServicePathMap){
+            char* baseS=strchr(userServicePathMap->value,' ');
+            if (baseS){
+                fprintf(stderr,"getAuthorizationBearer >%s<\n",++baseS);
+                return std::string(++baseS);
+            }
+        }
+    }
+    return  "";
 }
 
 void setStatus(maps *&conf, const char *status, const char *message) {
@@ -340,7 +402,6 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
     }
 
     auto workflowExecutor = std::make_unique<mods::WorkflowExecutor>(confEoepca["libWorkflowExecutor"]);
-    std::string _userIdToken;
     if (usepep) {
         resource->setJwt(authorizationBearer(conf));
         if (resource->jwt_empty()) {
@@ -523,6 +584,9 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
             // check if protocol is http, https or s3
             auto isS3 = owsOri.find("s3://");
             if (isS3 == std::string::npos) {
+
+
+                std::cerr << "Downloading application package from http/https endpoint"  << std::endl;
                 // http or https
                 auto ret = getFromWeb(bufferOWSFile, owsOri.c_str());
                 if (ret != 200) {
@@ -534,36 +598,90 @@ int job(maps *&conf, maps *&inputs, maps *&outputs, Operation operation) {
                 ////////////////////////////
                 // s3
                 // START RETRIEVE USERNAME
-                std::cerr << "Retrieving username from User Id token \n";
-                _userIdToken = userIdToken(conf);
-                auto decoded = jwt::decode(_userIdToken);
-                std::string username;
-                auto claims = decoded.get_payload_claims();
-                std::string key = "user_name";
-                auto count = decoded.get_payload_claims().count(key);
-                if (count) {
-                    username = claims[key].as_string();
-                    std::cerr << "user: " << username << std::endl;
-                } else {
-                    if (claims.count("pct_claims")) {
-                        auto pct_claims_json = claims["pct_claims"].to_json();
-                        if (pct_claims_json.contains(key)) {
-                            username = pct_claims_json.get(key).to_str();
-                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
-                        }
+//                std::cerr << "Retrieving username from User Id token \n";
+//                _userIdToken = userIdToken(conf);
+//                auto decoded = jwt::decode(_userIdToken);
+//                std::string username;
+//                auto claims = decoded.get_payload_claims();
+//                std::string key = "user_name";
+//                auto count = decoded.get_payload_claims().count(key);
+//                if (count) {
+//                    username = claims[key].as_string();
+//                    std::cerr << "user: " << username << std::endl;
+//                } else {
+//                    if (claims.count("pct_claims")) {
+//                        auto pct_claims_json = claims["pct_claims"].to_json();
+//                        if (pct_claims_json.contains(key)) {
+//                            username = pct_claims_json.get(key).to_str();
+//                            std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
+//                        }
+//                    }
+//                }
+
+
+                std::cerr << "Downloading application package from S3 endpoint" << std::endl;
+                // get bearer token
+                std::string authorizationBearerToken{getAuthorizationBearer(conf)};
+                std::string username{};
+                if (!authorizationBearerToken.empty()){
+                    // get username path
+                    std::string usernamePath {confEoepca["usernameJwtJsonPath"].c_str()};
+
+                    // check if username path is empty, if so use default value
+                    if (usernamePath.empty()) {
+                        usernamePath = "user_name";
                     }
+
+                    // get username from token using configured user path
+                    std::cerr << "Retrieving username from Bearer token." << std::endl;
+                    username = getPayloadPathValue(authorizationBearerToken, usernamePath);
+                    std::cerr << "Retrieving username from Bearer token success. Username: " << username << std::endl;
+                } else {
+
+                    // username could not be parsed from bearer token
+                    // we are going to check if the x-user-id header is present
+                        std::cerr << "Retrieving username from user-id-token \n";
+
+                        auto decoded = jwt::decode(userIdToken(conf));
+                        std::string username;
+                        auto claims = decoded.get_payload_claims();
+                        std::string key = "user_name";
+                        auto count = decoded.get_payload_claims().count(key);
+
+                        if(count) {
+                            username = claims[key].as_string();
+                            std::cerr << "user: " << username << std::endl;
+                        } else {
+                            if (claims.count("pct_claims")) {
+                                auto pct_claims_json = claims["pct_claims"].to_json();
+                                if (pct_claims_json.contains(key)) {
+                                    username = pct_claims_json.get(key).to_str();
+                                    std::cerr << "user: " << pct_claims_json.get(key) << std::endl;
+                                }
+                            }
+                        }
+                        // checking if username was correctly parsed
+                        if (username.empty() ) {
+                            std::string err{
+                                    "eoepca: service error. Username could not be parsed."};
+                            setStatus(conf, "failed", err.c_str());
+                            updateStatus(conf, 100, err.c_str());
+                            return SERVICE_FAILED;
+                        } else {
+                            std::cerr << "Retrieving username from X-User-id hearder token success. Username: " << username << std::endl;
+                        }
                 }
 
                 auto wfpm = std::make_unique<mods::WorkflowExecutor::WorkflowExecutorWebParameters>();
                 wfpm->username = username;
-                wfpm->userIdToken = _userIdToken;
+                wfpm->bearerToken = authorizationBearer(conf);
+                wfpm->userIdToken = userIdToken(conf);
                 wfpm->hostName = confEoepca["WorkflowExecutorHost"];
                 wfpm->workspaceResource = owsOri.c_str();
 
                 std::cerr << "workflowExecutor->webGetWorkspaceResource init\n";
                 workflowExecutor->webGetWorkspaceResource(*wfpm, bufferOWSFile);
                 std::cerr << "workflowExecutor->webGetWorkspaceResource end\n";
-
             }
         }
 
