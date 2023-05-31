@@ -67,15 +67,13 @@ public:
 std::string getAuthorizationBearer(maps *&conf){
     map* eoUserMap=getMapFromMaps(conf,"renv","HTTP_AUTHORIZATION");
     if (eoUserMap){
-//        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
-//        if (userServicePathMap){
-//            char* baseS=strchr(userServicePathMap->value,' ');
-//            if (baseS){
-//                return std::string(++baseS);
-//            }
-//        }
-        std::cerr << "getAuthorizationBearer: " << eoUserMap->value << "\n";
-        return eoUserMap->value;
+        map* userServicePathMap = getMap(eoUserMap,"HTTP_AUTHORIZATION");
+        if (userServicePathMap){
+            char* baseS=strchr(userServicePathMap->value,' ');
+            if (baseS){
+                return std::string(++baseS);
+            }
+        }
     }
     return  "";
 }
@@ -302,8 +300,6 @@ void setStatus(maps *&conf, const char *status, const char *message) {
 }
 
 
-
-
 /**
  * given a json and path, return the value at the path
  * returns an empty json if the path is not found
@@ -312,17 +308,31 @@ void setStatus(maps *&conf, const char *status, const char *message) {
  * @return json value
  */
 nlohmann::json getJsonPathValue(nlohmann::json j, std::string path) {
-    std::string delimiter = ".";
-    size_t pos = 0;
-    std::string token;
-    while ((pos = path.find(delimiter)) != std::string::npos) {
-        token = path.substr(0, pos);
-        j = j[token];
-        path.erase(0, pos + delimiter.length());
-    }
-    return j[path];
-}
 
+    std::string pathCopy = path;
+    // check if the path is empty
+    if(path.empty()){
+        throw std::runtime_error("getPayloadPathValue: path is empty.");
+    }
+
+    // get value at path
+    try {
+        std::string delimiter = ".";
+        size_t pos = 0;
+        std::string token;
+        while ((pos = path.find(delimiter)) != std::string::npos) {
+            token = path.substr(0, pos);
+            j = j[token];
+            path.erase(0, pos + delimiter.length());
+        }
+        if(j[path].is_null()){
+            throw std::runtime_error("Username could not be found using the path " + pathCopy );
+        }
+        return j[path];
+    } catch (nlohmann::detail::type_error e){
+        throw std::runtime_error("Username could not be found using the path " + pathCopy );
+    }
+}
 
 
 /**
@@ -333,10 +343,35 @@ nlohmann::json getJsonPathValue(nlohmann::json j, std::string path) {
  * @return  json value
  */
 nlohmann::json getPayloadPathValue(std::string token, std::string path) {
-    auto decoded = jwt::decode(token);
-    std::string payload = decoded.get_payload();
-    nlohmann::json j = nlohmann::json::parse(payload);
-    return getJsonPathValue(j, path);
+    // check if the token is empty
+    if (token.empty()) {
+        throw std::runtime_error("getPayloadPathValue: token is empty.");
+    }
+
+    // check if the path is empty
+    if (path.empty()) {
+        throw std::runtime_error("getPayloadPathValue: path is empty.");
+    }
+
+    try {
+        // decode jwt to json string
+        auto decoded = jwt::decode(token);
+        std::string payload = decoded.get_payload();
+
+        // parse the json string to json object
+        nlohmann::json j = nlohmann::json::parse(payload);
+        return getJsonPathValue(j, path);
+    } catch (nlohmann::detail::type_error e) {
+        throw std::runtime_error("the jwt payload could not be parsed.");
+    } catch (std::runtime_error e) {
+        if (std::string(e.what()) == "Invalid input") {
+            throw std::runtime_error("token could not be decoded.");
+        } else {
+            throw std::runtime_error("Token could not be decoded. " + std::string(e.what()));
+        }
+    } catch (std::exception e) {
+        throw std::runtime_error("token could not be decoded. " + std::string(e.what()) + " execption type" + typeid(e).name() );
+    }
 }
 
 
@@ -536,16 +571,36 @@ ZOO_DLL_EXPORT int interface(maps *&conf, maps *&inputs, maps *&outputs) {
         std::string authorizationBearerToken{getAuthorizationBearer(conf)};
         std::string username{};
         if (!authorizationBearerToken.empty()){
-            // get username path
-            std::string usernamePath {confEoepca["usernameJwtJsonPath"].c_str()};
 
-            // check if username path is empty, if so use default value
-            if (usernamePath.empty()) {
-                usernamePath = "user_name";
+
+            try {
+
+                // get username path
+                std::string usernamePath{};
+                if (confEoepca["usernameJwtJsonPath"].empty()) {
+                    usernamePath = "user_name";
+                } else {
+                    usernamePath = confEoepca["usernameJwtJsonPath"].c_str();
+                }
+
+                // get username from token using configured user path
+                username = getPayloadPathValue(authorizationBearerToken, usernamePath);
+                if(username.empty()){
+                    std::string err{"eoepca cannot get username from token. Using usernamePath:" +  usernamePath };
+                    setStatus(conf, "failed", err.c_str());
+                    updateStatus(conf, 100, err.c_str());
+                    return SERVICE_FAILED;
+                }
+
+
+            }  catch (std::exception &e) {
+                std::string err{"eoepca cannot get username from token"};
+                setStatus(conf, "failed", e.what());
+                updateStatus(conf, 100, e.what());
+                return SERVICE_FAILED;
             }
 
-            // get username from token using configured user path
-            username = getPayloadPathValue(authorizationBearerToken, usernamePath);
+
         }
 
         //================ RESOURCE MANAGER
