@@ -79,6 +79,7 @@ public:
     std::string message;
     std::string username;
     std::string userIdToken;
+    std::string bearerToken;
 
     std::string hostName;
     std::string registerResultUrl;
@@ -98,6 +99,7 @@ public:
       std::cerr << "\tcwl: " << cwl << "\n";
       std::cerr << "\tinputs: " << inputs << "\n";
       std::cerr << "\tuserIdToken: " << userIdToken << "\n";
+      std::cerr << "\tbearerToken: " << bearerToken << "\n";
 
       std::cerr << "\tperc: " << perc << "\n";
       std::cerr << "\tmessage: " << message << "\n";

@@ -43,7 +43,6 @@ individualName=Operations Support team
 
 [javax]
 
-[env]
 
 [database]
 
