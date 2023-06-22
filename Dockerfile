@@ -140,6 +140,9 @@ COPY assets/oas.cfg /opt/t2service/oas.cfg
 COPY assets/scripts/entrypoint.sh /opt/t2scripts/entrypoint.sh
 RUN chmod +x /opt/t2scripts/entrypoint.sh
 
+# TODO remove from code all references to this file which is not needed anymore
+COPY assets/workflowwxecutorconfig.json /opt/t2config/workflowwxecutorconfig.json
+
 COPY src/templates/template.cpp /opt/t2template/template.cpp
 COPY src/templates/Makefile /opt/t2template/Makefile
 RUN cp /project/src/deployundeploy/zoo/build/libepcatransactional.zo /opt/t2service/
