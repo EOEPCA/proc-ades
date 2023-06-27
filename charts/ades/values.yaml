@@ -352,6 +352,7 @@ workflowExecutor:
   # available placeholders: $namespace $steps_exit_codes
   errorMessages:
     "Job has reached the specified backoff limit": "Unexpected application error occurred. ( namespace: $namespace , exit codes:  $steps_exit_codes )"
+    "namespace not found": "Job namespace $namespace does not exist or has been removed."
 
   usernameJwtJsonPath: "pct_claims.user_name"
 
