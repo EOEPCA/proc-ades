@@ -1,7 +1,7 @@
 /*
  * Author : Gérald FENOY
  *
- * Copyright (c) 2009-2020 GeoLabs SARL
+ * Copyright (c) 2009-2023 GeoLabs SARL
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -2000,7 +2000,7 @@ void printProcessResponse(maps* m,map* request, int pid,service* serv,const char
 
     tmp1 = (char*)malloc((TIME_SIZE+1)*sizeof(char));
 
-    len = strftime ( tmp1, TIME_SIZE, "%Y-%m-%dT%I:%M:%SZ", tm );
+    len = strftime ( tmp1, TIME_SIZE, zDateFormat, tm );
 
     xmlNewProp(nc,BAD_CAST "creationTime",BAD_CAST tmp1);
 
@@ -2632,16 +2632,16 @@ void _printExceptionReportResponse(maps* m,map* s){
  * (when required) depending on the code.
  * 
  * @param pmsConf the maps containing the settings of the main.cfg file
- * @param psService the service
+ * @param pmError the map containing the text,code,locator keys (or a map array)
  */
-void printExceptionReportResponse(maps* pmsConf,map* psService){
+void printExceptionReportResponse(maps* pmsConf,map* pmError){
   if(getMapFromMaps(pmsConf,"lenv","hasPrinted")!=NULL)
     return;
   map* pmExecutionType=getMapFromMaps(pmsConf,"main","executionType");
   if(pmExecutionType!=NULL && strncasecmp(pmExecutionType->value,"xml",3)==0)
-    _printExceptionReportResponse(pmsConf,psService);
+    _printExceptionReportResponse(pmsConf,pmError);
   else
-    printExceptionReportResponseJ(pmsConf,psService);
+    printExceptionReportResponseJ(pmsConf,pmError);
 }
 
 /**
