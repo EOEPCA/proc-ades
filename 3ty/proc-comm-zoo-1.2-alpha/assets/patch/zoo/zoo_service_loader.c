@@ -386,6 +386,7 @@ int addServicesNamespaceToMap(maps* conf){
                         char *namespaceFolder = (char *) malloc(1024);
                         memset(namespaceFolder, '\0', 1024);
                         map *servicesNamespaceParentFolder = getMapFromMaps(conf, "servicesNamespace", "path");
+			if(servicesNamespaceParentFolder!=NULL){
                         sprintf(namespaceFolder, "%s/%s", servicesNamespaceParentFolder->value, namespaceName);
                         DIR *dir = opendir(namespaceFolder);
                         if (dir) {
@@ -412,6 +413,7 @@ int addServicesNamespaceToMap(maps* conf){
                             freeMap(&error);
                             free(error);
                         }
+}
                     }
                 }
             }
