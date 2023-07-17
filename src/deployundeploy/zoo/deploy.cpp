@@ -238,7 +238,7 @@ std::string getAuthorizationBearer(maps *&conf){
             char* baseS=strchr(userServicePathMap->value,' ');
             if (baseS){
                 fprintf(stderr,"getAuthorizationBearer >%s<\n",++baseS);
-                return std::string(++baseS);
+                return std::string(baseS);
             }
         }
     }
