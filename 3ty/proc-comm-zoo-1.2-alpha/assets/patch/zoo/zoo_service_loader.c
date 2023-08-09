@@ -3708,7 +3708,7 @@ runRequest (map ** inputs)
 	      char *tmps0 = strtok_r(pmTmp->value, ",", &saveptr0);
 	      int iCnt0=0;
 	      while(tmps0 != NULL){
-		if(iCnt0>0){
+		if(iCnt0>=0){
 		  char *saveptr;
 		  char *tmps = strtok_r(tmps0, "/", &saveptr);
 		  int iCnt=0;
