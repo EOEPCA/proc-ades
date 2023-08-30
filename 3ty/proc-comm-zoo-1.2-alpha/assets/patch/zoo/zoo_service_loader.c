@@ -434,24 +434,28 @@ void setRootUrlMap(maps* m){
   int canContinue=false;
   char **orig = environ;
   char *s=*orig;
-  char workspace[1024*2];
   char* pWorkspace = NULL;
-  memset(workspace,0,1024*2);
   for (; s; ei++ ) {
     if (strstr(s,"EOEPCA_WORKSPACE")!=NULL){
       char* baseU=strchr(s,'=');
       if (strlen(baseU)>1){
 	pWorkspace = ++baseU;
       }
+      break;
     }
     s = *(orig+ei);
   }
   if (pWorkspace){
     // TODO: verify if we should optionaly prepend with rootHost
-    if(rootHost!=NULL)
+    char* workspace;
+    if(rootHost!=NULL){
+      workspace=(char*)malloc((strlen(rootHost->value)+strlen(rootPath->value)+3)*sizeof(char));
       sprintf(workspace, "%s/%s/%s",rootHost->value,pWorkspace,rootPath->value);
-    else
+    }
+    else{
+      workspace=(char*)malloc((strlen(rootPath->value)+3)*sizeof(char));
       sprintf(workspace, "/%s/%s",pWorkspace,rootPath->value);
+    }
     fprintf(stderr,"---------WORKSPACE: %s--------------\n",workspace);
     setMapInMaps(m,"openapi","rootUrl",workspace);
   }
@@ -3797,8 +3801,6 @@ runRequest (map ** inputs)
 	  }else{
 	    free(pcaClauseFinal);
 	  }
-	  maps* pmsTmp=getMaps(m,"lenv");
-	  dumpMap(pmsTmp->content);
 	  if(res!=NULL)
 	    json_object_put(res);
 	  res=printJobList(m);
@@ -4159,7 +4161,6 @@ runRequest (map ** inputs)
 	if(res!=NULL)
 	  json_object_put(res);
 	res=printJobStatus(m,pmTmp->value);
-	fprintf(stderr,"%s %d \n", __FILE__,__LINE__);
       }
       //printHeaders(m);
       //printf("Status: 201 Created \r\n\r\n");
