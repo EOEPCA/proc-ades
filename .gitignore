@@ -88,3 +88,4 @@ workspace.code-workspace
 
 /charts/ades/values.minikube-dev.terradue.yaml
 /charts/ades/values.minikube.yaml
+/charts/ades/values.eoepca_t2.yaml

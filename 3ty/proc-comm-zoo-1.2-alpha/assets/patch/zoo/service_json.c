@@ -1699,11 +1699,7 @@ extern "C" {
   bool isFilteredDMM(maps* pmsConf,const char* pccPid){
 #ifndef RELY_ON_DB
     maps* pmsRequest=getMaps(pmsConf,"request");
-    fprintf(stderr,"%s %d \n",__FILE__,__LINE__);
     if(pmsRequest!=NULL){
-      fprintf(stderr,"%s %d \n",__FILE__,__LINE__);
-      dumpMap(pmsRequest->content);
-      fprintf(stderr,"%s %d \n",__FILE__,__LINE__);
       map* pmTmpPath=getMapFromMaps(pmsConf,"main","tmpPath");
       map* pmMinDate=getMap(pmsRequest->content,"minDuration");
       map* pmMaxDate=getMap(pmsRequest->content,"maxDuration");
@@ -1842,7 +1838,8 @@ extern "C" {
       if(dirp!=NULL){
 	while ((dp = readdir (dirp)) != NULL){
 	  char* extn = strstr(dp->d_name, ".json");
-	  if(extn!=NULL && strstr(dp->d_name,"_status")==NULL){
+	  // d_name length should be the usid length (36) + ".json" extension
+	  if(extn!=NULL && strstr(dp->d_name,"_status")==NULL && strlen(dp->d_name)==41){
 	    char* tmpStr=zStrdup(dp->d_name);
 	    tmpStr[strlen(dp->d_name)-5]=0;
 #ifndef RELY_ON_DB
@@ -1854,6 +1851,9 @@ extern "C" {
 	    pmsLenv->child = NULL;
 	    pmsLenv->next = NULL;
 	    map *pmaPid=NULL,*pmaUsid=NULL;
+	    // In case we have jrequest defined in the _lenv.cfg file
+	    int saved_stdout = zDup (fileno (stdout));
+	    zDup2 (fileno (stderr), fileno (stdout));
 	    if(conf_read(pcaLenvPath,pmsLenv) !=2){
 	      map *pmTmp=getMapFromMaps(pmsLenv,"lenv","Identifier");
 	      if(pmTmp!=NULL){
@@ -1874,12 +1874,19 @@ extern "C" {
 	      pmaPid=NULL;
 	      pmaUsid=NULL;
 	    }
+	    fflush(stdout);
+	    fflush(stderr);
+	    //rewind(stdout);
+	    //fpurge(saved_stdout);
+	    zDup2 (saved_stdout, fileno (stdout));
+	    zClose (saved_stdout);
 	    free(pcaLenvPath);
 #else
 	    map *pmaPid=NULL, *pmaUsid=NULL;
 #endif
-	    if(isFilteredPid(conf,pmaPid->value) &&
-	       isFilteredDMM(conf,pmaUsid->value)){
+	    if((pmaPid==NULL && pmaUsid==NULL) ||
+	       (isFilteredPid(conf,pmaPid->value) &&
+		isFilteredDMM(conf,pmaUsid->value))){
 	      if(cnt>=skip && cnt<limit+skip){
 		json_object* cjob=printJobStatus(conf,tmpStr);
 		json_object_array_add(res,cjob);
